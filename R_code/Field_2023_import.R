@@ -15,7 +15,6 @@ for (package in packages) {
     library(package, character.only = TRUE)
   }}
 
-
 con1 <-dbConnect(SQLite(), '../Data/Data_all_combined.db')
 con <-dbConnect(SQLite(), 'R_code/Data_all_combined.db')
 
