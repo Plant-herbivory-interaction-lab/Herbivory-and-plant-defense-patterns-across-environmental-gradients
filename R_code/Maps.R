@@ -16,7 +16,7 @@ library(patchwork)
 
 source("R_code/Google_Engine_init.R")
 #### Database connection ----
-con <-dbConnect(SQLite(), 'Data/Data_all_combined.db')
+con <-dbConnect(SQLite(), 'Data/Data.db')
 
 #### Import the coordinates ----
 Pop_info<-dbReadTable(con,

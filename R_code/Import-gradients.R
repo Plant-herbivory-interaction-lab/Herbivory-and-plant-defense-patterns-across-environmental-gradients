@@ -15,7 +15,7 @@ ee_Initialize()
 source("R_code/Functions_to_extract_variables_from_GEE.R")
 
 
-con <-dbConnect(SQLite(), 'Data/Data_all_combined.db')
+con <-dbConnect(SQLite(), 'Data/Data.db')
 
 Pop_info<-dbReadTable(con,
                       'pop_info_2022_and_2023') %>% 
