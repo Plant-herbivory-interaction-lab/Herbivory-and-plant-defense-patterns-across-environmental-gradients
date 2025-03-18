@@ -20,7 +20,7 @@ library(GGally)
 library(brms)
 
 # Database connection ----
-con <-dbConnect(SQLite(), 'Data/Data_all_combined.db')
+con <-dbConnect(SQLite(), 'Data/Data.db')
 
 # Import and prep data ----
 source("R_code/Prep_data_for_all_analysis.R")
