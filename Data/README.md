@@ -8,7 +8,7 @@ Data file includes the following tables:
 
 ## Bioclims_1970_ave
 
-This file contains the [bioclim](https://developers.google.com/earth-engine/datasets/catalog/WORLDCLIM_V1_BIO#bands) and aridity data from Google Earth Engine.
+This file contains the [bioclim](https://developers.google.com/earth-engine/datasets/catalog/WORLDCLIM_V1_BIO#bands) from google earth engine and aridity data from this [publication](https://csidotinfo.wordpress.com/2019/01/24/global-aridity-index-and-potential-evapotranspiration-climate-database-v3/).
 
 | variables | units | description |
 | :--- | :---: | :--- |
