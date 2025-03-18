@@ -1,3 +1,9 @@
+# Code by: Jacob Herschberger
+# Date: August 2024
+
+
+
+
 packages<-c(
             "DBI",# Used to connect to sqlite databases
             "tidyverse", # Great suite of functions for data wrangling and visualization
