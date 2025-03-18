@@ -1,0 +1,107 @@
+## Code by: Jacob Herschberger
+## Date: January 2025
+## Email: j.herschberger@ufl.edu
+## Project: Culprits of plant defense variation across a latitudinal gradient.
+
+# Import packages ----
+# Run install.packages([Package name]) if package is not installed
+library(tidyverse)
+library(boot)
+
+# Functions ----
+transform_perc <- function(percentage_vec) {
+  # See Cribari-Neto & Zeileis (2010)
+  (percentage_vec * (length(percentage_vec) - 1) + 0.5)/length(percentage_vec)
+}
+
+# Import data ----
+
+Pop_info<-dbReadTable(con,
+                      'pop_info_2022_and_2023') %>% 
+  select(Pop,Latitude)
+
+### 2023 field plant traits
+Field_2023<-dbReadTable(con,
+                        'Field_2023') %>% 
+  mutate(Vis_p=logit(transform_perc(Vis_p)),
+         herb_p=(transform_perc(herb_p)),
+         Conc=(Conc),
+         #SLA=log(SLA),
+         #Trichomes=log(Trichomes),
+         #Spines=log(Spines+1),
+         Date=as.Date(Date,origin = "1970-01-01"))
+
+### Data from the field in 2022
+Field_2022<-dbReadTable(con,"Field_2022") %>% 
+  mutate(herb_p=Herbivory/100,
+         herb_p=(transform_perc(herb_p)),
+         Conc=(Conc),
+         SLA=(SLA),
+         Trichomes=(Trichomes),
+         Spines=Spines,
+         Date=as.Date(Date,origin = "1970-01-01"))
+
+### Data from the common garden 2023
+Garden <- dbReadTable(con, "Garden_2023") %>% 
+  mutate(Vis_p=logit(transform_perc(Vis_p)),
+         Conc=(Conc),
+         SLA=(SLA),
+         Trichomes=(Trichomes),
+         Spines=Spines,
+         herb_p=if_else(herb_p>1,1,herb_p),
+         herb_p=(transform_perc(herb_p))
+         )
+
+Clim_select<-c("X30s_bio_1","X30s_bio_2","X30s_bio_3","X30s_bio_4",
+               "X30s_bio_7",
+               "X30s_bio_12",
+               "X30s_bio_18"
+)
+
+Clim_select.1<-c("bio1","bio2","bio3","bio4",
+                 "bio7","bio12",
+                 "bio18")
+
+soil_select<-c("cec","nitrogen","sand","ocd","ocs","cfvo")
+
+Soil<-dbReadTable(con,"Soil") %>% 
+  select(all_of(soil_select))
+
+log_trans<-function(x){log(x-min(x)+1)}
+sqrt_trans<-function(x){(x-min(x))}
+
+Clim_ave<-dbReadTable(con,"Bioclims_1970_ave") %>%
+  select(all_of(Clim_select)) %>% 
+  mutate(X30s_bio_18=log_trans(X30s_bio_18)
+  ) %>%  as.data.frame()
+
+Clim_2022<-dbReadTable(con,"Bioclims_2022") %>%
+  select(all_of(Clim_select.1)) %>% 
+  mutate(bio18=poly(bio18,2)[,2]
+  ) %>%  as.data.frame()
+
+Clim_2023<-dbReadTable(con,"Bioclims_2023") %>%
+  select(all_of(Clim_select.1)) %>% 
+  mutate(bio18=log_trans(bio18)
+  ) %>%  as.data.frame()
+
+tables <- list(Soil=Soil,Clim_ave=Clim_ave,
+               Clim_2023=Clim_2023,Clim_2022=Clim_2022)
+
+combined_data <- list()
+
+for (table_name in names(tables)) {
+  df <- tables[[table_name]]
+  
+  numeric_df <- df %>% select(where(is.numeric)) 
+  pca_result <- prcomp(numeric_df, scale. = TRUE)
+  pca_scores <- as.data.frame(pca_result$x[, c("PC1", "PC2")])
+  renamed_pca <- pca_scores %>%
+    rename(
+      !!paste0(table_name, "_PC1") := PC1,
+      !!paste0(table_name, "_PC2") := PC2
+    )
+  combined_data[[table_name]] <- renamed_pca
+} 
+
+PCs <- bind_cols(combined_data) %>% cbind(Pop_info)
