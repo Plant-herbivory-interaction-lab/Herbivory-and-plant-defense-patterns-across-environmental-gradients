@@ -10,11 +10,24 @@ Data file includes the following tables:
 
 This file contains the [bioclim](https://developers.google.com/earth-engine/datasets/catalog/WORLDCLIM_V1_BIO#bands) from google earth engine and aridity data from this [publication](https://csidotinfo.wordpress.com/2019/01/24/global-aridity-index-and-potential-evapotranspiration-climate-database-v3/).
 
-| variables | units | description |
-| :--- | :---: | :--- |
-| Region | categorical | Geographical region, MT = Montana, WI = Wisconsin |
-| Site | categorical | Code for site location, see file 'WIMT_Sites_2019.csv' or Table S1 for more details about locations | 
-| Plant | number | numerical code for each maternal plant for where seed was collected |
-| Rep | categorical | A-E, code for indivdual plants grown from the maternal plant ID (ie. half siblings) |
-| Row | number | row in common garden, used to locate plants in the garden |
-| OrderGard | number | order planted in garden, used to
+| variables | units | min | max | scale | description |
+| :--- | :---: | :--- | :--- | :--- | :--- |
+| bio01 | °C                      | -29*   | 32*     | 0.1   | Annual mean temperature                                       |
+| bio02 | °C                      | 0.9*   | 21.4*   | 0.1   | Mean diurnal range (mean of monthly (max temp - min temp))    |
+| bio03 | %                        | 7*     | 96*     | NA    | Isothermality (bio02/bio07 * 100)                             |
+| bio04 | °C                      | 0.62*  | 227.21* | 0.01  | Temperature seasonality (Standard deviation * 100)            |
+| bio05 | °C                      | -9.6*  | 49*     | 0.1   | Max temperature of warmest month                              |
+| bio06 | °C                      | -57.3* | 25.8*   | 0.1   | Min temperature of coldest month                              |
+| bio07 | °C                      | 5.3*   | 72.5*   | 0.1   | Temperature annual range (bio05-bio06)                        |
+| bio08 | °C                      | -28.5* | 37.8*   | 0.1   | Mean temperature of wettest quarter                           |
+| bio09 | °C                      | -52.1* | 36.6*   | 0.1   | Mean temperature of driest quarter                            |
+| bio10 | °C                      | -14.3* | 38.3*   | 0.1   | Mean temperature of warmest quarter                           |
+| bio11 | °C                      | -52.1* | 28.9*   | 0.1   | Mean temperature of coldest quarter                           |
+| bio12 | mm                       | 0*     | 11401*  | NA    | Annual precipitation                                          |
+| bio13 | mm                       | 0*     | 2949*   | NA    | Precipitation of wettest month                                |
+| bio14 | mm                       | 0*     | 752*    | NA    | Precipitation of driest month                                 |
+| bio15 | Coefficient of Variation | 0*     | 265*    | NA    | Precipitation seasonality                                     |
+| bio16 | mm                       | 0*     | 8019*   | NA    | Precipitation of wettest quarter                              |
+| bio17 | mm                       | 0*     | 2495*   | NA    | Precipitation of driest quarter                               |
+| bio18 | mm                       | 0*     | 6090*   | NA    | Precipitation of warmest quarter * estimated min or max value |
+| bio19 | mm                       | 0*     | 5162*   | NA    | Precipitation of coldest quarter 
