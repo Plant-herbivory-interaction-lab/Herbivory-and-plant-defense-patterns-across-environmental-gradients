@@ -14,7 +14,7 @@ This file contains the [bioclim](https://developers.google.com/earth-engine/data
 | :--- | :---: | :--- | :--- | :--- | :--- |
 | bio01 | °C                      | -29*   | 32*     | 0.1   | Annual mean temperature                                       |
 | bio02 | °C                      | 0.9*   | 21.4*   | 0.1   | Mean diurnal range (mean of monthly (max temp - min temp))    |
-| bio03 | %                        | 7*     | 96*     | NA    | Isothermality (bio02/bio07 * 100)                             |
+| bio03 | %                        | 7*     | 96*     |     | Isothermality (bio02/bio07 * 100)                             |
 | bio04 | °C                      | 0.62*  | 227.21* | 0.01  | Temperature seasonality (Standard deviation * 100)            |
 | bio05 | °C                      | -9.6*  | 49*     | 0.1   | Max temperature of warmest month                              |
 | bio06 | °C                      | -57.3* | 25.8*   | 0.1   | Min temperature of coldest month                              |
@@ -23,11 +23,11 @@ This file contains the [bioclim](https://developers.google.com/earth-engine/data
 | bio09 | °C                      | -52.1* | 36.6*   | 0.1   | Mean temperature of driest quarter                            |
 | bio10 | °C                      | -14.3* | 38.3*   | 0.1   | Mean temperature of warmest quarter                           |
 | bio11 | °C                      | -52.1* | 28.9*   | 0.1   | Mean temperature of coldest quarter                           |
-| bio12 | mm                       | 0*     | 11401*  | NA    | Annual precipitation                                          |
-| bio13 | mm                       | 0*     | 2949*   | NA    | Precipitation of wettest month                                |
-| bio14 | mm                       | 0*     | 752*    | NA    | Precipitation of driest month                                 |
-| bio15 | Coefficient of Variation | 0*     | 265*    | NA    | Precipitation seasonality                                     |
-| bio16 | mm                       | 0*     | 8019*   | NA    | Precipitation of wettest quarter                              |
-| bio17 | mm                       | 0*     | 2495*   | NA    | Precipitation of driest quarter                               |
-| bio18 | mm                       | 0*     | 6090*   | NA    | Precipitation of warmest quarter * estimated min or max value |
-| bio19 | mm                       | 0*     | 5162*   | NA    | Precipitation of coldest quarter 
+| bio12 | mm                       | 0*     | 11401*  |    | Annual precipitation                                          |
+| bio13 | mm                       | 0*     | 2949*   |    | Precipitation of wettest month                                |
+| bio14 | mm                       | 0*     | 752*    |    | Precipitation of driest month                                 |
+| bio15 | Coefficient of Variation | 0*     | 265*    |    | Precipitation seasonality                                     |
+| bio16 | mm                       | 0*     | 8019*   |    | Precipitation of wettest quarter                              |
+| bio17 | mm                       | 0*     | 2495*   |   | Precipitation of driest quarter                               |
+| bio18 | mm                       | 0*     | 6090*   |   | Precipitation of warmest quarter * estimated min or max value |
+| bio19 | mm                       | 0*     | 5162*   |   | Precipitation of coldest quarter 
