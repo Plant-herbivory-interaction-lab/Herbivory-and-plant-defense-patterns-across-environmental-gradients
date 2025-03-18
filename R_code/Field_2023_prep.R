@@ -22,7 +22,7 @@ for (package in packages) {
   }}
 
 con1 <-dbConnect(SQLite(), '../Data/Data_all_combined.db')
-con <-dbConnect(SQLite(), 'R_code/Data_all_combined.db')
+con <-dbConnect(SQLite(), 'Data/Data_all_combined.db')
 
 Plant_traits_field_2023<-dbReadTable(con1,
                                      'Horsenettle_field_plant_trait_data_2023')%>% 
