@@ -1,5 +1,5 @@
 # Folder contents
-**Table 1** Table of the folder files and folder descriptions.
+**Table 1** Table of the files and folder descriptions.
 
 | File/folder name | Description |
 |-----------|----------|
