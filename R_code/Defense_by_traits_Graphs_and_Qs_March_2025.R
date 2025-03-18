@@ -1,5 +1,5 @@
 ## Code by: Jacob Herschberger
-## Date: MArch 2025
+## Date: March 2025
 ## Email: j.herschberger@ufl.edu
 ## Project: Culprits of plant defense variation across a latitudinal gradient.
 
