@@ -4,7 +4,7 @@
 | File/folder name | Description |
 |-----------|----------|
 |Defense_by_traits_Graphs_and_Qs_March_2025.R| Contains code regarding the final analysis and presentation of the data. This code depends on the **Prep_data_for_all_analysis.R** and **Psem_graphing.R** files. |
- [2] "Field_2023_prep.R"                           
+ |Field_2023_prep.R| Prepares the raw data into usable data for the final data analysis |                           
  [3] "Functions_to_extract_variables_from_GEE.R"   
  [4] "Google_Engine_init.R"                        
  [5] "Import_field_2022_data.R"                    
