@@ -6,7 +6,6 @@
 # Import packages ----
 # Run install.packages([Package name]) if package is not installed
 library(tidyverse)
-library(boot)
 
 # Functions ----
 transform_perc <- function(percentage_vec) {
@@ -23,35 +22,23 @@ Pop_info<-dbReadTable(con,
 ### 2023 field plant traits
 Field_2023<-dbReadTable(con,
                         'Field_2023') %>% 
-  mutate(Vis_p=logit(transform_perc(Vis_p)),
+  mutate(
          herb_p=(transform_perc(herb_p)),
-         Conc=(Conc),
-         #SLA=log(SLA),
-         #Trichomes=log(Trichomes),
-         #Spines=log(Spines+1),
          Date=as.Date(Date,origin = "1970-01-01"))
 
 ### Data from the field in 2022
 Field_2022<-dbReadTable(con,"Field_2022") %>% 
   mutate(herb_p=Herbivory/100,
          herb_p=(transform_perc(herb_p)),
-         Conc=(Conc),
-         SLA=(SLA),
-         Trichomes=(Trichomes),
-         Spines=Spines,
          Date=as.Date(Date,origin = "1970-01-01"))
 
 ### Data from the common garden 2023
 Garden <- dbReadTable(con, "Garden_2023") %>% 
-  mutate(Vis_p=logit(transform_perc(Vis_p)),
-         Conc=(Conc),
-         SLA=(SLA),
-         Trichomes=(Trichomes),
-         Spines=Spines,
-         herb_p=if_else(herb_p>1,1,herb_p),
+  mutate(
          herb_p=(transform_perc(herb_p))
          )
 
+#### Import the climate and siol data ----
 Clim_select<-c("X30s_bio_1","X30s_bio_2","X30s_bio_3","X30s_bio_4",
                "X30s_bio_7",
                "X30s_bio_12",
