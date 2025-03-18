@@ -1,4 +1,7 @@
- 
+#Code by: Jacob Herschberger
+# Date: September 2024
+# Functions to extract various gradient data from google earth engine
+
 # Function to extract ESA data from Google earth engine ----
 # This samples 1000 spots within one kilometer and then finds the proportion of landtypes.
 Land_cover_porp_1KM<-function(path,pp1) {
