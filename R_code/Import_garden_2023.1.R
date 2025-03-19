@@ -17,7 +17,7 @@ for (package in packages) {
   }}
 
 
-con<-dbConnect(SQLite(), 'Data/Data.db')
+con<-dbConnect(SQLite(), '../Data/Data_all_combined.db')
 
 
 
@@ -32,13 +32,14 @@ leaf_traits_garden <- dbReadTable(con, "Plant_traits_Dudu_2023") %>%
                              as.numeric), na.rm = TRUE)/rowMeans(across(starts_with("L_weight"),as.numeric), na.rm = TRUE),
          Plant_ID=paste(Pop.ab,"-",Plant_ID,Rep,sep="")
   ) %>% 
-  select(Plant_ID,Spines,Trichomes,SLA,Conc)
+  select(Plant_ID,Spines,Trichomes,SLA,Conc) %>% 
+  rbind(dbReadTable(con,"Jake_leaf_traits_Garden_2023") %>% select(!Treatment))
 
 herb<-dbReadTable(con,"Whole_plant_traits_garden_2023_jake") %>% 
   filter(Survey == "8/4/2023" | Survey == "8/10/2023") %>% 
   select(Field.Label,Herby) %>% group_by(Field.Label) %>% 
   summarise(herb_p=mean(Herby,na.rm=T)/100) %>% rbind(
-    dbReadTable(con1,"Summer_herbivory_dudu_2023" ) %>% 
+    dbReadTable(con,"Summer_herbivory_dudu_2023" ) %>% 
       filter(Date == "8/7/2023" | Date == "8/15/2023") %>% 
       select(Field.Label,Chewing,Sucking) %>% 
       group_by(Field.Label) %>% 
@@ -46,7 +47,8 @@ herb<-dbReadTable(con,"Whole_plant_traits_garden_2023_jake") %>%
                 Sucking=mean(as.numeric(Sucking),na.rm=T)) %>% 
       drop_na(herb_p) %>% #mutate(
         #herb_p=rowSums(
-          #across(c(Sucking, Chewing)), na.rm = TRUE)/100) %>% 
+          #across(c(Sucking, Chewing)), na.rm = TRUE)) %>% 
+      mutate(herb_p=herb_p/100) %>% 
       select(Field.Label,herb_p)) %>% rename(Plant_ID="Field.Label")
 
 Sprout_info<- dbReadTable(con, "sprout_data_garden_2024" ) %>% 
@@ -56,6 +58,9 @@ Sprout_info<- dbReadTable(con, "sprout_data_garden_2024" ) %>%
   drop_na(Treatment)
 
 Garden<-full_join(Sprout_info,leaf_traits_garden) %>% 
-  full_join(herb)  
+  full_join(herb) %>% 
+  filter(Treatment=="us"|Treatment=="Cont") %>% 
+  drop_na()
+  
 
 dbWriteTable(con,"Garden_2023",Garden,overwrite=T)
