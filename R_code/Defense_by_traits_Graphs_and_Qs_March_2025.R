@@ -32,24 +32,20 @@ Field_2022<-Field_2022 %>%
   select(Trichomes:herb_p) %>% 
   mutate(Loc="Field",
          Loc1="Field 2022",
-         Year="2022",
-         Treatment=NA)
+         Year="2022")
 
 Field_2023<-Field_2023 %>% 
-  select(Pop,Trichomes:SLA,Conc) %>% 
+  select(Pop,Trichomes:SLA,Conc,herb_p) %>% 
   mutate(Loc="Field",
          Loc1="Field 2023",
          Year="2023",
-         Conc=Conc*2.5, # This is do to use using different amounts of leaf material.
-         Treatment=NA)
+         Conc=Conc*2.5) # This is do to use using different amounts of leaf material.
 
 Garden<-Garden %>% 
-  #filter(Treatment=="Cont"|Treatment=="us") %>% 
-  select(Pop:Conc,herb_p,Treatment) %>% 
+  select(Pop:Conc,herb_p) %>% 
   mutate(Loc="Garden",Loc1="Garden",Year="2023")
 
-Combined_data1<-rbind(Field_2022,Field_2023,Garden)%>% 
-  filter(Treatment=="Cont"|Treatment=="us"|is.na(Treatment)==T) %>% filter(SLA>3.9) %>% 
+Combined_data1<-rbind(Field_2022,Field_2023,Garden)%>% filter(SLA>3.9) %>% 
   left_join(PCs %>% 
               select(Latitude,Pop,Clim_ave_PC1,Soil_PC2,Clim_ave_PC2)) %>% 
   drop_na(Latitude)%>% 
