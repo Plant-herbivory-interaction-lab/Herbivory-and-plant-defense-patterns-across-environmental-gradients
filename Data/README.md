@@ -75,12 +75,32 @@ This table includes the herbivory and plant defense traits measurements collecte
 |Pop | Categorical | Population acronym of the collected populations |
 
 ## Pop_info_2022_and_2023
-This table includes the herbivory and plant defense traits measurements collected of the plants growing in the common garden during 2023.
+This table includes the population information of plants collected in the field and planted in the common garden.
 | variables | units | description |
 | :--- | :---: | :--- |
+|Pop | Categorical | Population acronym of the collected populations |
 |Latitude | Arc degrees | The latitudenal value of the plant population |
 |Longitude | Arc degrees | The longitudinal value of the plant population |
 |Pop | Categorical | Population acronym of the collected populations |
 |Place | Character | Description of where the plant was collected |
 |Notes | Character | Population notes of the plant location |
+
+# Soil
+This table includes the soil attributes at the collected poulations using the geodata::soil_world function.
+| variables | units | description |
+| :--- | :---: | :--- |
+|Pop | Categorical | Population acronym of the collected populations |
+| bdod      | kg dm<sup>-3</sup> | Bulk density of the fine earth fraction     |
+| cec       | cmol(+) kg<sup>-1</sup> | Cation Exchange Capacity of the soil        |
+| cfvo      | %                 | Vol. fraction of coarse fragments (> 2 mm)  |
+| nitrogen  | g kg<sup>-1</sup>  | Total nitrogen (N)                          |
+| phh2o     | -                 | pH (H<sub>2</sub>O)                         |
+| sand      | %                 | Sand (> 0.05 mm) in fine earth              |
+| silt      | %                 | Silt (0.002-0.05 mm) in fine earth         |
+| clay      | %                 | Clay (< 0.002 mm) in fine earth            |
+| soc       | g kg<sup>-1</sup>  | Soil organic carbon in fine earth          |
+| ocd       | kg m<sup>-3</sup>  | Organic carbon density                     |
+| ocs       | kg m<sup>-2</sup>  | Organic carbon stocks                      |
+
+
 
