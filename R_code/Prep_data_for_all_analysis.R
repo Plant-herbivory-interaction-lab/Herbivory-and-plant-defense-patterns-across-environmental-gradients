@@ -45,9 +45,6 @@ Clim_select<-c("X30s_bio_1","X30s_bio_2","X30s_bio_3","X30s_bio_4",
                "X30s_bio_18"
 )
 
-Clim_select.1<-c("bio1","bio2","bio3","bio4",
-                 "bio7","bio12",
-                 "bio18")
 
 soil_select<-c("cec","nitrogen","sand","ocd","ocs","cfvo")
 
@@ -62,18 +59,7 @@ Clim_ave<-dbReadTable(con,"Bioclims_1970_ave") %>%
   mutate(X30s_bio_18=log_trans(X30s_bio_18)
   ) %>%  as.data.frame()
 
-Clim_2022<-dbReadTable(con,"Bioclims_2022") %>%
-  select(all_of(Clim_select.1)) %>% 
-  mutate(bio18=poly(bio18,2)[,2]
-  ) %>%  as.data.frame()
-
-Clim_2023<-dbReadTable(con,"Bioclims_2023") %>%
-  select(all_of(Clim_select.1)) %>% 
-  mutate(bio18=log_trans(bio18)
-  ) %>%  as.data.frame()
-
-tables <- list(Soil=Soil,Clim_ave=Clim_ave,
-               Clim_2023=Clim_2023,Clim_2022=Clim_2022)
+tables <- list(Soil=Soil,Clim_ave=Clim_ave)
 
 combined_data <- list()
 
