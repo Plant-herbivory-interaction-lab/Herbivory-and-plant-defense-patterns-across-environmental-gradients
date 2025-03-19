@@ -54,11 +54,33 @@ This table includes the herbivory and plant defense traits measurements collecte
 | variables | units | description |
 | :--- | :---: | :--- |
 |Date | Numeric | The number that indicates when the data was collected. This number indicates a date orgin of 1970-01-01|
-|Plant_ID | Numeric | Indicates the plant number in a specific population |
+|Plant_ID | Character | Indicates the plant ID in a specific population |
 |herb_p | proportion | The percent herbivory estimation of the whole plant |
 |Trichomes | Numeric | The number of trichomes in a 500 mm squared area |       
 |SLA | cm<sup>2</sup>/g | The specific leaf area of the collected leaf |
 |Spines | Numeric | Number of spines on the mid-rib of the collected leaf |      
 |Conc | mg/mg | Glycoalkaloid concentration per miligram of dried leaf matter |
 |Pop | Categorical | Population acronym of the collected populations |
+
+## Garden_2023
+This table includes the herbivory and plant defense traits measurements collected of the plants growing in the common garden during 2023.
+| variables | units | description |
+| :--- | :---: | :--- |
+|Plant_ID | Character | Indicates the plant ID in a specific population |
+|herb_p | proportion | The percent herbivory estimation of the whole plant |
+|Trichomes | Numeric | The number of trichomes in a 500 mm squared area |       
+|SLA | cm<sup>2</sup>/g | The specific leaf area of the collected leaf |
+|Spines | Numeric | Number of spines on the mid-rib of the collected leaf |      
+|Conc | mg/mg | Glycoalkaloid concentration per miligram of dried leaf matter |
+|Pop | Categorical | Population acronym of the collected populations |
+
+## Pop_info_2022_and_2023
+This table includes the herbivory and plant defense traits measurements collected of the plants growing in the common garden during 2023.
+| variables | units | description |
+| :--- | :---: | :--- |
+|Latitude | Arc degrees | The latitudenal value of the plant population |
+|Longitude | Arc degrees | The longitudinal value of the plant population |
+|Pop | Categorical | Population acronym of the collected populations |
+|Place | Character | Description of where the plant was collected |
+|Notes | Character | Population notes of the plant location |
 
