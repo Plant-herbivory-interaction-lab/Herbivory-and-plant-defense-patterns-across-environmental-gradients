@@ -60,6 +60,7 @@ Sprout_info<- dbReadTable(con, "sprout_data_garden_2024" ) %>%
 Garden<-full_join(Sprout_info,leaf_traits_garden) %>% 
   full_join(herb) %>% 
   filter(Treatment=="us"|Treatment=="Cont") %>% 
+  select(!Treatment) %>% 
   drop_na()
   
 
