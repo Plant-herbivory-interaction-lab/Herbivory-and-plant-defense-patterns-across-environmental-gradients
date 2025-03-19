@@ -47,5 +47,5 @@ This table includes the herbivory and plant defense traits measurements collecte
 |Trichomes | Numeric | The number of trichomes in a 500 mm squared area |       
 |SLA | cm<sup>2</sup>/g | The specific leaf area of the collected leaf |
 |Spines | Numeric | Number of spines on the mid-rib of the collected leaf |      
-|Conc | 
+|Conc | mg/g 
 |Pop
