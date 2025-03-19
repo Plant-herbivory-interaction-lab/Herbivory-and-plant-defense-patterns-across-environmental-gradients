@@ -40,13 +40,12 @@ This table includes the herbivory and plant defense traits measurements collecte
 
 | variables | units | description |
 | :--- | :---: | :--- |
-
 |Latitude  | Arc degrees | The latitudenal value of the plant population |
 |Date | Numeric | The number that indicates when the data was collected. This number indicates a date orgin of 1970-01-01|
 |Plant_ID | Numeric | Indicates the plant number in a specific population |
 |Herbivory | Percent | The percent herbivory estimation of the whole plant |
 |Trichomes | Numeric | The number of trichomes in a 500 mm squared area |       
-|SLA 
-|Spines       
-|Conc 
+|SLA | cm<sup>2</sup>/g | The specific leaf area of the collected leaf |
+|Spines | Numeric | Number of spines on the mid-rib of the collected leaf |      
+|Conc | 
 |Pop
