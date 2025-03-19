@@ -259,10 +259,9 @@ Trait_response_pop_clim_sq<-ggplot(Data_prep(loc="NA",long=T,PopLevel = T),aes(y
 # SEM; test all hypothesis together----
 # Individual data points
 psem_data<-Data_prep(loc="Field") %>% 
-  select(!Treatment) %>% 
   drop_na()
 
-lm1<-lmer(herb_p_t~((Clim_ave_PC1+Clim_PC1_sq)+Trichomes+Conc+SLA)+(1|Year/Pop),psem_data)
+lm1<-lmer(herb_p_t~((Clim_ave_PC1+Clim_ave_PC1_sq)+Trichomes+Conc+SLA)+(1|Year/Pop),psem_data)
 lm2<-lmer(Conc~(Clim_ave_PC1+Clim_PC1_sq)+(1|Year/Pop),psem_data)
 lm3<-lmer(SLA~(Clim_ave_PC1+Clim_PC1_sq)+(1|Year/Pop),psem_data)
 lm4<-lmer(Trichomes~(Clim_ave_PC1+Clim_PC1_sq)+(1|Year/Pop),psem_data)
