@@ -30,4 +30,6 @@ This file contains the [bioclim](https://developers.google.com/earth-engine/data
 | bio16 | mm                       | 0*     | 8019*   |    | Precipitation of wettest quarter                              |
 | bio17 | mm                       | 0*     | 2495*   |   | Precipitation of driest quarter                               |
 | bio18 | mm                       | 0*     | 6090*   |   | Precipitation of warmest quarter * estimated min or max value |
-| bio19 | mm                       | 0*     | 5162*   |   | Precipitation of coldest quarter 
+| bio19 | mm                       | 0*     | 5162*   |   | Precipitation of coldest quarter |
+|Pop | categorical | |||Population acronym of the collected populations |
+| Aridity | 
