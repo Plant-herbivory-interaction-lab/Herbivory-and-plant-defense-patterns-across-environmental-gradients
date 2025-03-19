@@ -31,7 +31,7 @@ This table contains the [bioclim](https://developers.google.com/earth-engine/dat
 | bio17 | mm                       | 0*     | 2495*   |   | Precipitation of driest quarter                               |
 | bio18 | mm                       | 0*     | 6090*   |   | Precipitation of warmest quarter * estimated min or max value |
 | bio19 | mm                       | 0*     | 5162*   |   | Precipitation of coldest quarter |
-|Pop | categorical | |||Population acronym of the collected populations |
+|Pop | Categorical | |||Population acronym of the collected populations |
 | Aridity | |||| Aridity index |
 
 
@@ -40,12 +40,25 @@ This table includes the herbivory and plant defense traits measurements collecte
 
 | variables | units | description |
 | :--- | :---: | :--- |
-|Latitude  | Arc degrees | The latitudenal value of the plant population |
 |Date | Numeric | The number that indicates when the data was collected. This number indicates a date orgin of 1970-01-01|
 |Plant_ID | Numeric | Indicates the plant number in a specific population |
 |Herbivory | Percent | The percent herbivory estimation of the whole plant |
 |Trichomes | Numeric | The number of trichomes in a 500 mm squared area |       
 |SLA | cm<sup>2</sup>/g | The specific leaf area of the collected leaf |
 |Spines | Numeric | Number of spines on the mid-rib of the collected leaf |      
-|Conc | mg/g 
-|Pop
+|Conc | mg/mg | Glycoalkaloid concentration per miligram of dried leaf matter |
+|Pop | Categorical | Population acronym of the collected populations |
+
+## Field_2023
+This table includes the herbivory and plant defense traits measurements collected during the 2023 field season.
+| variables | units | description |
+| :--- | :---: | :--- |
+|Date | Numeric | The number that indicates when the data was collected. This number indicates a date orgin of 1970-01-01|
+|Plant_ID | Numeric | Indicates the plant number in a specific population |
+|herb_p | proportion | The percent herbivory estimation of the whole plant |
+|Trichomes | Numeric | The number of trichomes in a 500 mm squared area |       
+|SLA | cm<sup>2</sup>/g | The specific leaf area of the collected leaf |
+|Spines | Numeric | Number of spines on the mid-rib of the collected leaf |      
+|Conc | mg/mg | Glycoalkaloid concentration per miligram of dried leaf matter |
+|Pop | Categorical | Population acronym of the collected populations |
+
