@@ -8,7 +8,7 @@ Data file includes the following tables:
 
 ## Bioclims_1970_ave
 
-This file contains the [bioclim](https://developers.google.com/earth-engine/datasets/catalog/WORLDCLIM_V1_BIO#bands) from google earth engine and aridity data from this [publication](https://csidotinfo.wordpress.com/2019/01/24/global-aridity-index-and-potential-evapotranspiration-climate-database-v3/).
+This table contains the [bioclim](https://developers.google.com/earth-engine/datasets/catalog/WORLDCLIM_V1_BIO#bands) from google earth engine and aridity data from this [publication](https://csidotinfo.wordpress.com/2019/01/24/global-aridity-index-and-potential-evapotranspiration-climate-database-v3/).
 
 | variables | units | min | max | scale | description |
 | :--- | :---: | :--- | :--- | :--- | :--- |
@@ -32,4 +32,21 @@ This file contains the [bioclim](https://developers.google.com/earth-engine/data
 | bio18 | mm                       | 0*     | 6090*   |   | Precipitation of warmest quarter * estimated min or max value |
 | bio19 | mm                       | 0*     | 5162*   |   | Precipitation of coldest quarter |
 |Pop | categorical | |||Population acronym of the collected populations |
-| Aridity | 
+| Aridity | |||| Aridity index |
+
+
+## Field_2022
+This table includes the herbivory and plant defense traits measurements collected during the 2022 field season.
+
+| variables | units | description |
+| :--- | :---: | :--- |
+
+|Latitude  | Arc degrees | The latitudenal value of the plant population |
+|Date | Numeric | The number that indicates when the data was collected. This number indicates a date orgin of 1970-01-01|
+|Plant_ID | Numeric | Indicates the plant number in a specific population |
+|Herbivory | Percent | The percent herbivory estimation of the whole plant |
+|Trichomes | Numeric | The number of trichomes in a 500 mm squared area |       
+|SLA 
+|Spines       
+|Conc 
+|Pop
