@@ -3,12 +3,16 @@ library(qgraph)
 semGraph<-function(filename="test") {
 edges<-summary(fit, fit=T,rsquare=T,conserve=T)$coefficients[,c("Response","Predictor","Std.Estimate","P.Value")] %>% 
   filter(!grepl("~",Response)&!grepl("Loc",Predictor)) %>% 
-  mutate(Response=case_when(Response=="herb_p_t" ~ 'Herbivory',
-                            Response=="Conc" ~ 'Glycoalkaloids',
+  mutate(Response=case_when(grepl("herb", Response) ~ 'Herbivory',
+                            grepl("Conc", Response) ~ 'Glycoalkaloids',
+                            grepl("SLA", Response) ~ 'SLA',
+                            grepl("Trichomes", Response) ~ 'Trichomes',
                             .default = Response),
-         Predictor = case_when(Predictor == 'Clim_ave_PC1'~ 'Climate',
-                               Predictor == 'Clim_PC1_sq'~ 'Climate (sq)',
-                               Predictor == "Conc" ~ 'Glycoalkaloids',
+         Predictor = case_when(Predictor == 'Clim_ave_PC1_sc'~ 'Climate',
+                               Predictor == 'Clim_PC1_sq_sc'~ 'Climate (sq)',
+                               grepl("Conc", Predictor) ~ 'Glycoalkaloids',
+                               grepl("SLA", Predictor) ~ 'SLA',
+                               grepl("Trichomes", Predictor) ~ 'Trichomes',
                                .default = Predictor))
 
 # Convert to edgelist format (include all paths)
