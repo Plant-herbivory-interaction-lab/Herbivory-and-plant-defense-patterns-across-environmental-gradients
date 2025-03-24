@@ -261,10 +261,10 @@ Trait_response_pop_clim_sq<-ggplot(Data_prep(loc="NA",long=T,PopLevel = T),aes(y
 psem_data<-Data_prep(loc="Field") %>% 
   drop_na()
 
-lm1<-lmer(herb_p_t~((Clim_ave_PC1+Clim_ave_PC1_sq)+Trichomes+Conc+SLA)+(1|Year/Pop),psem_data)
-lm2<-lmer(Conc~(Clim_ave_PC1+Clim_PC1_sq)+(1|Year/Pop),psem_data)
-lm3<-lmer(SLA~(Clim_ave_PC1+Clim_PC1_sq)+(1|Year/Pop),psem_data)
-lm4<-lmer(Trichomes~(Clim_ave_PC1+Clim_PC1_sq)+(1|Year/Pop),psem_data)
+lm1<-lmer(herb_p_t~((Clim_ave_PC1_sc+Clim_PC1_sq_sc)+Trichomes_t+Conc_t+SLA_t)+(1|Pop/Year),psem_data)
+lm2<-lmer(Conc_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Pop),psem_data)
+lm3<-lmer(SLA_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Pop/Year),psem_data)
+lm4<-lmer(Trichomes_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Pop/Year),psem_data)
 
 fit<-psem(
   lm1,
@@ -272,12 +272,13 @@ fit<-psem(
   lm3,
   lm4,
   
-  SLA %~~%Trichomes,
-  SLA %~~% Conc,
+  SLA_t %~~%Trichomes_t,
+  SLA_t %~~% Conc_t,
   
   data = psem_data
 )
 
+semGraph("Figures/Field_individual_SEM")
 
 #ggpairs(psem_data %>% select(herb_p_t,Clim_ave_PC1,Clim_PC1_sq,Trichomes:Conc))
 # Removed soil PC because it was highly correlated with climate squared
@@ -303,17 +304,15 @@ bayes_R2(brm_fit)  # Bayesian R-squared for model fit
 plot(brm_fit)
 fixef(brm_fit)
 
-semGraph("Figures/Field_individual_SEM")
-
 psem_data<-Data_prep(loc = "Garden")
 
 
 #ggpairs(psem_data %>% select(herb_p_t,Clim_ave_PC1,Clim_PC1_sq,Trichomes:Conc))
 
-lm1<-lmer(herb_p_t~(Clim_ave_PC1+Clim_PC1_sq+Trichomes+Conc+SLA)+(1|Pop),psem_data)
-lm2<-lmer(Conc~(Clim_ave_PC1+Clim_PC1_sq)+(1|Pop),psem_data)
-lm3<-lmer(SLA~(Clim_ave_PC1+Clim_PC1_sq)+(1|Pop),psem_data)
-lm4<-lmer(Trichomes~(Clim_ave_PC1+Clim_PC1_sq)+(1|Pop),psem_data)
+lm1<-lmer(herb_p_t~((Clim_ave_PC1_sc+Clim_PC1_sq_sc)+Trichomes_t+Conc_t+SLA_t)+(1|Pop),psem_data)
+lm2<-lmer(Conc_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Pop),psem_data)
+lm3<-lmer(SLA_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Pop),psem_data)
+lm4<-lmer(Trichomes_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Pop),psem_data)
 
 fit<-psem(
   lm1,
@@ -337,10 +336,10 @@ psem_data<-Data_prep(loc="Field",PopLevel = T) %>%
 #ggpairs(psem_data %>% select(herb_p_t,Clim_ave_PC1,Clim_PC1_sq,Trichomes:Conc))
 
 # Removed soil PC because it was highly correlated with climate squared
-lm1<-lmer(herb_p_t~((Clim_ave_PC1+Clim_PC1_sq)+Trichomes+Conc+SLA)+(1|Year),psem_data)
-lm2<-lmer(Conc~(Clim_ave_PC1+Clim_PC1_sq)+(1|Year),psem_data)
-lm3<-lmer(SLA~(Clim_ave_PC1+Clim_PC1_sq)+(1|Year),psem_data)
-lm4<-lmer(Trichomes~(Clim_ave_PC1+Clim_PC1_sq)+(1|Year),psem_data)
+lm1<-lmer(herb_p_t~((Clim_ave_PC1_sc+Clim_PC1_sq_sc)+Trichomes_t+Conc_t+SLA_t)+(1|Pop),psem_data)
+lm2<-lm(Conc_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc),psem_data)
+lm3<-lm(SLA_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc),psem_data)
+lm4<-lm(Trichomes_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc),psem_data)
 
 fit<-psem(
   lm1,
