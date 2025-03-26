@@ -23,18 +23,21 @@ Pop_info<-dbReadTable(con,
 Field_2023<-dbReadTable(con,
                         'Field_2023') %>% 
   mutate(
+         herb=herb_p,
          herb_p=(transform_perc(herb_p)),
          Date=as.Date(Date,origin = "1970-01-01"))
 
 ### Data from the field in 2022
 Field_2022<-dbReadTable(con,"Field_2022") %>% 
   mutate(herb_p=Herbivory/100,
+         herb=herb_p,
          herb_p=(transform_perc(herb_p)),
          Date=as.Date(Date,origin = "1970-01-01"))
 
 ### Data from the common garden 2023
 Garden <- dbReadTable(con, "Garden_2023") %>% 
   mutate(
+    herb=herb_p,
          herb_p=(transform_perc(herb_p))
          )
 
