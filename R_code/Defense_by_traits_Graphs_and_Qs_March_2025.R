@@ -18,6 +18,7 @@ library(performance)
 library(lme4)
 library(GGally)
 library(brms)
+library()
 
 # Database connection ----
 con <-dbConnect(SQLite(), 'Data/Data.db')
@@ -29,20 +30,20 @@ source("R_code/Psem_graphing.R")
 
 Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,Treatment=F){
 Field_2022<-Field_2022 %>% 
-  select(Trichomes:herb_p) %>% 
+  select(Trichomes:herb) %>% 
   mutate(Loc="Field",
          Loc1="Field 2022",
          Year="2022")
 
 Field_2023<-Field_2023 %>% 
-  select(Pop,Trichomes:SLA,Conc,herb_p) %>% 
+  select(herb_p:herb) %>% 
   mutate(Loc="Field",
          Loc1="Field 2023",
          Year="2023",
          Conc=Conc*2.5) # This is do to use using different amounts of leaf material.
 
 Garden<-Garden %>% 
-  select(Pop:Conc,herb_p) %>% 
+  select(Pop:herb) %>% 
   mutate(Loc="Garden",Loc1="Garden",Year="2023")
 
 Combined_data1<-rbind(Field_2022,Field_2023,Garden)%>% filter(SLA>3.9) %>% 
@@ -57,13 +58,13 @@ Combined_data1<-rbind(Field_2022,Field_2023,Garden)%>% filter(SLA>3.9) %>%
     herb_p_t=logit(herb_p),
     Clim_ave_PC1=-Clim_ave_PC1,
     #Soil_PC2=-Soil_PC2,
-    Clim_ave_PC1_sq=Clim_ave_PC1^2,
-    Clim_ave_PC1_sc=scale(Clim_ave_PC1),
-    Clim_PC1_sq_sc=scale(Clim_ave_PC1_sq),
-    Conc_t_sc=scale(Conc_t),
-    SLA_t_sc=scale(SLA_t),
-    Trichomes_t_sc=scale(Trichomes_t),
-    herb_p_t_sc=scale(herb_p_t),
+    Clim_ave_PC1_sq=-Clim_ave_PC1^2,
+    Clim_ave_PC1_sc=scale(Clim_ave_PC1)[,1],
+    Clim_PC1_sq_sc=scale(Clim_ave_PC1_sq)[,1],
+    Conc_t_sc=scale(Conc_t)[,1],
+    SLA_t_sc=scale(SLA_t)[,1],
+    Trichomes_t_sc=scale(Trichomes_t)[,1],
+    herb_p_t_sc=scale(herb_p_t)[,1],
     Plant=c(1:length(Conc))
   )  
 
@@ -261,10 +262,10 @@ Trait_response_pop_clim_sq<-ggplot(Data_prep(loc="NA",long=T,PopLevel = T),aes(y
 psem_data<-Data_prep(loc="Field") %>% 
   drop_na()
 
-lm1<-lmer(herb_p_t~((Clim_ave_PC1_sc+Clim_PC1_sq_sc)+Trichomes_t+Conc_t+SLA_t)+(1|Pop/Year),psem_data)
-lm2<-lmer(Conc_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Pop),psem_data)
-lm3<-lmer(SLA_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Pop/Year),psem_data)
-lm4<-lmer(Trichomes_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Pop/Year),psem_data)
+lm1<-lme(herb_p~((Clim_ave_PC1_sc+Clim_PC1_sq_sc)+Trichomes_t+Conc_t+SLA_t)+(1|Year/Pop),family = beta_family(),psem_data)
+lm2<-glmmTMB(Conc_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Year/Pop),psem_data)
+lm3<-glmmTMB(SLA_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Year/Pop),psem_data)
+lm4<-glmmTMB(Trichomes_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Year/Pop),psem_data)
 
 fit<-psem(
   lm1,
@@ -280,7 +281,7 @@ fit<-psem(
 
 semGraph("Figures/Field_individual_SEM")
 
-#ggpairs(psem_data %>% select(herb_p_t,Clim_ave_PC1,Clim_PC1_sq,Trichomes:Conc))
+#ggpairs(psem_data %>% select(Clim_ave_PC1_sc:herb_p_t_sc))
 # Removed soil PC because it was highly correlated with climate squared
 
 brm_fit <- brm(
