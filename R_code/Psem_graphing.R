@@ -1,7 +1,7 @@
 library(qgraph)
 
 semGraph<-function(filename="test") {
-edges<-summary(fit, fit=T,rsquare=T,conserve=T)$coefficients[,c("Response","Predictor","Std.Estimate","P.Value")] %>% 
+edges<-summary(fit, fit=T,rsquare=T,conserve=T,standardize="none")$coefficients[,c("Response","Predictor","Estimate","P.Value")] %>% 
   filter(!grepl("~",Response)&!grepl("Loc",Predictor)) %>% 
   mutate(Response=case_when(grepl("herb", Response) ~ 'Herbivory',
                             grepl("Conc", Response) ~ 'Glycoalkaloids',
@@ -17,7 +17,7 @@ edges<-summary(fit, fit=T,rsquare=T,conserve=T)$coefficients[,c("Response","Pred
 
 # Convert to edgelist format (include all paths)
 edge_list <- as.matrix(edges[, c("Predictor", "Response")])
-weights <- edges$Std.Estimate  # Path coefficients as weights
+weights <- edges$Estimate  # Path coefficients as weights
 p_values <- edges$P.Value  # P-values
 
 # Change the response and predictor labels
