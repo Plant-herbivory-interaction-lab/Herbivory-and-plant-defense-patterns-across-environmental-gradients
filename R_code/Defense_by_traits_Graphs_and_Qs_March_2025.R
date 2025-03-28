@@ -18,7 +18,6 @@ library(performance)
 library(lme4)
 library(GGally)
 library(brms)
-library()
 
 # Database connection ----
 con <-dbConnect(SQLite(), 'Data/Data.db')
@@ -48,7 +47,7 @@ Garden<-Garden %>%
 
 Combined_data1<-rbind(Field_2022,Field_2023,Garden)%>% filter(SLA>3.9) %>% 
   left_join(PCs %>% 
-              select(Latitude,Pop,Clim_ave_PC1,Soil_PC2,Clim_ave_PC2)) %>% 
+              select(Latitude,Pop,Clim_ave_PC1,Soil_PC2,Clim_ave_PC2,Aridity)) %>% 
   drop_na(Latitude)%>% 
   filter(SLA>40) %>% 
   mutate(
@@ -58,7 +57,7 @@ Combined_data1<-rbind(Field_2022,Field_2023,Garden)%>% filter(SLA>3.9) %>%
     herb_p_t=logit(herb_p),
     Clim_ave_PC1=-Clim_ave_PC1,
     #Soil_PC2=-Soil_PC2,
-    Clim_ave_PC1_sq=-Clim_ave_PC1^2,
+    Clim_ave_PC1_sq=Clim_ave_PC1^2,
     Clim_ave_PC1_sc=scale(Clim_ave_PC1)[,1],
     Clim_PC1_sq_sc=scale(Clim_ave_PC1_sq)[,1],
     Conc_t_sc=scale(Conc_t)[,1],
@@ -113,19 +112,20 @@ Combined_data1
 }
 
 # Question 1: Is herbivore pressure predicted by productivity associated climate variables (i.e. temperature and precipitation, etc) and plant defense traits? ----
-Data=Data_prep(loc = "Field")
-MD.1<-glmmTMB(herb_p_t~Clim_ave_PC1_sc+Clim_PC1_sq_sc+SLA+Conc+Trichomes+(1|Pop/Year),data=Data)
+DF_field_short=Data_prep(loc = "Field")
+MD.1<-glmmTMB(herb~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(SLA_t_sc+Conc_t_sc+Trichomes_t_sc)+(1|Year:Pop),family=ordbeta(),data=DF_field_short)
 summary(MD.1)
 Anova(MD.1)
 plot(simulateResiduals(MD.1))
-check_collinearity(MD.1)
+check_model(MD.1)
 
-Data=Data_prep(loc = "Garden")
-MD.1.1<-glmmTMB(herb_p_t~((Clim_ave_PC1+Clim_PC1_sq_sc)+SLA+Conc+Trichomes)+(1|Pop),data=Data)
+DF_garden_short=Data_prep(loc = "Garden")
+MD.1.1<-glmmTMB(herb~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(SLA_t_sc+Conc_t_sc+Trichomes_t_sc)+(1|Pop),data=DF_garden_short,family=ordbeta())
 summary(MD.1.1)
-
-Anova(MD.1.1)
+check_model(MD.1.1)
 plot(simulateResiduals(MD.1.1))
+Anova(MD.1.1)
+
 
 
 Herb_response_individual<-ggplot(Data_prep(loc="NA",long=T,ClimateLong = T),aes(y=herb_p,x=value,
@@ -143,17 +143,18 @@ Herb_response_individual<-ggplot(Data_prep(loc="NA",long=T,ClimateLong = T),aes(
   facet_wrap(~name,scales="free");Herb_response_individual
 
 
-Data=Data_prep(loc = "Field",PopLevel = T)
-MD.2<-glmmTMB(herb_p_t~Clim_ave_PC1+Clim_ave_PC1_sq+SLA+Conc+Trichomes+(1|Year),data=Data)
+DF_field_short_pop=Data_prep(loc = "Field",PopLevel = T)
+MD.2<-glmmTMB(herb_p~Clim_ave_PC1+Clim_ave_PC1_sq+SLA_t_sc+Conc_t_sc+Trichomes_t_sc+(1|Year),family = beta_family(),data=DF_field_short_pop)
 summary(MD.2)
 Anova(MD.2)
 plot(simulateResiduals(MD.2))
 
-Data=Data_prep(loc = "Garden",PopLevel = T)
-MD.2.1<-glmmTMB(herb_p_t~Clim_ave_PC1+Clim_PC1_sq_sc+SLA+Conc+Trichomes,data=Data)
+DF_garden_short_pop=Data_prep(loc = "Garden",PopLevel = T)
+MD.2.1<-glmmTMB(herb~SLA_t_sc+Conc_t_sc+Trichomes_t_sc,data=DF_garden_short_pop,family = beta_family())
 summary(MD.2.1)
 Anova(MD.2.1)
 plot(simulateResiduals(MD.2.1))
+check_model(MD.2.1)
 
 Herb_response_pop<-ggplot(Data_prep(loc="NA",long=T,PopLevel = T,ClimateLong = T),aes(y=herb_p,x=value,
                                                                 colour = Loc1,fill = Loc1))+
