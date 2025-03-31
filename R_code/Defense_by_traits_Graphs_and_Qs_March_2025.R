@@ -39,7 +39,7 @@ Field_2023<-Field_2023 %>%
   mutate(Loc="Field",
          Loc1="Field 2023",
          Year="2023",
-         Conc=Conc*2.5) # This is do to use using different amounts of leaf material.
+         Conc=Conc*2.5) # This is do to using different amounts of leaf material.
 
 Garden<-Garden %>% 
   select(Pop:herb) %>% 
@@ -131,7 +131,8 @@ Anova(MD.1.1)
 Herb_response_individual<-ggplot(Data_prep(loc="NA",long=T,ClimateLong = T),aes(y=herb_p,x=value,
                               colour = Loc1,fill = Loc1))+
   geom_point()+
-  geom_smooth(method = 'glm',
+  geom_smooth(method = 'glm', 
+              #formula = y~poly(x,2),
               method.args=list(family=beta_family()))+
   theme_bw(base_size = 20)+
   theme(panel.grid.minor = element_blank(),
@@ -171,7 +172,7 @@ Herb_response_pop<-ggplot(Data_prep(loc="NA",long=T,PopLevel = T,ClimateLong = T
   facet_wrap(~name,scales="free");Herb_response_pop
 
 # Question 2: Does climate productivity predict plant traits? ----
-Data=Data_prep(loc = "Field",long = T)
+DF_field_short_pop=Data_prep(loc = "Field",long = T)
 
 MD.3<-glmmTMB(value~name*(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Pop/Year),data=Data)
 summary(MD.3)
@@ -381,17 +382,17 @@ semGraph("Figures/Garden_Pop_SEM")
 
 # population level trend of herbivory versus plant defense traits ----
 
-ggplot(Combined_data1,aes(SLA,herb_p_t,col=Loc))+
+ggplot(Data_prep(),aes(SLA,herb_p_t,col=Loc))+
   geom_point()+
   geom_smooth(method = "glm")+
   facet_wrap(~Pop)
 
-ggplot(Combined_data1,aes(Trichomes,herb_p_t,col=Loc))+
+ggplot(Data_prep(),aes(Trichomes,herb_p_t,col=Loc))+
   geom_point()+
   geom_smooth(method = "glm")+
   facet_wrap(~Pop,scales="free")
 
-ggplot(Combined_data1,aes(Conc,herb_p_t,col=Loc))+
+ggplot(Data_prep(),aes(Conc,herb_p_t,col=Loc))+
   geom_point()+
   geom_smooth(method = "glm")+
   facet_wrap(~Pop)+
