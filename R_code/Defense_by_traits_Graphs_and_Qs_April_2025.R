@@ -107,30 +107,83 @@ Combined_data1
 
 # SEMs ----
 # SEM of the plant traits, climate and herbivore relations at the plant individual level.
-DF_short_I_garden<-Data_prep(loc = "Garden") %>% 
-  drop_na()
 
-DF_short_I_field<-Data_prep() %>% 
-drop_na()
-lm1<-glmmTMB(herb_p_t_sc~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)*(Trichomes_t_sc+Conc_t_sc+SLA_t_sc)+(1|Pop:Year),DF_short_I)
-
-
-lm2<-glmmTMB(Conc_t_sc~Clim_ave_PC1_sc+Clim_PC1_sq_sc+(1|Pop:Year),DF_short_I)
-lm3<-glmmTMB(SLA_t_sc~Clim_ave_PC1_sc+Clim_PC1_sq_sc+(1|Pop:Year),DF_short_I)
-lm4<-glmmTMB(Trichomes_t_sc~Clim_ave_PC1_sc+Clim_PC1_sq_sc+(1|Pop:Year),DF_short_I)
-
-fit<-psem(
-  lm1,
-  lm2,
-  lm3,
-  lm4,
+SEM_results <- function(Loc = "Field", model = c("lm1", "lm2", "lm3", "lm4"), random = "Pop:Year") {
+  DF_short_I_field <- Data_prep(loc=Loc) %>%
+    drop_na()
   
-  SLA_t_sc %~~% Trichomes_t_sc,
-  #Conc_t_sc %~~% Trichomes_t_sc,
-  SLA_t_sc %~~% Conc_t_sc,
-  data = DF_short_I
-)
+  lm1 <- glmmTMB(as.formula(paste0('herb_p_t_sc ~ (Clim_ave_PC1_sc + Clim_PC1_sq_sc) * (Trichomes_t_sc + Conc_t_sc + SLA_t_sc) + (1|', random, ')')), DF_short_I_field)
+  lm1.1 <- glmmTMB(as.formula(paste0('herb_p_t_sc ~ (Clim_ave_PC1_sc + Clim_PC1_sq_sc) + (Trichomes_t_sc + Conc_t_sc + SLA_t_sc) + (1|', random, ')')), DF_short_I_field)
+  lm1.2 <- update(lm1.1, . ~ . - Clim_ave_PC1_sc)
+  lm1.3 <- update(lm1.1, . ~ . - Clim_PC1_sq_sc)
+  
+  lm2 <- glmmTMB(as.formula(paste0('Conc_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc + (1|', random, ')')), DF_short_I_field)
+  lm2.1 <- update(lm2, . ~ . - Clim_ave_PC1_sc)
+  lm2.2 <- update(lm2, . ~ . - Clim_PC1_sq_sc)
+  
+  lm3 <- glmmTMB(as.formula(paste0('SLA_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc + (1|', random, ')')), DF_short_I_field)
+  lm3.1 <- update(lm3, . ~ . - Clim_ave_PC1_sc)
+  lm3.2 <- update(lm3, . ~ . - Clim_PC1_sq_sc)
+  
+  lm4 <- glmmTMB(as.formula(paste0('Trichomes_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc + (1|', random, ')')), DF_short_I_field)
+  lm4.1 <- update(lm4, . ~ . - Clim_ave_PC1_sc)
+  lm4.2 <- update(lm4, . ~ . - Clim_PC1_sq_sc)
+  
+  # Create a named list of models
+  model_list <- list(lm1 = lm1, lm2 = lm2, lm3 = lm3, lm4 = lm4,
+                     lm1.1 = lm1.1,lm1.2 = lm1.2,lm1.3 = lm1.3,
+                     lm2.1 = lm2.1,lm2.2 = lm2.2,
+                     lm3.1 = lm3.1,lm3.2 = lm3.2,
+                     lm4.1 = lm4.1,lm4.2 = lm4.2)
+ 
+  
+  fit <- psem(
+    model_list[[model[[1]]]],
+    model_list[[model[[2]]]],
+    model_list[[model[[3]]]],
+    model_list[[model[[4]]]],
+    SLA_t_sc %~~% Trichomes_t_sc,
+    SLA_t_sc %~~% Conc_t_sc,
+    data = DF_short_I_field
+  )
+  return(fit)
+}
+# Field results ----
+# This model tests the indirect effects of climate on herbviory via defense traits.
+interaction_field<-SEM_results()
+summary(interaction_field)
+AIC(interaction_field)
 
-summary(fit)
+# This model only includes the direct effects of climate and defense traits on herbviory.
+Non_interaction_field<-SEM_results(model = c("lm1.1", "lm2", "lm3", "lm4"))
+summary(Non_interaction_field)
+AIC(Non_interaction_field)
 
+# This model includes 
+climate_field<-SEM_results(model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"))
+summary(climate_field)
+AIC(climate_field)
+
+climate_sq_field<-SEM_results(model = c("lm1.3", "lm2.2", "lm3.2", "lm4.2"))
+summary(climate_sq_field)
+AIC(climate_sq_field)
+
+
+
+interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1", "lm2", "lm3", "lm4"))
+summary(interaction_Garden)
+AIC(interaction_Garden)
+
+
+Non_interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"))
+summary(Non_interaction_Garden)
+AIC(Non_interaction_Garden)
+
+Climate_Garden<-SEM_results(Loc="Garden",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"))
+summary(Climate_Garden)
+AIC(Climate_Garden)
+
+Climate_sq_Garden<-SEM_results(Loc="Garden",model = c("lm1.3", "lm2.2", "lm3.2", "lm4.2"))
+summary(Climate_sq_Garden)
+AIC(Climate_sq_Garden)
 
