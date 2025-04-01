@@ -21,7 +21,7 @@ library(sf)
 reticulate::use_virtualenv("rgee")
 ee_Initialize() 
 
-con <-dbConnect(SQLite(), 'R_code/Data_all_combined.db')
+con <-dbConnect(SQLite(), 'Data/Data.db')
 
 Pop_info<-dbReadTable(con,
                       'pop_info_2022_and_2023') %>% 
