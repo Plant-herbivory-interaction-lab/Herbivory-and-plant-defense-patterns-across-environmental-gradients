@@ -262,12 +262,14 @@ Trait_response_pop_clim_sq<-ggplot(Data_prep(loc="NA",long=T,PopLevel = T),aes(y
 # SEM; test all hypothesis together----
 # Individual data points
 psem_data<-Data_prep(loc="Field") %>% 
-  drop_na()
+  drop_na() 
 
-lm1<-lme(herb_p~((Clim_ave_PC1_sc+Clim_PC1_sq_sc)+Trichomes_t+Conc_t+SLA_t)+(1|Year/Pop),family = beta_family(),psem_data)
-lm2<-glmmTMB(Conc_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Year/Pop),psem_data)
-lm3<-glmmTMB(SLA_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Year/Pop),psem_data)
-lm4<-glmmTMB(Trichomes_t~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)+(1|Year/Pop),psem_data)
+table(psem_data$Pop, psem_data$Year)
+
+lm1<-glmmTMB(herb_p~(Clim_ave_PC1_sc+Clim_PC1_sq_sc)*(Conc_t+SLA_t+Trichomes_t)+(1|Year:Pop),family = beta_family(),psem_data)
+lm2<-glmmTMB(Conc_t~Clim_ave_PC1_sc+Clim_PC1_sq_sc+(1|Year:Pop),psem_data)
+lm3<-glmmTMB(SLA_t~Clim_ave_PC1_sc+Clim_PC1_sq_sc+(1|Year:Pop),psem_data)
+lm4<-glmmTMB(Trichomes_t~Clim_ave_PC1_sc+Clim_PC1_sq_sc+(1|Year:Pop),psem_data)
 
 fit<-psem(
   lm1,
