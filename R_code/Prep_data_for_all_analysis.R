@@ -6,6 +6,8 @@
 # Import packages ----
 # Run install.packages([Package name]) if package is not installed
 library(tidyverse)
+library(DBI)
+library(RSQLite)
 
 # Functions ----
 transform_perc <- function(percentage_vec) {
@@ -42,24 +44,22 @@ Garden <- dbReadTable(con, "Garden_2023") %>%
          )
 
 #### Import the climate and siol data ----
-Clim_select<-c("X30s_bio_1","X30s_bio_2","X30s_bio_3","X30s_bio_4",
-               "X30s_bio_7",
-               "X30s_bio_12",
-               "X30s_bio_18"
+Clim_select<-c("wc2.1_30s_bio_1","wc2.1_30s_bio_2","wc2.1_30s_bio_3","wc2.1_30s_bio_4",
+               "wc2.1_30s_bio_7",
+               "wc2.1_30s_bio_12",
+               "wc2.1_30s_bio_18"
 )
 
 
-soil_select<-c("cec","nitrogen","sand","ocd","ocs","cfvo")
 
-Soil<-dbReadTable(con,"Soil") %>% 
-  select(all_of(soil_select))
+Soil<-dbReadTable(con,"Soil") 
 
 log_trans<-function(x){log(x-min(x)+1)}
 sqrt_trans<-function(x){(x-min(x))}
 
 Clim_ave<-dbReadTable(con,"Bioclims_1970_ave") %>%
   select(all_of(Clim_select)) %>% 
-  mutate(X30s_bio_18=log_trans(X30s_bio_18)
+  mutate(wc2.1_30s_bio_18=log_trans(wc2.1_30s_bio_18)
   ) %>%  as.data.frame()
 
 tables <- list(Soil=Soil,Clim_ave=Clim_ave)
@@ -81,3 +81,5 @@ for (table_name in names(tables)) {
 } 
 
 PCs <- bind_cols(combined_data) %>% cbind(Pop_info) %>% left_join(dbReadTable(con,"Bioclims_1970_ave") %>% select(Pop,Aridity))
+
+
