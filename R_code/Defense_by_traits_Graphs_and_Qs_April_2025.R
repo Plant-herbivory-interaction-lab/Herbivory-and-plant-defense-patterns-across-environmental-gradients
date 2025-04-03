@@ -51,7 +51,6 @@ Combined_data1<-rbind(Field_2022,Field_2023,Garden)%>% filter(SLA>3.9) %>%
     Trichomes_t=log(Trichomes),
     herb_p_t=logit(herb_p),
     Clim_ave_PC1=-Clim_ave_PC1,
-    #Soil_PC2=-Soil_PC2,
     Clim_ave_PC1_sq=Clim_ave_PC1^2,
     Clim_ave_PC1_sc=scale(Clim_ave_PC1)[,1],
     Clim_PC1_sq_sc=scale(Clim_ave_PC1_sq)[,1],
@@ -149,32 +148,33 @@ SEM_results <- function(Loc = "Field", model = c("lm1", "lm2", "lm3", "lm4"), ra
   return(fit)
 }
 # Field results ----
-# This model tests the indirect effects of climate on herbviory via defense traits.
+# This model tests the indirect effects of climate on herbivory via defense traits.
 interaction_field<-SEM_results()
 summary(interaction_field)
 AIC(interaction_field)
 
-# This model only includes the direct effects of climate and defense traits on herbviory.
+# This model only includes the direct effects of climate and defense traits on herbivory.
 Non_interaction_field<-SEM_results(model = c("lm1.1", "lm2", "lm3", "lm4"))
 summary(Non_interaction_field)
 AIC(Non_interaction_field)
 
-# This model includes 
+# This model includes climate only
 climate_field<-SEM_results(model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"))
 summary(climate_field)
 AIC(climate_field)
 
+# This model includes the climate squared term only
 climate_sq_field<-SEM_results(model = c("lm1.3", "lm2.2", "lm3.2", "lm4.2"))
 summary(climate_sq_field)
 AIC(climate_sq_field)
 
 
-
+# This model tests the indirect effects of climate on herbivory via defense traits.
 interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1", "lm2", "lm3", "lm4"))
 summary(interaction_Garden)
 AIC(interaction_Garden)
 
-
+# This model only includes the direct effects of climate and defense traits on herbivory.
 Non_interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"))
 summary(Non_interaction_Garden)
 AIC(Non_interaction_Garden)
