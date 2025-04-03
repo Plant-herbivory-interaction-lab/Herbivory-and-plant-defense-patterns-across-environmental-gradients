@@ -16,6 +16,7 @@ transform_perc <- function(percentage_vec) {
 }
 
 # Import data ----
+con <-dbConnect(SQLite(), 'Data/Data.db')
 
 Pop_info<-dbReadTable(con,
                       'pop_info_2022_and_2023') %>% 
@@ -46,21 +47,20 @@ Garden <- dbReadTable(con, "Garden_2023") %>%
 #### Import the climate and siol data ----
 Clim_select<-c("wc2.1_30s_bio_1","wc2.1_30s_bio_2","wc2.1_30s_bio_3","wc2.1_30s_bio_4",
                "wc2.1_30s_bio_7",
-               "wc2.1_30s_bio_12",
-               "wc2.1_30s_bio_18"
+               "wc2.1_30s_bio_12"
+               #"wc2.1_30s_bio_18"
 )
 
 
 
 Soil<-dbReadTable(con,"Soil") 
 
-log_trans<-function(x){log(x-min(x)+1)}
-sqrt_trans<-function(x){(x-min(x))}
+log_trans<-function(x){log(x+1)}
 
 Clim_ave<-dbReadTable(con,"Bioclims_1970_ave") %>%
-  select(all_of(Clim_select)) %>% 
-  mutate(wc2.1_30s_bio_18=log_trans(wc2.1_30s_bio_18)
-  ) %>%  as.data.frame()
+  #select(all_of(Clim_select)) %>% 
+  #mutate(wc2.1_30s_bio_18=log_trans(wc2.1_30s_bio_18)) %>%  
+  as.data.frame()
 
 tables <- list(Soil=Soil,Clim_ave=Clim_ave)
 
