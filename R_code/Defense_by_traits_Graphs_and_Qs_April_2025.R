@@ -168,7 +168,7 @@ climate_sq_field<-SEM_results(model = c("lm1.3", "lm2.2", "lm3.2", "lm4.2"))
 summary(climate_sq_field)
 AIC(climate_sq_field)
 
-
+# Garden results ----
 # This model tests the indirect effects of climate on herbivory via defense traits.
 interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1", "lm2", "lm3", "lm4"))
 summary(interaction_Garden)
@@ -179,10 +179,12 @@ Non_interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3"
 summary(Non_interaction_Garden)
 AIC(Non_interaction_Garden)
 
+# This model includes climate only
 Climate_Garden<-SEM_results(Loc="Garden",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"))
 summary(Climate_Garden)
 AIC(Climate_Garden)
 
+# This model includes the climate squared term only
 Climate_sq_Garden<-SEM_results(Loc="Garden",model = c("lm1.3", "lm2.2", "lm3.2", "lm4.2"))
 summary(Climate_sq_Garden)
 AIC(Climate_sq_Garden)
