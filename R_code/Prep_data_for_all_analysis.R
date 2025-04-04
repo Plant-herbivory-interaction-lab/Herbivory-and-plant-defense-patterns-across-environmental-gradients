@@ -44,11 +44,12 @@ Garden <- dbReadTable(con, "Garden_2023") %>%
          herb_p=(transform_perc(herb_p))
          )
 
-#### Import the climate and siol data ----
+#### Import the climate and soil data ----
 Clim_select<-c("wc2.1_30s_bio_1","wc2.1_30s_bio_2","wc2.1_30s_bio_3","wc2.1_30s_bio_4",
-               "wc2.1_30s_bio_7",
-               "wc2.1_30s_bio_12"
-               #"wc2.1_30s_bio_18"
+               "wc2.1_30s_bio_7","wc2.1_30s_bio_8",
+               "wc2.1_30s_bio_12", 
+               "wc2.1_30s_bio_15",
+               "wc2.1_30s_bio_19"
 )
 
 
@@ -59,7 +60,10 @@ log_trans<-function(x){log(x+1)}
 
 Clim_ave<-dbReadTable(con,"Bioclims_1970_ave") %>%
   #select(all_of(Clim_select)) %>% 
-  #mutate(wc2.1_30s_bio_18=log_trans(wc2.1_30s_bio_18)) %>%  
+  #mutate(wc2.1_30s_bio_18=log_trans(wc2.1_30s_bio_18),
+         #wc2.1_30s_bio_18=log_trans(wc2.1_30s_bio_8),
+         #wc2.1_30s_bio_15=as.vector(powerTransform(wc2.1_30s_bio_15 ~ 1, family = "bcPower")$y)
+                                  # ) %>%  
   as.data.frame()
 
 tables <- list(Soil=Soil,Clim_ave=Clim_ave)
