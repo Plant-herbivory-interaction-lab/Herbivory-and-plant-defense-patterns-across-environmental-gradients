@@ -45,25 +45,27 @@ Garden <- dbReadTable(con, "Garden_2023") %>%
          )
 
 #### Import the climate and soil data ----
-Clim_select<-c("wc2.1_30s_bio_1","wc2.1_30s_bio_2","wc2.1_30s_bio_3","wc2.1_30s_bio_4",
-               "wc2.1_30s_bio_7","wc2.1_30s_bio_8",
-               "wc2.1_30s_bio_12", 
-               "wc2.1_30s_bio_15",
-               "wc2.1_30s_bio_19"
-)
-
-
 
 Soil<-dbReadTable(con,"Soil") 
 
-log_trans<-function(x){log(x+1)}
+log_transform <- function(x) {
+  min_val <- min(x, na.rm = TRUE)
+  shift <- if (min_val <= 0) abs(min_val) + 1 else 0
+  log(x + shift)
+}
 
-Clim_ave<-dbReadTable(con,"Bioclims_1970_ave") %>%
-  #select(all_of(Clim_select)) %>% 
-  #mutate(wc2.1_30s_bio_18=log_trans(wc2.1_30s_bio_18),
-         #wc2.1_30s_bio_18=log_trans(wc2.1_30s_bio_8),
-         #wc2.1_30s_bio_15=as.vector(powerTransform(wc2.1_30s_bio_15 ~ 1, family = "bcPower")$y)
-                                  # ) %>%  
+sqrt_transform <- function(x) {
+  min_val <- min(x, na.rm = TRUE)
+  shift <- if (min_val <= 0) abs(min_val) + 1 else 0
+  sqrt(x + shift)
+}
+
+Clim_ave<-dbReadTable(con,"Bioclims_1970_ave") %>% 
+  select(!c(Pop,Aridity))  %>% 
+  rename_with(.cols = ends_with("bio_1"):ends_with("bio_19"), 
+              .fn = ~ str_replace_all(., "wc2.1_30s_bio_(\\d+)$", "BIO\\1")) %>% 
+  mutate(across(BIO13:BIO19),sqrt_transform(.)) %>% 
+  scale() %>% 
   as.data.frame()
 
 tables <- list(Soil=Soil,Clim_ave=Clim_ave)
@@ -85,5 +87,4 @@ for (table_name in names(tables)) {
 } 
 
 PCs <- bind_cols(combined_data) %>% cbind(Pop_info) %>% left_join(dbReadTable(con,"Bioclims_1970_ave") %>% select(Pop,Aridity))
-
 
