@@ -12,6 +12,7 @@ library(piecewiseSEM)
 library(performance)
 library(car)
 library(lme4)
+library(tidyverse)
 
 
 # Database connection ----
@@ -147,7 +148,7 @@ SEM_results <- function(Loc = "Field", model = c("lm1", "lm2", "lm3", "lm4"), ra
   )
   return(fit)
 }
-# Field results ----
+# Field SEM results ----
 # This model tests the indirect effects of climate on herbivory via defense traits.
 interaction_field<-SEM_results()
 summary(interaction_field)
@@ -168,7 +169,7 @@ climate_sq_field<-SEM_results(model = c("lm1.3", "lm2.2", "lm3.2", "lm4.2"))
 summary(climate_sq_field)
 AIC(climate_sq_field)
 
-# Garden results ----
+# Garden SEM results ----
 # This model tests the indirect effects of climate on herbivory via defense traits.
 interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1", "lm2", "lm3", "lm4"))
 summary(interaction_Garden)
@@ -188,4 +189,9 @@ AIC(Climate_Garden)
 Climate_sq_Garden<-SEM_results(Loc="Garden",model = c("lm1.3", "lm2.2", "lm3.2", "lm4.2"))
 summary(Climate_sq_Garden)
 AIC(Climate_sq_Garden)
+
+# Graph of Climate PCA and PCA across latitude ----
+# We used 
+source('R_code/Biplot_function.R')
+ClimBiplot<-PCbiplot(Clim_ave,rot_x=-1)
 
