@@ -13,6 +13,7 @@ library(performance)
 library(car)
 library(lme4)
 library(tidyverse)
+library(patchwork)
 
 
 # Database connection ----
@@ -112,29 +113,26 @@ SEM_results <- function(Loc = "Field", model = c("lm1", "lm2", "lm3", "lm4"), ra
   DF_short_I_field <- Data_prep(loc=Loc) %>%
     drop_na()
   
-  lm1 <- glmmTMB(as.formula(paste0('herb_p_t_sc ~ (Clim_ave_PC1_sc + Clim_PC1_sq_sc) * (Trichomes_t_sc + Conc_t_sc + SLA_t_sc) + (1|', random, ')')), DF_short_I_field)
+  lm1 <- glmmTMB(as.formula(paste0('herb_p_t_sc ~ Clim_PC1_sq_sc + Clim_ave_PC1_sc * (Trichomes_t_sc + Conc_t_sc + SLA_t_sc) + (1|', random, ')')), DF_short_I_field)
   lm1.1 <- glmmTMB(as.formula(paste0('herb_p_t_sc ~ (Clim_ave_PC1_sc + Clim_PC1_sq_sc) + (Trichomes_t_sc + Conc_t_sc + SLA_t_sc) + (1|', random, ')')), DF_short_I_field)
-  lm1.2 <- update(lm1.1, . ~ . - Clim_ave_PC1_sc)
-  lm1.3 <- update(lm1.1, . ~ . - Clim_PC1_sq_sc)
+  lm1.2 <- update(lm1.1, . ~ . - Clim_PC1_sq_sc)
+  lm1.3 <- update(lm1, . ~ . - Clim_PC1_sq_sc)
   
   lm2 <- glmmTMB(as.formula(paste0('Conc_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc + (1|', random, ')')), DF_short_I_field)
-  lm2.1 <- update(lm2, . ~ . - Clim_ave_PC1_sc)
-  lm2.2 <- update(lm2, . ~ . - Clim_PC1_sq_sc)
+  lm2.1 <- update(lm2, . ~ . - Clim_PC1_sq_sc)
   
   lm3 <- glmmTMB(as.formula(paste0('SLA_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc + (1|', random, ')')), DF_short_I_field)
-  lm3.1 <- update(lm3, . ~ . - Clim_ave_PC1_sc)
-  lm3.2 <- update(lm3, . ~ . - Clim_PC1_sq_sc)
+  lm3.1 <- update(lm3, . ~ . - Clim_PC1_sq_sc)
   
   lm4 <- glmmTMB(as.formula(paste0('Trichomes_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc + (1|', random, ')')), DF_short_I_field)
-  lm4.1 <- update(lm4, . ~ . - Clim_ave_PC1_sc)
-  lm4.2 <- update(lm4, . ~ . - Clim_PC1_sq_sc)
+  lm4.1 <- update(lm4, . ~ . - Clim_PC1_sq_sc)
   
   # Create a named list of models
   model_list <- list(lm1 = lm1, lm2 = lm2, lm3 = lm3, lm4 = lm4,
-                     lm1.1 = lm1.1,lm1.2 = lm1.2,lm1.3 = lm1.3,
-                     lm2.1 = lm2.1,lm2.2 = lm2.2,
-                     lm3.1 = lm3.1,lm3.2 = lm3.2,
-                     lm4.1 = lm4.1,lm4.2 = lm4.2)
+                     lm1.1 = lm1.1,lm1.2 = lm1.2, lm1.3 = lm1.3,
+                     lm2.1 = lm2.1,
+                     lm3.1 = lm3.1,
+                     lm4.1 = lm4.1)
  
   
   fit <- psem(
@@ -149,49 +147,72 @@ SEM_results <- function(Loc = "Field", model = c("lm1", "lm2", "lm3", "lm4"), ra
   return(fit)
 }
 # Field SEM results ----
-# This model tests the indirect effects of climate on herbivory via defense traits.
-interaction_field<-SEM_results()
+# This model tests the indirect effects of climate on herbivory via defense traits (linear only).
+interaction_field<-SEM_results(model = c("lm1.3", "lm2.1", "lm3.1", "lm4.1"))
 summary(interaction_field)
 AIC(interaction_field)
+
+# This model tests the indirect effects of climate on herbivory via defense traits (with quadratic term).
+interaction_field_clim2<-SEM_results()
+summary(interaction_field_clim2)
+AIC(interaction_field_clim2)
 
 # This model only includes the direct effects of climate and defense traits on herbivory.
 Non_interaction_field<-SEM_results(model = c("lm1.1", "lm2", "lm3", "lm4"))
 summary(Non_interaction_field)
 AIC(Non_interaction_field)
 
-# This model includes climate only
+# This model includes climate as a linear term only
 climate_field<-SEM_results(model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"))
 summary(climate_field)
 AIC(climate_field)
 
-# This model includes the climate squared term only
-climate_sq_field<-SEM_results(model = c("lm1.3", "lm2.2", "lm3.2", "lm4.2"))
-summary(climate_sq_field)
-AIC(climate_sq_field)
-
 # Garden SEM results ----
-# This model tests the indirect effects of climate on herbivory via defense traits.
-interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1", "lm2", "lm3", "lm4"))
+# This model tests the indirect effects of climate on herbivory via defense traits (linear).
+interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.3", "lm2.1", "lm3.1", "lm4.1"),random = "Pop")
 summary(interaction_Garden)
 AIC(interaction_Garden)
 
+# This model tests the indirect effects of climate on herbivory via defense traits (Quadratic).
+interaction_Garden_clim2<-SEM_results(Loc="Garden",random = "Pop")
+summary(interaction_Garden_clim2)
+AIC(interaction_Garden_clim2)
+
 # This model only includes the direct effects of climate and defense traits on herbivory.
-Non_interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"))
+Non_interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "Pop")
 summary(Non_interaction_Garden)
 AIC(Non_interaction_Garden)
 
-# This model includes climate only
-Climate_Garden<-SEM_results(Loc="Garden",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"))
+# This model includes climate as a linear term only
+Climate_Garden<-SEM_results(Loc="Garden",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"),random = "Pop")
 summary(Climate_Garden)
 AIC(Climate_Garden)
 
-# This model includes the climate squared term only
-Climate_sq_Garden<-SEM_results(Loc="Garden",model = c("lm1.3", "lm2.2", "lm3.2", "lm4.2"))
-summary(Climate_sq_Garden)
-AIC(Climate_sq_Garden)
+# Graph theme setup----
+C_theme<-theme_bw(base_size = 18)+
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank())
 
 # Graph of Climate PCA and PCA across latitude ----
 # We used 
 source('R_code/Biplot_function.R')
-ClimBiplot<-PCbiplot(Clim_ave,rot_x=-1)
+ClimBiplot<-PCbiplot(Clim_ave,rot_x=-1)+ C_theme;ClimBiplot
 
+Clim_x_latitude<-ggplot(PCs,aes(x=Latitude,y=-Clim_ave_PC1))+
+  geom_point()+
+  C_theme+
+  labs(y="Climate PC1 (Productivity)");Clim_x_latitude
+
+Clim_PC<-(ClimBiplot| Clim_x_latitude)+plot_annotation(tag_levels = "A");Clim_PC
+
+ggsave("Clim_PC.jpg",
+       device = "jpg",plot = Clim_PC,
+       path = "Figures",dpi = 400,width = 12, 
+       height = 5,limitsize = F)
+
+# SEM figures ----
+Field_sem<-semGraph(Non_interaction_field);Field_sem
+
+Garden_sem<-semGraph(Non_interaction_Garden);Garden_sem
+
+SEM_fig<-(Field_sem | Garden_sem)+plot_annotation(tag_levels = "A");SEM_fig
