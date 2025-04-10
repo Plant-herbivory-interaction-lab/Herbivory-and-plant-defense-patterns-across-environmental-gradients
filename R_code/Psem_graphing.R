@@ -74,12 +74,12 @@ qgraph(edge_list, layout = layout_matrix, labels = node_names, directed = TRUE,
 
 semGraph_ggraph <- function(fit) {
   library(ggraph)
-  library(tidygraph)
+  #library(tidygraph)
   library(igraph)
-  library(dplyr)
-  library(ggplot2)
+  #library(dplyr)
+  #library(ggplot2)
   
-  edges <- summary(fit, fit = TRUE, rsquare = TRUE, conserve = TRUE, standardize = "none")$coefficients[, c("Response", "Predictor", "Estimate", "P.Value")] %>% 
+  edges <- summary(fit, fit = TRUE, rsquare = TRUE, conserve = TRUE)$coefficients[, c("Predictor", "Response", "Std.Estimate", "P.Value")] %>% 
     filter(!grepl("~", Response) & !grepl("Loc", Predictor)) %>%
     mutate(
       Response = case_when(
@@ -99,29 +99,47 @@ semGraph_ggraph <- function(fit) {
       )
     )
   
-  # Create tidygraph
-  graph <- tbl_graph(edges = edges, directed = TRUE)
-  
-  # Manual layout as data.frame
-  layout_df <- data.frame(
-    x = c(0, -1, 0, 1, -0.5, 0.5),
-    y = c(1, 0, 0, 0, -1, -1),
-    name = c("Herbivory", "Glycoalkaloids", "SLA", "Trichomes", "Climate", "Climate (sq)")
-  )
-  
-  # Merge node positions into graph layout
-  ggraph(graph, layout = "manual", node.positions = layout_df) +
-    geom_edge_link(aes(
-      edge_alpha = abs(Estimate),
-      edge_width = abs(Estimate),
-      edge_linetype = P.Value < 0.05,
-      edge_color = Estimate > 0
-    ),
-    show.legend = FALSE,
-    arrow = arrow(length = unit(4, "mm"))
-    ) +
-    geom_node_label(aes(label = name), size = 4, label.padding = unit(0.2, "lines")) +
-    scale_edge_color_manual(values = c("darkred", "black")) +
-    scale_edge_linetype_manual(values = c("dashed", "solid")) +
-    theme_void()
+graph<-graph_from_data_frame(edges, directed = TRUE)
+
+node_positions <- data.frame(
+  name = c("Herbivory", "SLA", "Trichomes", "Climate", "Climate (sq)", "Glycoalkaloids"),
+  x = c(0, -1, 1, -0.5, 0.5, 0),   # Place Glycoalkaloids below or wherever fits
+  y = c(1, 0, 0, -1, -1, -0.5)
+)
+
+V(graph)$x <- node_positions$x[match(V(graph)$name, node_positions$name)]
+V(graph)$y <- node_positions$y[match(V(graph)$name, node_positions$name)]
+
+
+ggraph(graph,layout = "manual") + 
+  geom_edge_link(aes(edge_alpha = Std.Estimate), show.legend = FALSE) +  # Draw edges with alpha based on weight
+  geom_node_label(aes(label = name), size = 5, fontface = "bold", fill = "lightblue", color = "black") +
+  theme_void()
 }
+
+
+
+
+
+# Manual layout as data.frame
+layout_df <- create_layout(edges,
+                           x = ,
+                           y = ,
+                           name = c("Herbivory", "Glycoalkaloids", "SLA", "Trichomes", "Climate", "Climate (sq)")
+)
+
+# Merge node positions into graph layout
+ggraph(graph, layout = "manual", layout = layout_df) +
+  geom_edge_link(aes(
+    edge_alpha = abs(Estimate),
+    edge_width = abs(Estimate),
+    edge_linetype = P.Value < 0.05,
+    edge_color = Estimate > 0
+  ),
+  show.legend = FALSE,
+  arrow = arrow(length = unit(4, "mm"))
+  ) +
+  geom_node_label(aes(label = name), size = 4, label.padding = unit(0.2, "lines")) +
+  scale_edge_color_manual(values = c("darkred", "black")) +
+  scale_edge_linetype_manual(values = c("dashed", "solid")) +
+  theme_void()
