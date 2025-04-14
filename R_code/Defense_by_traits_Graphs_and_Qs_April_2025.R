@@ -106,6 +106,7 @@ Combined_data1
 
 
 
+
 # SEMs ----
 # SEM of the plant traits, climate and herbivore relations at the plant individual level.
 
@@ -216,3 +217,9 @@ Field_sem<-semGraph(Non_interaction_field);Field_sem
 Garden_sem<-semGraph(Non_interaction_Garden);Garden_sem
 
 SEM_fig<-(Field_sem | Garden_sem)+plot_annotation(tag_levels = "A");SEM_fig
+
+
+ggsave("SEM.jpg",
+       device = "jpg",plot = SEM_fig,
+       path = "Figures",dpi = 400,width = 10, 
+       height = 5,limitsize = F)
