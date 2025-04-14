@@ -61,23 +61,23 @@ curves[climate_to_herbivory] <- -5.6
 
 
 # Plot with qgraph
-qgraph(edge_list, layout = layout_matrix, labels = node_names, directed = TRUE,
+graph<-qgraph(edge_list, layout = layout_matrix, labels = node_names, directed = TRUE,
        edge.labels = edge_labels, edge.color = edge_colors, edge.width = edge_widths,
        lty = edge_lty, curve = curves, edge.label.position = 0.7,
        edge.label.bg = "white",curveShape = -1.5,
        #filetype="jpg",
        #filename = filename,
        #height = 9, width = 9,
-       shape="rectangle",vsize2=5,vsize=15,label.scale=F,border.width=2.1)  # Enlarged labels with background
+       shape="rectangle",vsize2=5,vsize=15,label.scale=F,border.width=2.1)  # Enlarged labels with backgroun
+
+#as.igraph(graph)
 }
 
 
-semGraph_ggraph <- function(fit) {
+semGraph_ggraph <- function(fit=Non_interaction_field) {
   library(ggraph)
-  #library(tidygraph)
   library(igraph)
-  #library(dplyr)
-  #library(ggplot2)
+
   
   edges <- summary(fit, fit = TRUE, rsquare = TRUE, conserve = TRUE)$coefficients[, c("Predictor", "Response", "Std.Estimate", "P.Value")] %>% 
     filter(!grepl("~", Response) & !grepl("Loc", Predictor)) %>%
@@ -101,45 +101,34 @@ semGraph_ggraph <- function(fit) {
   
 graph<-graph_from_data_frame(edges, directed = TRUE)
 
+
+V(graph)$name<- c("Herbivory", "SLA", "Trichomes", "Climate", "Climate (sq)", "Glycoalkaloids")
+
 node_positions <- data.frame(
-  name = c("Herbivory", "SLA", "Trichomes", "Climate", "Climate (sq)", "Glycoalkaloids"),
-  x = c(0, -1, 1, -0.5, 0.5, 0),   # Place Glycoalkaloids below or wherever fits
-  y = c(1, 0, 0, -1, -1, -0.5)
+  x = c(-0.5, 0.5, 1, 0, -1, 0),   # Place Glycoalkaloids below or wherever fits
+  y = c(-1, -1, 0, 0, 0, 1)
 )
 
-V(graph)$x <- node_positions$x[match(V(graph)$name, node_positions$name)]
-V(graph)$y <- node_positions$y[match(V(graph)$name, node_positions$name)]
 
-
-ggraph(graph,layout = "manual") + 
-  geom_edge_link(aes(edge_alpha = Std.Estimate), show.legend = FALSE) +  # Draw edges with alpha based on weight
-  geom_node_label(aes(label = name), size = 5, fontface = "bold", fill = "lightblue", color = "black") +
+ggraph(graph,layout = "manual",x=node_positions[,1],y=node_positions[,2]
+       ) + 
+  geom_edge_link(aes(
+    edge_alpha = abs(Std.Estimate),
+    edge_width = abs(Std.Estimate),
+    edge_linetype = P.Value < 0.05,
+    edge_color = Std.Estimate > 0
+  ),
+  show.legend = FALSE,
+  arrow = arrow(length = unit(3, "mm"))
+  ) +  # Draw edges with alpha based on weight
+  ggraph::geom_edge_label(aes(label = round(Std.Estimate, 2)), 
+                  fontface = "bold", color = "black", label.size = NA, fill = "white") +
+  geom_node_label(aes(label = name), size = 8, label.padding = unit(0.2, "lines")) +
+  scale_edge_color_manual(values = c("darkred", "black")) +
+  scale_edge_linetype_manual(values = c("dashed", "solid")) +
   theme_void()
 }
 
 
 
 
-
-# Manual layout as data.frame
-layout_df <- create_layout(edges,
-                           x = ,
-                           y = ,
-                           name = c("Herbivory", "Glycoalkaloids", "SLA", "Trichomes", "Climate", "Climate (sq)")
-)
-
-# Merge node positions into graph layout
-ggraph(graph, layout = "manual", layout = layout_df) +
-  geom_edge_link(aes(
-    edge_alpha = abs(Estimate),
-    edge_width = abs(Estimate),
-    edge_linetype = P.Value < 0.05,
-    edge_color = Estimate > 0
-  ),
-  show.legend = FALSE,
-  arrow = arrow(length = unit(4, "mm"))
-  ) +
-  geom_node_label(aes(label = name), size = 4, label.padding = unit(0.2, "lines")) +
-  scale_edge_color_manual(values = c("darkred", "black")) +
-  scale_edge_linetype_manual(values = c("dashed", "solid")) +
-  theme_void()
