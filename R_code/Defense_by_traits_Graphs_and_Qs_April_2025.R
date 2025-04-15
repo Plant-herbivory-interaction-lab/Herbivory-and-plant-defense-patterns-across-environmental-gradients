@@ -223,3 +223,35 @@ ggsave("SEM.jpg",
        device = "jpg",plot = SEM_fig,
        path = "Figures",dpi = 400,width = 10, 
        height = 5,limitsize = F)
+
+
+# Significant trends in the SEM ---- 
+
+# Garden climate versus glycoalkaloids
+ggplot(Data_prep(loc = "Garden"),aes(x=Clim_ave_PC1,y=Conc))+
+  geom_smooth(method = "glm")+
+  geom_point() + 
+  labs(x="Climate productivity",y="Glycoalkaloids (mg/mg)") +
+  C_theme
+
+# Garden climate squared versus trichomes
+ggplot(Data_prep(loc = "Garden"),aes(x=Clim_ave_PC1_sq,y=Trichomes))+
+  geom_smooth(method = "glm",formula = y~x,method.args=list(family=poisson()))+
+  geom_point() + 
+  labs(x="Climate productivity (sq)") +
+  C_theme
+
+# Field climate versus trichomes
+ggplot(Data_prep(loc = "Field"),aes(x=Clim_ave_PC1,y=Trichomes))+
+  geom_smooth(method = "glm",formula = y~x,method.args=list(family=poisson()))+
+  geom_point() + 
+  labs(x="Climate productivity") +
+  C_theme
+
+# Field climate squared versus trichomes
+ggplot(Data_prep(loc = "Field"),aes(x=Clim_ave_PC1_sq,y=Trichomes))+
+  geom_smooth(method = "glm",formula = y~x,method.args=list(family=poisson()))+
+  geom_point() + 
+  labs(x="Climate productivity") +
+  C_theme
+
