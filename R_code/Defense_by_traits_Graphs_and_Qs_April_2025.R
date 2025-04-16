@@ -14,6 +14,7 @@ library(car)
 library(lme4)
 library(tidyverse)
 library(patchwork)
+library(ggeffects)
 
 
 # Database connection ----
@@ -226,32 +227,64 @@ ggsave("SEM.jpg",
 
 
 # Significant trends in the SEM ---- 
-
-# Garden climate versus glycoalkaloids
-ggplot(Data_prep(loc = "Garden"),aes(x=Clim_ave_PC1,y=Conc))+
+## Field ----
+# Field climate versus trichomes
+ClimXtrich<-ggplot(Data_prep(loc = "Field"),aes(x=Clim_ave_PC1,y=Trichomes))+
   geom_smooth(method = "glm")+
   geom_point() + 
-  labs(x="Climate productivity",y="Glycoalkaloids (mg/mg)") +
-  C_theme
-
-# Garden climate squared versus trichomes
-ggplot(Data_prep(loc = "Garden"),aes(x=Clim_ave_PC1_sq,y=Trichomes))+
-  geom_smooth(method = "glm",formula = y~x,method.args=list(family=poisson()))+
-  geom_point() + 
-  labs(x="Climate productivity (sq)") +
-  C_theme
-
-# Field climate versus trichomes
-ggplot(Data_prep(loc = "Field"),aes(x=Clim_ave_PC1,y=Trichomes))+
-  geom_smooth(method = "glm",formula = y~x,method.args=list(family=poisson()))+
-  geom_point() + 
   labs(x="Climate productivity") +
-  C_theme
+  C_theme;ClimXtrich
 
 # Field climate squared versus trichomes
-ggplot(Data_prep(loc = "Field"),aes(x=Clim_ave_PC1_sq,y=Trichomes))+
-  geom_smooth(method = "glm",formula = y~x,method.args=list(family=poisson()))+
+ClimsqXtrich<-ggplot(Data_prep(loc = "Field"),aes(x=Clim_ave_PC1_sq,y=Trichomes))+
+  geom_smooth(method = "glm")+
   geom_point() + 
-  labs(x="Climate productivity") +
-  C_theme
+  labs(x="Climate productivity (sq)") +
+  C_theme;ClimsqXtrich
+
+# Field climate squared versus Herbivores
+ClimsqXherb<-ggplot(Data_prep(loc = "Field"),aes(x=Clim_ave_PC1_sq,y=herb_p))+
+  geom_point() + 
+  geom_smooth(method = "glm",formula = y~x,method.args=list(family=beta_family()))+
+  labs(x="Climate productivity (sq)",y="Herbivory") +
+  C_theme;ClimsqXherb
+
+# Field glycoalkaloids versus Herbivory
+glycXherb<-ggplot(Data_prep(loc = "Field"),aes(x=Conc,y=herb_p))+
+  geom_point() + 
+  geom_smooth(method = "glm",formula = y~x,method.args=list(family=beta_family()))+
+  labs(x="Glycoalkaloids (mg/mg)",y='Herbivory') +
+  C_theme;glycXherb
+
+Field_pan<-((ClimXtrich|ClimsqXtrich)/(ClimsqXherb|glycXherb))+plot_annotation(tag_levels = "A");Field_pan
+
+ggsave("Field_pan.jpg",
+       device = "jpg",plot = Field_pan,
+       path = "Figures",dpi = 400,width = 12, 
+       height = 12,limitsize = F)
+
+## Garden ----
+
+# Garden climate versus glycoalkaloids
+climXglyc<-ggplot(Data_prep(loc = "Garden"),aes(x=Clim_ave_PC1,y=Conc))+
+  geom_smooth(method = "glm",formula = y~x,method.args = list(family = gaussian(link = "log")))+
+  geom_point() + 
+  labs(x="Climate productivity",y="Glycoalkaloids (mg/mg)") +
+  C_theme;climXglyc
+
+# Garden climate squared versus trichomes
+climsqXtri_gard<-ggplot(Data_prep(loc = "Garden"),aes(x=Clim_ave_PC1_sq,y=Trichomes))+
+  geom_smooth(method = "glm",formula = y~x,method.args=list(family=poisson()) )+
+  geom_point() + 
+  labs(x="Climate productivity (sq)") +
+  C_theme;climXtri_gard
+
+gard_pan<-(climXglyc|climsqXtri_gard)+plot_annotation(tag_levels = "A");gard_pan
+
+
+ggsave("gard_pan.jpg",
+       device = "jpg",plot = gard_pan,
+       path = "Figures",dpi = 400,width = 12, 
+       height = 5,limitsize = F)
+
 
