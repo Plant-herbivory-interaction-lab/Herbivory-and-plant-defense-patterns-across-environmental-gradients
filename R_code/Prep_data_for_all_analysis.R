@@ -38,10 +38,19 @@ Field_2022<-dbReadTable(con,"Field_2022") %>%
          Date=as.Date(Date,origin = "1970-01-01"))
 
 ### Data from the common garden 2023
-Garden <- dbReadTable(con, "Garden_2023") %>% 
+Garden1<-dbReadTable(con, "Garden_2023") %>% 
+  full_join(dbReadTable(con,"leaf_traits_garden")) %>% 
+  mutate(Herby=ifelse(Herby>100,100,Herby),
+         fl_m=as.numeric(fl_m),
+         fl_m=ifelse(is.na(fl_m),0,fl_m),
+         fl_h=as.numeric(fl_h),
+         fl_h=ifelse(is.na(fl_h),0,fl_h),
+         Date=as.Date(Date,format = "%m/%d/%Y"))
+
+Garden <- Garden1 %>% 
   mutate(
-    herb=herb_p,
-         herb_p=(transform_perc(herb_p))
+    herb=Herby/100,
+         herb_p=(transform_perc(herb))
          )
 
 #### Import the climate and soil data ----

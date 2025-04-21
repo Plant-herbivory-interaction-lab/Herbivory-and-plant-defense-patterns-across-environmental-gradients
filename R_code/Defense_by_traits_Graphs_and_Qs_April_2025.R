@@ -20,6 +20,7 @@ library(ggeffects)
 # Database connection ----
 con <-dbConnect(SQLite(), 'Data/Data.db')
 
+
 # Import and prep data ----
 source("R_code/Prep_data_for_all_analysis.R")
 source("R_code/Psem_graphing.R")
@@ -37,10 +38,11 @@ Field_2023<-Field_2023 %>%
   mutate(Loc="Field",
          Loc1="Field 2023",
          Year="2023",
-         Conc=Conc*2.5) # This is do to using different amounts of leaf material.
+         #Conc=Conc*2.5
+         ) # This is do to using different amounts of leaf material.
 
 Garden<-Garden %>% 
-  select(Pop:herb) %>% 
+  select(Pop,Spines,Trichomes,SLA,Conc,herb_p,herb) %>% 
   mutate(Loc="Garden",Loc1="Garden",Year="2023")
 
 Combined_data1<-rbind(Field_2022,Field_2023,Garden)%>% filter(SLA>3.9) %>% 
@@ -105,8 +107,22 @@ if(long==T){Combined_data1<-Combined_data1 %>%
 Combined_data1
 }
 
+# Appendix figures ----
+Pop_level<-Garden1 %>% group_by(Pop,Date)%>% 
+  summarise(across(where(is.numeric), \ (x) mean(x, na.rm = TRUE))) %>% 
+  ungroup()
 
+Leaves_time<-ggplot(Pop_level,aes(Date,leaves)) +
+  geom_point()+
+  geom_smooth()
 
+Flowers_time<-ggplot(Pop_level,aes(Date,fl_m)) +
+  geom_point()+
+  geom_smooth()
+
+Flowers_time<-ggplot(Pop_level,aes(Date,Herby)) +
+  geom_point()+
+  geom_smooth(method="glm")
 
 # SEMs ----
 # SEM of the plant traits, climate and herbivore relations at the plant individual level.
@@ -130,12 +146,19 @@ SEM_results <- function(Loc = "Field", model = c("lm1", "lm2", "lm3", "lm4"), ra
   lm4.1 <- update(lm4, . ~ . - Clim_PC1_sq_sc)
   
   # Create a named list of models
-  model_list <- list(lm1 = lm1, lm2 = lm2, lm3 = lm3, lm4 = lm4,
-                     lm1.1 = lm1.1,lm1.2 = lm1.2, lm1.3 = lm1.3,
-                     lm2.1 = lm2.1,
-                     lm3.1 = lm3.1,
-                     lm4.1 = lm4.1)
+  model_list <- list(lm1 = lm1, lm1.1 = lm1.1,lm1.2 = lm1.2, lm1.3 = lm1.3,
+                     lm2 = lm2, lm2.1 = lm2.1,
+                     lm3 = lm3, lm3.1 = lm3.1,
+                     lm4 = lm4, lm4.1 = lm4.1)
  
+  AICs<-sapply(model_list,FUN=AIC)
+  
+  names(AICs)<-c("interaction_sq","non_interaction_sq","non_interaction_lin","interaction_lin",
+                 "Conc_sq", "Conc_lin",
+                 "SLA_sq", "SLA_lin",
+                 "Trich_sq","Trich_lin")
+  
+  print(AICs)
   
   fit <- psem(
     model_list[[model[[1]]]],
@@ -220,7 +243,7 @@ Garden_sem<-semGraph(Non_interaction_Garden);Garden_sem
 SEM_fig<-(Field_sem | Garden_sem)+plot_annotation(tag_levels = "A");SEM_fig
 
 
-ggsave("SEM.jpg",
+ggsave("test.jpg",
        device = "jpg",plot = SEM_fig,
        path = "Figures",dpi = 400,width = 10, 
        height = 5,limitsize = F)
@@ -230,22 +253,15 @@ ggsave("SEM.jpg",
 ## Field ----
 # Field climate versus trichomes
 ClimXtrich<-ggplot(Data_prep(loc = "Field"),aes(x=Clim_ave_PC1,y=Trichomes))+
-  geom_smooth(method = "glm")+
+  geom_smooth(method = "glm",formula = y~poly(x,2))+
   geom_point() + 
   labs(x="Climate productivity") +
   C_theme;ClimXtrich
 
-# Field climate squared versus trichomes
-ClimsqXtrich<-ggplot(Data_prep(loc = "Field"),aes(x=Clim_ave_PC1_sq,y=Trichomes))+
-  geom_smooth(method = "glm")+
-  geom_point() + 
-  labs(x="Climate productivity (sq)") +
-  C_theme;ClimsqXtrich
-
 # Field climate squared versus Herbivores
-ClimsqXherb<-ggplot(Data_prep(loc = "Field"),aes(x=Clim_ave_PC1_sq,y=herb_p))+
+ClimsqXherb<-ggplot(Data_prep(loc = "Field"),aes(x=Clim_ave_PC1,y=herb_p))+
   geom_point() + 
-  geom_smooth(method = "glm",formula = y~x,method.args=list(family=beta_family()))+
+  geom_smooth(method = "glm",formula = y~poly(x,2),method.args=list(family=beta_family()))+
   labs(x="Climate productivity (sq)",y="Herbivory") +
   C_theme;ClimsqXherb
 
