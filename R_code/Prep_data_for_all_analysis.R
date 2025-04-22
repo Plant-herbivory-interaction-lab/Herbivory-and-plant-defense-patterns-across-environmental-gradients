@@ -51,7 +51,12 @@ Garden <- Garden1 %>%
   mutate(
     herb=Herby/100,
          herb_p=(transform_perc(herb))
-         )
+         ) %>% 
+  filter(Date >= as.Date("2023-06-15") & Date <= as.Date("2023-07-29")) %>% 
+  group_by(Plant_ID) %>% 
+  summarise(Pop=unique(Pop),
+    across(where(is.numeric), ~ mean(., na.rm = TRUE))) %>% 
+  ungroup() %>% drop_na(SLA)
 
 #### Import the climate and soil data ----
 

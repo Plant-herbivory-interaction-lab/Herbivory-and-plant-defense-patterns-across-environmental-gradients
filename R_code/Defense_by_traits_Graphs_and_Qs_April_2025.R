@@ -107,42 +107,68 @@ if(long==T){Combined_data1<-Combined_data1 %>%
 Combined_data1
 }
 
+# Graph theme setup----
+C_theme<-theme_bw(base_size = 18)+
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank())
+
 # Appendix figures ----
 Pop_level<-Garden1 %>% group_by(Pop,Date)%>% 
-  summarise(across(where(is.numeric), \ (x) mean(x, na.rm = TRUE))) %>% 
+  summarise(count=n(),
+            flowers = sum(fl_m>0, fl_h>0, na.rm = TRUE),
+    across(c(ht:leaves,Herby,Trichomes:Spines), \ (x) mean(x, na.rm = TRUE))) %>%
+  mutate(Flowering_p=flowers/count) %>% 
   ungroup()
 
 Leaves_time<-ggplot(Pop_level,aes(Date,leaves)) +
   geom_point()+
-  geom_smooth()
+  geom_smooth(method="glm")+
+  labs(y="Leaves")+
+  C_theme;Leaves_time
 
-Flowers_time<-ggplot(Pop_level,aes(Date,fl_m)) +
+Flowers_time<-ggplot(Pop_level,aes(Date,Flowering_p,col=Pop)) +
   geom_point()+
-  geom_smooth()
+  geom_smooth()+
+  labs(y='Proportion flowering')+
+  C_theme;Flowers_time
 
-Flowers_time<-ggplot(Pop_level,aes(Date,Herby)) +
+Herbivory_time<-ggplot(Pop_level,aes(Date,Herby)) +
   geom_point()+
-  geom_smooth(method="glm")
+  geom_smooth(method="glm")+
+  labs(y="Herbivory (%)")+
+  C_theme;Herbivory_time
+
+appendix<-((Leaves_time | Flowers_time)/(Herbivory_time | plot_spacer()))+plot_annotation(tag_levels = "A");appendix
+
+ggsave("Appendix.jpg",
+       device = "jpg",plot = appendix,
+       path = "Figures",dpi = 400,width = 12, 
+       height = 12,limitsize = F)
 
 # SEMs ----
 # SEM of the plant traits, climate and herbivore relations at the plant individual level.
 
-SEM_results <- function(Loc = "Field", model = c("lm1", "lm2", "lm3", "lm4"), random = "Pop:Year") {
+SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1", "lm2", "lm3", "lm4"), random = "+ (1|Pop:Year)",corError = list(
+  quote(SLA_t_sc %~~% Trichomes_t_sc),
+  quote(SLA_t_sc %~~% Conc_t_sc)
+)) {
   DF_short_I_field <- Data_prep(loc=Loc) %>%
     drop_na()
   
-  lm1 <- glmmTMB(as.formula(paste0('herb_p_t_sc ~ Clim_PC1_sq_sc + Clim_ave_PC1_sc * (Trichomes_t_sc + Conc_t_sc + SLA_t_sc) + (1|', random, ')')), DF_short_I_field)
-  lm1.1 <- glmmTMB(as.formula(paste0('herb_p_t_sc ~ (Clim_ave_PC1_sc + Clim_PC1_sq_sc) + (Trichomes_t_sc + Conc_t_sc + SLA_t_sc) + (1|', random, ')')), DF_short_I_field)
+  method<-get(mod_fun)
+  
+  lm1 <- method(as.formula(paste0('herb_p_t_sc ~ Clim_PC1_sq_sc + Clim_ave_PC1_sc *(Trichomes_t_sc + Conc_t_sc + SLA_t_sc)', random)), DF_short_I_field)
+  lm1.1 <- method(as.formula(paste0('herb_p_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random)), DF_short_I_field)
   lm1.2 <- update(lm1.1, . ~ . - Clim_PC1_sq_sc)
   lm1.3 <- update(lm1, . ~ . - Clim_PC1_sq_sc)
   
-  lm2 <- glmmTMB(as.formula(paste0('Conc_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc + (1|', random, ')')), DF_short_I_field)
+  lm2 <- method(as.formula(paste0('Conc_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc', random)), DF_short_I_field)
   lm2.1 <- update(lm2, . ~ . - Clim_PC1_sq_sc)
   
-  lm3 <- glmmTMB(as.formula(paste0('SLA_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc + (1|', random, ')')), DF_short_I_field)
+  lm3 <- method(as.formula(paste0('SLA_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc', random)), DF_short_I_field)
   lm3.1 <- update(lm3, . ~ . - Clim_PC1_sq_sc)
   
-  lm4 <- glmmTMB(as.formula(paste0('Trichomes_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc + (1|', random, ')')), DF_short_I_field)
+  lm4 <- method(as.formula(paste0('Trichomes_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc', random)), DF_short_I_field)
   lm4.1 <- update(lm4, . ~ . - Clim_PC1_sq_sc)
   
   # Create a named list of models
@@ -160,15 +186,21 @@ SEM_results <- function(Loc = "Field", model = c("lm1", "lm2", "lm3", "lm4"), ra
   
   print(AICs)
   
-  fit <- psem(
-    model_list[[model[[1]]]],
-    model_list[[model[[2]]]],
-    model_list[[model[[3]]]],
-    model_list[[model[[4]]]],
-    SLA_t_sc %~~% Trichomes_t_sc,
-    SLA_t_sc %~~% Conc_t_sc,
-    data = DF_short_I_field
-  )
+  for (m in model) {
+    model_list[[m]]$call[[1]] <- as.name(mod_fun)
+  }
+  
+  fit <- do.call(psem, c(
+    list(
+      model_list[[model[1]]],
+      model_list[[model[2]]],
+      model_list[[model[3]]],
+      model_list[[model[4]]]
+    ),
+    corError,
+    list(data = DF_short_I_field)
+  ))
+  
   return(fit)
 }
 # Field SEM results ----
@@ -194,29 +226,30 @@ AIC(climate_field)
 
 # Garden SEM results ----
 # This model tests the indirect effects of climate on herbivory via defense traits (linear).
-interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.3", "lm2.1", "lm3.1", "lm4.1"),random = "Pop")
+interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.3", "lm2.1", "lm3.1", "lm4.1"),random = '',mod_fun='lm',
+                                corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)))
 summary(interaction_Garden)
 AIC(interaction_Garden)
 
 # This model tests the indirect effects of climate on herbivory via defense traits (Quadratic).
-interaction_Garden_clim2<-SEM_results(Loc="Garden",random = "Pop")
+interaction_Garden_clim2<-SEM_results(Loc="Garden",random = "",mod_fun='lm',
+                                      corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)))
 summary(interaction_Garden_clim2)
 AIC(interaction_Garden_clim2)
 
 # This model only includes the direct effects of climate and defense traits on herbivory.
-Non_interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "Pop")
+Non_interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
+                                    corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)))
 summary(Non_interaction_Garden)
 AIC(Non_interaction_Garden)
 
 # This model includes climate as a linear term only
-Climate_Garden<-SEM_results(Loc="Garden",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"),random = "Pop")
+Climate_Garden<-SEM_results(Loc="Garden",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"),random = "",mod_fun='lm',
+                            corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)))
 summary(Climate_Garden)
 AIC(Climate_Garden)
 
-# Graph theme setup----
-C_theme<-theme_bw(base_size = 18)+
-  theme(panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank())
+
 
 # Graph of Climate PCA and PCA across latitude ----
 # We used 
@@ -243,7 +276,7 @@ Garden_sem<-semGraph(Non_interaction_Garden);Garden_sem
 SEM_fig<-(Field_sem | Garden_sem)+plot_annotation(tag_levels = "A");SEM_fig
 
 
-ggsave("test.jpg",
+ggsave("SEM.jpg",
        device = "jpg",plot = SEM_fig,
        path = "Figures",dpi = 400,width = 10, 
        height = 5,limitsize = F)
@@ -272,7 +305,7 @@ glycXherb<-ggplot(Data_prep(loc = "Field"),aes(x=Conc,y=herb_p))+
   labs(x="Glycoalkaloids (mg/mg)",y='Herbivory') +
   C_theme;glycXherb
 
-Field_pan<-((ClimXtrich|ClimsqXtrich)/(ClimsqXherb|glycXherb))+plot_annotation(tag_levels = "A");Field_pan
+Field_pan<-((ClimsqXherb|ClimXtrich)/(glycXherb|plot_spacer()))+plot_annotation(tag_levels = "A");Field_pan
 
 ggsave("Field_pan.jpg",
        device = "jpg",plot = Field_pan,
@@ -283,24 +316,31 @@ ggsave("Field_pan.jpg",
 
 # Garden climate versus glycoalkaloids
 climXglyc<-ggplot(Data_prep(loc = "Garden"),aes(x=Clim_ave_PC1,y=Conc))+
-  geom_smooth(method = "glm",formula = y~x,method.args = list(family = gaussian(link = "log")))+
+  geom_smooth(method = "glm",formula = y~poly(x,2),method.args = list(family = gaussian(link = "log")))+
   geom_point() + 
   labs(x="Climate productivity",y="Glycoalkaloids (mg/mg)") +
   C_theme;climXglyc
 
-# Garden climate squared versus trichomes
+# Garden climate versus trichomes
 climsqXtri_gard<-ggplot(Data_prep(loc = "Garden"),aes(x=Clim_ave_PC1_sq,y=Trichomes))+
   geom_smooth(method = "glm",formula = y~x,method.args=list(family=poisson()) )+
   geom_point() + 
-  labs(x="Climate productivity (sq)") +
-  C_theme;climXtri_gard
+  labs(x="Climate productivity") +
+  C_theme;climsqXtri_gard
 
-gard_pan<-(climXglyc|climsqXtri_gard)+plot_annotation(tag_levels = "A");gard_pan
+herbXSLA_gard<-ggplot(Data_prep(loc = "Garden"),aes(x=SLA,y=herb_p))+
+  geom_smooth(method = "glm",formula = y~x,method.args=list(family=beta_family()) )+
+  geom_point() + 
+  labs(x="SLA",y="Herbivory") +
+  C_theme;herbXSLA_gard
+
+
+gard_pan<-((climXglyc|climsqXtri_gard)/(herbXSLA_gard|plot_spacer()))+plot_annotation(tag_levels = "A");gard_pan
 
 
 ggsave("gard_pan.jpg",
        device = "jpg",plot = gard_pan,
        path = "Figures",dpi = 400,width = 12, 
-       height = 5,limitsize = F)
+       height = 12,limitsize = F)
 
 
