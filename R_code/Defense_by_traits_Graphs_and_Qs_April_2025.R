@@ -120,19 +120,19 @@ Pop_level<-Garden1 %>% group_by(Pop,Date)%>%
   mutate(Flowering_p=flowers/count) %>% 
   ungroup()
 
-Leaves_time<-ggplot(Pop_level,aes(Date,leaves)) +
-  geom_point()+
-  geom_smooth(method="glm")+
+Leaves_time<-ggplot(Pop_level,aes(Date,leaves,,col=Pop)) +
+  geom_point(show.legend=F)+
+  geom_smooth(method="glm",show.legend=F)+
   labs(y="Leaves")+
   C_theme;Leaves_time
 
 Flowers_time<-ggplot(Pop_level,aes(Date,Flowering_p,col=Pop)) +
-  geom_point()+
-  geom_smooth()+
+  geom_point(show.legend=F)+
+  geom_smooth(show.legend=F)+
   labs(y='Proportion flowering')+
   C_theme;Flowers_time
 
-Herbivory_time<-ggplot(Pop_level,aes(Date,Herby)) +
+Herbivory_time<-ggplot(Pop_level,aes(Date,Herby,col=Pop)) +
   geom_point()+
   geom_smooth(method="glm")+
   labs(y="Herbivory (%)")+
@@ -291,21 +291,27 @@ ClimXtrich<-ggplot(Data_prep(loc = "Field"),aes(x=Clim_ave_PC1,y=Trichomes))+
   labs(x="Climate productivity") +
   C_theme;ClimXtrich
 
-# Field climate squared versus Herbivores
+ClimXglyc<-ggplot(Data_prep(loc = "Field"),aes(x=Clim_ave_PC1,y=Conc))+
+  geom_smooth(method = "glm")+
+  geom_point() + 
+  labs(x="Climate productivity",y="Glycoalkaloids (mg/mg)") +
+  C_theme;ClimXglyc
+
+# Field climate versus Herbivores
 ClimsqXherb<-ggplot(Data_prep(loc = "Field"),aes(x=Clim_ave_PC1,y=herb_p))+
   geom_point() + 
   geom_smooth(method = "glm",formula = y~poly(x,2),method.args=list(family=beta_family()))+
-  labs(x="Climate productivity (sq)",y="Herbivory") +
+  labs(x="Climate productivity",y="Herbivory (%)") +
   C_theme;ClimsqXherb
 
 # Field glycoalkaloids versus Herbivory
 glycXherb<-ggplot(Data_prep(loc = "Field"),aes(x=Conc,y=herb_p))+
   geom_point() + 
   geom_smooth(method = "glm",formula = y~x,method.args=list(family=beta_family()))+
-  labs(x="Glycoalkaloids (mg/mg)",y='Herbivory') +
+  labs(x="Glycoalkaloids (mg/mg)",y='Herbivory (%)') +
   C_theme;glycXherb
 
-Field_pan<-((ClimsqXherb|ClimXtrich)/(glycXherb|plot_spacer()))+plot_annotation(tag_levels = "A");Field_pan
+Field_pan<-((ClimXtrich|ClimXglyc)/(ClimsqXherb|glycXherb))+plot_annotation(tag_levels = "A");Field_pan
 
 ggsave("Field_pan.jpg",
        device = "jpg",plot = Field_pan,
@@ -322,8 +328,8 @@ climXglyc<-ggplot(Data_prep(loc = "Garden"),aes(x=Clim_ave_PC1,y=Conc))+
   C_theme;climXglyc
 
 # Garden climate versus trichomes
-climsqXtri_gard<-ggplot(Data_prep(loc = "Garden"),aes(x=Clim_ave_PC1_sq,y=Trichomes))+
-  geom_smooth(method = "glm",formula = y~x,method.args=list(family=poisson()) )+
+climsqXtri_gard<-ggplot(Data_prep(loc = "Garden"),aes(x=Clim_ave_PC1,y=Trichomes))+
+  geom_smooth(method = "glm",formula = y~poly(x,2),method.args=list(family=poisson()) )+
   geom_point() + 
   labs(x="Climate productivity") +
   C_theme;climsqXtri_gard
@@ -331,7 +337,7 @@ climsqXtri_gard<-ggplot(Data_prep(loc = "Garden"),aes(x=Clim_ave_PC1_sq,y=Tricho
 herbXSLA_gard<-ggplot(Data_prep(loc = "Garden"),aes(x=SLA,y=herb_p))+
   geom_smooth(method = "glm",formula = y~x,method.args=list(family=beta_family()) )+
   geom_point() + 
-  labs(x="SLA",y="Herbivory") +
+  labs(x="SLA",y="Herbivory (%)") +
   C_theme;herbXSLA_gard
 
 
