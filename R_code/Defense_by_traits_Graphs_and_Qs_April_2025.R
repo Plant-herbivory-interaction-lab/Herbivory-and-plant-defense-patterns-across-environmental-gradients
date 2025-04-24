@@ -122,19 +122,19 @@ Pop_level<-Garden1 %>% group_by(Pop,Date)%>%
 
 Leaves_time<-ggplot(Pop_level,aes(Date,leaves,,col=Pop)) +
   geom_point(show.legend=F)+
-  geom_smooth(method="glm",show.legend=F)+
+  geom_smooth(method="glm",show.legend=F,formula = y~poly(x,2),se=F)+
   labs(y="Leaves")+
   C_theme;Leaves_time
 
 Flowers_time<-ggplot(Pop_level,aes(Date,Flowering_p,col=Pop)) +
   geom_point(show.legend=F)+
-  geom_smooth(show.legend=F)+
+  geom_smooth(show.legend=F,se=F)+
   labs(y='Proportion flowering')+
   C_theme;Flowers_time
 
 Herbivory_time<-ggplot(Pop_level,aes(Date,Herby,col=Pop)) +
   geom_point()+
-  geom_smooth(method="glm")+
+  geom_smooth(method="glm",se=F,formula = y~poly(x,2))+
   labs(y="Herbivory (%)")+
   C_theme;Herbivory_time
 
