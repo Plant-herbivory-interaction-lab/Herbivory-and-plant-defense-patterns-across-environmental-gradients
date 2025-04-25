@@ -33,24 +33,22 @@ source("R_code/Prep_data_for_all_analysis.R")
 source("R_code/Psem_graphing.R")
 
 
-Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,Treatment=F){
+Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,Treatment=F,Time=quo(Time=="mid"),...){
 Field_2022<-Field_2022 %>% 
-  select(Trichomes:herb) %>% 
+  select(Plant_ID,Date,Trichomes:herb) %>% 
   mutate(Loc="Field",
-         Loc1="Field 2022",
-         Year="2022")
+         Time="2022")
 
 Field_2023<-Field_2023 %>% 
-  select(herb_p:herb) %>% 
+  select(Plant_ID,Date,herb_p:herb) %>% 
   mutate(Loc="Field",
-         Loc1="Field 2023",
-         Year="2023",
+         Time="2023",
          #Conc=Conc*2.5
          ) # This is do to using different amounts of leaf material.
 
 Garden<-Garden %>% 
-  select(Pop,Spines,Trichomes,SLA,Conc,herb_p,herb) %>% 
-  mutate(Loc="Garden",Loc1="Garden",Year="2023")
+  select(Plant_ID,Date,Pop,Spines,Trichomes,SLA,Conc,herb_p,herb,Time) %>% 
+  mutate(Loc="Garden")
 
 Combined_data1<-rbind(Field_2022,Field_2023,Garden)%>% filter(SLA>3.9) %>% 
   left_join(PCs %>% 
@@ -77,6 +75,16 @@ if(loc=="Field"|loc=="Garden"){Combined_data1<-Combined_data1 %>%
   #select(!c(Spines)) %>% 
   #drop_na() %>% 
   dplyr::filter(Loc==loc)}
+
+
+if(loc=="Garden"){
+  
+  Combined_data1<-Combined_data1 %>%
+    filter(!!Time) %>% 
+  group_by(Plant_ID) %>% 
+  summarise(Pop=unique(Pop),
+            across(where(is.numeric), ~ mean(., na.rm = TRUE))) %>% 
+  ungroup() %>% drop_na(SLA)}
 
 
 if(PopLevel==T&Treatment==T){Combined_data1<-Combined_data1 %>% 
@@ -122,11 +130,11 @@ C_theme<-theme_bw(base_size = 18)+
 # SEMs ----
 # SEM of the plant traits, climate and herbivore relations at the plant individual level.
 
-SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1", "lm2", "lm3", "lm4"), random = "+ (1|Pop:Year)",corError = list(
+SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1", "lm2", "lm3", "lm4"), random = "+ (1|Pop:Time)",corError = list(
   quote(SLA_t_sc %~~% Trichomes_t_sc),
   quote(SLA_t_sc %~~% Conc_t_sc)
-)) {
-  DF_short_I_field <- Data_prep(loc=Loc) %>%
+),Time=quo(Time=="mid")) {
+  DF_short_I_field <- Data_prep(loc=Loc,Time=Time) %>%
     drop_na()
   
   method<-get(mod_fun)
@@ -201,29 +209,35 @@ AIC(climate_field)
 # Garden SEM results ----
 # This model tests the indirect effects of climate on herbivory via defense traits (linear).
 interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.3", "lm2.1", "lm3.1", "lm4.1"),random = '',mod_fun='lm',
-                                corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)))
+                                corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
+                                Time=quo(Date >= as.Date("2023-06-15") & Date <= as.Date("2023-07-29")))
 summary(interaction_Garden)
 AIC(interaction_Garden)
 
 # This model tests the indirect effects of climate on herbivory via defense traits (Quadratic).
 interaction_Garden_clim2<-SEM_results(Loc="Garden",random = "",mod_fun='lm',
-                                      corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)))
+                                      corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
+                                      Time=quo(Date >= as.Date("2023-06-15") & Date <= as.Date("2023-07-29")))
 summary(interaction_Garden_clim2)
 AIC(interaction_Garden_clim2)
 
 # This model only includes the direct effects of climate and defense traits on herbivory.
 Non_interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
-                                    corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)))
+                                    corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
+                                    Time=quo(Date >= as.Date("2023-06-15") & Date <= as.Date("2023-07-29")))
 summary(Non_interaction_Garden)
 AIC(Non_interaction_Garden)
 
 # This model includes climate as a linear term only
 Climate_Garden<-SEM_results(Loc="Garden",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"),random = "",mod_fun='lm',
-                            corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)))
+                            corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
+                            Time=quo(Date >= as.Date("2023-06-15") & Date <= as.Date("2023-07-29")))
 summary(Climate_Garden)
 AIC(Climate_Garden)
 
-
+summary(SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
+                                    corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
+                                    Time=quo(Time=="end")))
 
 # Graph of Climate PCA and temperature across latitude ----
 
