@@ -78,8 +78,8 @@ svglite(temp_file, width = 60, height = 60)
                        #filetype="jpg",
                        #filename = filename,
                        #height = 9, width = 9,
-         label.cex = 8, 
-                       shape="rectangle",vsize2=5,vsize=15,label.scale=F,border.width=2.1)
+         label.cex = 9, 
+                       shape="rectangle",vsize2=5,vsize=16,label.scale=F,border.width=2.1)
 
 dev.off()
 
