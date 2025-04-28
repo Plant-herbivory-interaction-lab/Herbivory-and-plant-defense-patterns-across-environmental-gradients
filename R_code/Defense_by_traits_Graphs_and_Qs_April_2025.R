@@ -33,7 +33,7 @@ source("R_code/Prep_data_for_all_analysis.R")
 source("R_code/Psem_graphing.R")
 
 
-Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,Treatment=F,Time=quo(Time=="mid"),...){
+Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,Treatment=F,Time.var='mid',start_date="2023-06-15",end_date="2023-07-29",byDate=F,...){
 Field_2022<-Field_2022 %>% 
   select(Plant_ID,Date,Trichomes:herb) %>% 
   mutate(Loc="Field",
@@ -79,12 +79,21 @@ if(loc=="Field"|loc=="Garden"){Combined_data1<-Combined_data1 %>%
 
 if(loc=="Garden"){
   
+  
+  if(byDate==T){
+    Combined_data1<-Combined_data1 %>%
+    filter(Date >= as.Date(start_date) & Date <= as.Date(end_date))}
+    else{
+      Combined_data1<-Combined_data1 %>%
+        filter(Time==Time.var)
+  }
+  
   Combined_data1<-Combined_data1 %>%
-    filter(!!Time) %>% 
   group_by(Plant_ID) %>% 
   summarise(Pop=unique(Pop),
             across(where(is.numeric), ~ mean(., na.rm = TRUE))) %>% 
-  ungroup() %>% drop_na(SLA)}
+  ungroup() %>% drop_na(SLA)
+  }
 
 
 if(PopLevel==T&Treatment==T){Combined_data1<-Combined_data1 %>% 
@@ -130,12 +139,15 @@ C_theme<-theme_bw(base_size = 18)+
 # SEMs ----
 # SEM of the plant traits, climate and herbivore relations at the plant individual level.
 
-SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1", "lm2", "lm3", "lm4"), random = "+ (1|Pop:Time)",corError = list(
-  quote(SLA_t_sc %~~% Trichomes_t_sc),
-  quote(SLA_t_sc %~~% Conc_t_sc)
-),Time=quo(Time=="mid")) {
-  DF_short_I_field <- Data_prep(loc=Loc,Time=Time) %>%
+SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1", "lm2", "lm3", "lm4"), random = "+ (1|Pop:Time)",Time="mid",
+                        byDate=F,start_date="2023-06-15",end_date="2023-07-29",corError = list(
+                          quote(SLA_t_sc %~~% Trichomes_t_sc),
+                          quote(SLA_t_sc %~~% Conc_t_sc)
+                        )) {
+  DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,start_date = start_date, end_date = end_date) %>%
     drop_na()
+  
+  #print(DF_short_I_field)
   
   method<-get(mod_fun)
   
@@ -185,59 +197,60 @@ SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1", "lm2",
   
   return(fit)
 }
-# Field SEM results ----
-# This model tests the indirect effects of climate on herbivory via defense traits (linear only).
+# SEM results ----
+# Hypothesis 1: Herbivory is associated with climate productivity indirectly via plant defense traits and there is no quadratic 
+# relationship with herbivory and plant defense traits.
+# Field
 interaction_field<-SEM_results(model = c("lm1.3", "lm2.1", "lm3.1", "lm4.1"))
 summary(interaction_field)
 AIC(interaction_field)
 
-# This model tests the indirect effects of climate on herbivory via defense traits (with quadratic term).
+#Garden
+interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.3", "lm2.1", "lm3.1", "lm4.1"),random = '',mod_fun = "lm",
+                                corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
+                                byDate = T)
+summary(interaction_Garden)
+AIC(interaction_Garden,aicc = T)
+
+# Hypothesis 2: Herbivory is associated with climate productivity indirectly via plant defense traits and there is an 
+# additional direct quadratic relationship with herbivory and plant defense traits.
+# Field
 interaction_field_clim2<-SEM_results()
 summary(interaction_field_clim2)
 AIC(interaction_field_clim2)
 
-# This model only includes the direct effects of climate and defense traits on herbivory.
-Non_interaction_field<-SEM_results(model = c("lm1.1", "lm2", "lm3", "lm4"))
-summary(Non_interaction_field)
-AIC(Non_interaction_field)
+#Garden
+interaction_Garden_clim2<-SEM_results(Loc="Garden",random = "",mod_fun='lm',
+                                      corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
+                                      byDate = T)
+summary(interaction_Garden_clim2)
+AIC(interaction_Garden_clim2,aicc = T)
 
-# This model includes climate as a linear term only
+# Hypothesis 3: Herbivory and plant traits are only directly and linearly associated with climate productivity.
+# Field
 climate_field<-SEM_results(model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"))
 summary(climate_field)
 AIC(climate_field)
 
-# Garden SEM results ----
-# This model tests the indirect effects of climate on herbivory via defense traits (linear).
-interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.3", "lm2.1", "lm3.1", "lm4.1"),random = '',mod_fun='lm',
-                                corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
-                                Time=quo(Date >= as.Date("2023-06-15") & Date <= as.Date("2023-07-29")))
-summary(interaction_Garden)
-AIC(interaction_Garden)
-
-# This model tests the indirect effects of climate on herbivory via defense traits (Quadratic).
-interaction_Garden_clim2<-SEM_results(Loc="Garden",random = "",mod_fun='lm',
-                                      corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
-                                      Time=quo(Date >= as.Date("2023-06-15") & Date <= as.Date("2023-07-29")))
-summary(interaction_Garden_clim2)
-AIC(interaction_Garden_clim2)
-
-# This model only includes the direct effects of climate and defense traits on herbivory.
-Non_interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
-                                    corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
-                                    Time=quo(Date >= as.Date("2023-06-15") & Date <= as.Date("2023-07-29")))
-summary(Non_interaction_Garden)
-AIC(Non_interaction_Garden)
-
-# This model includes climate as a linear term only
+#Garden
 Climate_Garden<-SEM_results(Loc="Garden",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"),random = "",mod_fun='lm',
                             corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
-                            Time=quo(Date >= as.Date("2023-06-15") & Date <= as.Date("2023-07-29")))
+                            byDate = T)
 summary(Climate_Garden)
-AIC(Climate_Garden)
+AIC(Climate_Garden,aicc = T)
 
-summary(SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
+# Hypothesis 4: Herbivory and plant traits are only directly and quadratically associated with climate productivity.
+# Field
+Non_interaction_field<-SEM_results(model = c("lm1.1", "lm2", "lm3", "lm4"))
+summary(Non_interaction_field)
+AIC(Non_interaction_field)
+
+# Garden
+Non_interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
                                     corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
-                                    Time=quo(Time=="end")))
+                                    byDate = T)
+summary(Non_interaction_Garden)
+AIC(Non_interaction_Garden,aicc = T)
 
 # Graph of Climate PCA and temperature across latitude ----
 
@@ -386,7 +399,26 @@ ggsave("gard_pan.jpg",
        device = "jpg",plot = gard_pan,
        path = "Figures",dpi = 400,width = 12, 
        height = 12,limitsize = F)
+# Appendix AICs -----
+# Herbviory data from early in the year
+AIC(SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
+                corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
+                Time='Early'),aicc = T)
 
+# Herbviory data from the middle of the year
+AIC(SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
+                corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
+                Time='Mid'),aicc = T)
+
+# Herbviory data from the end of the year
+AIC(SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
+                corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
+                Time='Late'),aicc = T)
+
+# Herbivory from all time points of the experiment
+AIC(SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
+                corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc),quote(SLA_t_sc %~~% Trichomes_t_sc)),
+                byDate = T, start_date = "2023-05-15",end_date = "2023-10-15"),aicc = T)
 
 # Appendix figures ----
 Pop_level<-Garden1 %>% group_by(Pop,Date)%>% 
