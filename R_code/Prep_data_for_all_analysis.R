@@ -46,7 +46,11 @@ Garden<-dbReadTable(con, "Garden_2023") %>%
          fl_h=as.numeric(fl_h),
          fl_h=ifelse(is.na(fl_h),0,fl_h),
          Date=as.Date(Date,format = "%m/%d/%Y"),
-         Time=cut(Date,breaks=3,labels=c('begin','mid','end')),
+         Time=cut(Garden$Date, 
+                  breaks = seq(min(Garden$Date),max(Garden$Date),length.out=4), 
+                  labels = c("Early", "Mid", "Late"), 
+                  include.lowest = TRUE, 
+                  right = FALSE),
          herb=Herby/100,
          herb_p=(transform_perc(herb)))
 
