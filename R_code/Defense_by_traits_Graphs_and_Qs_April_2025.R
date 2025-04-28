@@ -97,10 +97,10 @@ if(loc=="Garden"){
 
 
 if(PopLevel==T&Treatment==T){Combined_data1<-Combined_data1 %>% 
-  group_by(Pop,Loc,Treatment,Year)}
+  group_by(Pop,Loc,Treatment,Time)}
 
 if(PopLevel==T&Treatment==F){Combined_data1<-Combined_data1 %>% 
-  group_by(Pop,Loc,Loc1,Year)}
+  group_by(Pop,Loc,Time)}
 
 
 if(PopLevel==T){Combined_data1<-Combined_data1 %>% 
@@ -317,7 +317,7 @@ ggsave("SEM.jpg",
 
 
 # Significant trends in the SEM ---- 
-Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1',deg=2,random="+(1|Pop:Year)",family="poisson"){
+Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1',deg=2,random="+(1|Pop:Time)",family="poisson"){
   Data<-Data_prep(loc=loc) %>% 
   drop_na() %>% 
     mutate(Pop=as.factor(Pop))
@@ -339,8 +339,8 @@ Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1
 
   
   ggplot(data=predicted,aes(x=x,y=predicted))+
-    geom_point(data=Data,aes_string(x=predictor,y=response),alpha=0.3,shape = 16)+
-    geom_point(data=Data_pop,aes_string(x=predictor,y=response),col="darkred",size=3)+
+    geom_point(data=Data,aes(x=!!sym(predictor),y=!!sym(response)),alpha=0.3,shape = 16)+
+    geom_point(data=Data_pop,aes(x=!!sym(predictor),y=!!sym(response)),col="darkred",size=3)+
     geom_ribbon(aes(x=x,y=predicted,ymin=conf.low,ymax = conf.high), fill = "grey70",alpha=0.5) + 
     geom_line(size=1)
   
