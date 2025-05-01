@@ -96,5 +96,8 @@ for (table_name in names(tables)) {
   combined_data[[table_name]] <- renamed_pca
 } 
 
-PCs <- bind_cols(combined_data) %>% cbind(Pop_info) %>% left_join(dbReadTable(con,"Bioclims_1970_ave") %>% select(Pop,Aridity))
+PCs <- bind_cols(combined_data) %>% cbind(Pop_info) %>% 
+  left_join(dbReadTable(con,"Bioclims_1970_ave") %>% 
+              select(Pop,Aridity)) %>% 
+  mutate(Latitude_quad=poly(Latitude,2)[,2])
 

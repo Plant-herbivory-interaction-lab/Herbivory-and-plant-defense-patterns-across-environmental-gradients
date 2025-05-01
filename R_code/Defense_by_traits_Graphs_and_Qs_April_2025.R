@@ -20,6 +20,7 @@ library(geodata)
 library(raster)
 library(tidyterra)
 library(DHARMa)
+library(emmeans)
 
 conflicts_prefer(dplyr::select(),
                  dplyr::filter)
@@ -55,7 +56,7 @@ Garden<-Garden %>%
 
 Combined_data1<-rbind(Field_2022,Field_2023,Garden)%>% filter(SLA>3.9) %>% 
   left_join(PCs %>% 
-              select(Latitude,Pop,Clim_ave_PC1,Soil_PC2,Clim_ave_PC2,Aridity)) %>% 
+              select(Latitude,Pop,Clim_ave_PC1,Soil_PC2,Clim_ave_PC2,Aridity,Latitude_quad)) %>% 
   drop_na(Latitude)%>% 
   filter(SLA>40) %>% 
   mutate(
@@ -63,8 +64,8 @@ Combined_data1<-rbind(Field_2022,Field_2023,Garden)%>% filter(SLA>3.9) %>%
     SLA_t=log(SLA),
     Trichomes_t=log(Trichomes),
     herb_p_t=logit(herb_p),
-    Clim_ave_PC1=-Clim_ave_PC1,
-    Clim_ave_PC1_sq=Clim_ave_PC1^2,
+    Clim_ave_PC1=Latitude,
+    Clim_ave_PC1_sq=Latitude_quad,
     Clim_ave_PC1_sc=scale(Clim_ave_PC1)[,1],
     Clim_PC1_sq_sc=scale(Clim_ave_PC1_sq)[,1],
     Conc_t_sc=scale(Conc_t)[,1],
@@ -92,16 +93,14 @@ if(loc=="Garden"){
   }
   
   Combined_data1<-Combined_data1 %>%
-  {if(grouptime==F){group_by(.,Plant_ID)}else{group_by(.,Plant_ID,Time)}} %>% 
+  {if(grouptime==F){group_by(.,Plant_ID)}else{group_by(.,Plant_ID,Time,Loc)}} %>% 
   summarise(Pop=unique(Pop),
-            minDate=min(Date),
-            maxDate=max(Date),
+            Date=sample(c(min(Date),max(Date)),size=1),
             quant_herb_0.75=as.vector(quantile(herb_p)[3]),
             max_herb=max(herb_p),
             across(where(is.numeric), ~ mean(., na.rm = TRUE))) %>% 
   ungroup() %>% drop_na(SLA)
-  }
-
+}
 
 if(PopLevel==T&Treatment==T){Combined_data1<-Combined_data1 %>% 
   group_by(Pop,Loc,Treatment,Time)}
@@ -135,6 +134,7 @@ if(long==T){Combined_data1<-Combined_data1 %>%
     .default = name))}
 
 
+Combined_data1<-Combined_data1 %>% ungroup()
 Combined_data1
 }
 
@@ -154,9 +154,9 @@ SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1", "lm2",
   DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,start_date = start_date, end_date = end_date) %>%
     drop_na()
   
-  
-  print(min(DF_short_I_field$minDate))
-  print(max(DF_short_I_field$maxDate))
+
+  print(min(DF_short_I_field$Date))
+  print(max(DF_short_I_field$Date))
   #print(DF_short_I_field)
   
   method<-get(mod_fun)
@@ -332,7 +332,7 @@ Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1
   drop_na() %>% 
     mutate(Pop=as.factor(Pop))
   
-  Data_pop<-Data_prep(loc=loc,PopLevel = T) %>% 
+  Data_pop<-Data_prep(loc=loc,PopLevel = T,grouptime = T) %>% 
     drop_na()
   
   max_l<-max(Data[,predictor],na.rm=T)
@@ -352,7 +352,7 @@ Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1
     geom_point(data=Data,aes(x=!!sym(predictor),y=!!sym(response)),alpha=0.3,shape = 16)+
     geom_point(data=Data_pop,aes(x=!!sym(predictor),y=!!sym(response)),col="darkred",size=3)+
     geom_ribbon(aes(x=x,y=predicted,ymin=conf.low,ymax = conf.high), fill = "grey70",alpha=0.5) + 
-    geom_line(size=1)
+    geom_line(linewidth=1)
   
 }
 
@@ -388,16 +388,16 @@ ggsave("Field_pan.jpg",
 ## Garden figure ----
 
 # Garden climate versus glycoalkaloids
-climXglyc<-Custom_ggplot(loc = "Garden",predictor = 'Clim_ave_PC1',response = "Conc", family = gaussian(link = "log"),deg=2)+
+climXglyc<-Custom_ggplot(loc = "Garden",predictor = 'Clim_ave_PC1',response = "Conc", family = gaussian(link = "log"),deg=1,random = "+(1|Pop)")+
   labs(x="Climate productivity",y="Glycoalkaloids (mg/mg)") +
   C_theme;climXglyc
 
 # Garden climate versus trichomes
-climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = 'Clim_ave_PC1',response = "Trichomes", family = gaussian(link = "log"),deg=2)+
+climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = 'Clim_ave_PC1',response = "Trichomes", family = gaussian(link = "log"),deg=2,random = "+(1|Pop)")+
   labs(x="Climate productivity",y="Trichomes") +
   C_theme;climsqXtri_gard
 
-herbXSLA_gard<-Custom_ggplot(loc = "Garden",predictor = 'SLA',response = "herb_p", family = beta_family(),deg=1)+
+herbXSLA_gard<-Custom_ggplot(loc = "Garden",predictor = 'SLA',response = "herb_p", family = beta_family(),deg=1,random = "+(1|Pop)")+
   labs(x="SLA",y="Herbivory (%)") +
   C_theme;herbXSLA_gard
 
@@ -415,48 +415,28 @@ glmmTMB(as.formula(paste0(herb, '~ Clim_ave_PC1_sc + Clim_PC1_sq_sc + (Trichomes
         family=family.var,data=Data_prep(loc = "Garden",byDate = F,Time.var = time,grouptime = T))
 }
 
-# Models of herbivory early in the year using the 75th quantile, mean, and max herbivory.
-early_herb_mod_quant<-Herb_by_time(herb='quant_herb_0.75',family=beta_family())
-summary(early_herb_mod_quant)
-plot(simulateResiduals(early_herb_mod_quant))
-
-early_herb_mod_mean<-Herb_by_time(herb='herb_p',family=beta_family())
-summary(early_herb_mod_mean)
-plot(simulateResiduals(early_herb_mod_mean))
-
-early_herb_mod_max<-Herb_by_time(herb='max_herb',family=beta_family())
-summary(early_herb_mod_max)
-plot(simulateResiduals(early_herb_mod_max))
-
-# Models of herbivory middle of the year using the 75th quantile, mean, and max herbivory.
-mid_herb_mod_quant<-Herb_by_time(herb='quant_herb_0.75',family=beta_family(),time='Mid')
-summary(mid_herb_mod_quant)
-
-mid_herb_mod_mean<-Herb_by_time(herb='herb_p',family=beta_family(),time='Mid')
-summary(mid_herb_mod_mean)
-
-mid_herb_mod_max<-Herb_by_time(herb='max_herb',family=beta_family(),time='Mid')
-summary(mid_herb_mod_max)
-
-# Models of herbivory end of the year using the 75th quantile, mean, and max herbivory.
-late_herb_mod_quant<-Herb_by_time(herb='quant_herb_0.75',family=beta_family(),time='Late')
-summary(late_herb_mod_quant)
-
-late_herb_mod_mean<-Herb_by_time(herb='herb_p',family=beta_family(),time='Late')
-summary(late_herb_mod_mean)
-
-late_herb_mod_max<-Herb_by_time(herb='max_herb',family=beta_family(),time='Late')
-summary(late_herb_mod_max)
-
-# Models of herbivory all observations using the 75th quantile, mean, and max herbivory.
+# Models of herbivory using the 75th quantile, mean, and max herbivory.
 all_herb_mod_quant<-Herb_by_time(herb='quant_herb_0.75',family=beta_family(),time='Early|Mid|Late',ad_form='*Time')
-Anova(all_herb_mod_quant)
+AIC(all_herb_mod_quant)
+emtrends(all_herb_mod_quant,~Time,var="SLA_t_sc",infer=T)
+emtrends(all_herb_mod_quant,~Time,var="Conc_t_sc",infer=T)
+emtrends(all_herb_mod_quant,~Time,var="Trichomes_t_sc",infer=T)
+emtrends(all_herb_mod_quant,~Time,var="Clim_ave_PC1_sc",infer=T)
+emtrends(all_herb_mod_quant,~Time,var="Clim_PC1_sq_sc",infer=T)
 
 all_herb_mod_mean<-Herb_by_time(herb='herb_p',family=beta_family(),time='Early|Mid|Late',ad_form='*Time')
-Anova(all_herb_mod_mean)
+AIC(all_herb_mod_mean)
+emtrends(all_herb_mod_mean,~Time,var="SLA_t_sc",infer=T)
+emtrends(all_herb_mod_mean,~Time,var="Conc_t_sc",infer=T)
+emtrends(all_herb_mod_mean,~Time,var="Trichomes_t_sc",infer=T)
+emtrends(all_herb_mod_mean,~Time,var="Clim_ave_PC1_sc",infer=T)
+emtrends(all_herb_mod_mean,~Time,var="Clim_PC1_sq_sc",infer=T)
 
 all_herb_mod_max<-Herb_by_time(herb='max_herb',family=beta_family(),time='Early|Mid|Late',ad_form='*Time')
-Anova(all_herb_mod_max)
+AIC(all_herb_mod_max)
+emtrends(all_herb_mod_max,~Time,var="SLA_t_sc",infer=T)
+emtrends(all_herb_mod_max,~Time,var="Conc_t_sc",infer=T)
+emtrends(all_herb_mod_max,~Time,var="Trichomes_t_sc",infer=T)
 
 # Appendix: AICs at different herbivory observations -----
 # Herbviory data from early in the year
