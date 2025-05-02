@@ -411,8 +411,15 @@ ggsave("gard_pan.jpg",
        height = 12,limitsize = F)
 # Appendix: Herbviory in response to plant traits and climete at different times of the year ----
 Herb_by_time<-function(herb='herb_p_t_sc',family.var='poisson',time="Early",ad_form=""){
+  Data<-Data_prep(loc = "Garden",byDate = F,Time.var = time,grouptime = T)
+  Data1<-Data_prep(loc = "Garden",byDate = T,grouptime = F,start_date = "2023-04-15",end_date = "2023-09-15") %>% 
+    mutate(Time="All",
+           Loc='Garden')
+  
+  Data<- rbind(Data,Data1)
+  
 glmmTMB(as.formula(paste0(herb, '~ Clim_ave_PC1_sc + Clim_PC1_sq_sc + (Trichomes_t_sc + Conc_t_sc + SLA_t_sc)',ad_form)),
-        family=family.var,data=Data_prep(loc = "Garden",byDate = F,Time.var = time,grouptime = T))
+        family=family.var,data=Data)
 }
 
 # Models of herbivory using the 75th quantile, mean, and max herbivory.
