@@ -5,15 +5,15 @@ semGraph<-function(fit=fit) {
   library(rsvg)
   library(svglite)
   library(grid)
-edges<-summary(fit, fit=T,rsquare=T,conserve=T,standardize="none")$coefficients[,c("Response","Predictor","Estimate","P.Value")] %>% 
+edges<-summary(fit, fit=T,rsquare=T,conserve=T,standardize="scale")$coefficients[,c("Response","Predictor","Std.Estimate","P.Value")] %>% 
   filter(!grepl("~",Response)&!grepl("Loc",Predictor)) %>% 
   mutate(Response=case_when(grepl("herb", Response) ~ 'Herbivory',
                             grepl("Conc", Response) ~ 'Glycoalkaloids',
                             grepl("SLA", Response) ~ 'SLA',
                             grepl("Trichomes", Response) ~ 'Trichomes',
                             .default = Response),
-         Predictor = case_when(Predictor == 'Clim_ave_PC1_sc'~ 'Climate',
-                               Predictor == 'Clim_PC1_sq_sc'~ 'Climate (sq)',
+         Predictor = case_when(Predictor == 'Latitude_sc'~ 'Latitude',
+                               Predictor == 'Latitude_sc_sq'~ 'Latitude (sq)',
                                grepl("Conc", Predictor) ~ 'Glycoalkaloids',
                                grepl("SLA", Predictor) ~ 'SLA',
                                grepl("Trichomes", Predictor) ~ 'Trichomes',
@@ -21,7 +21,7 @@ edges<-summary(fit, fit=T,rsquare=T,conserve=T,standardize="none")$coefficients[
 
 # Convert to edgelist format (include all paths)
 edge_list <- as.matrix(edges[, c("Predictor", "Response")])
-weights <- edges$Estimate  # Path coefficients as weights
+weights <- edges$Std.Estimate  # Path coefficients as weights
 p_values <- edges$P.Value  # P-values
 
 # Change the response and predictor labels
@@ -39,7 +39,7 @@ edge_widths <- sqrt(rank(abs(weights)))
 edge_labels <- round(weights, 3)  
 
 # Define node order (top to bottom)
-node_names <- c("Herbivory", "Glycoalkaloids", "SLA", "Trichomes", "Climate", "Climate (sq)")
+node_names <- c("Herbivory", "Glycoalkaloids", "SLA", "Trichomes", "Latitude", "Latitude (sq)")
 
 # Define custom layout positions with increased spacing
 layout_matrix <- matrix(c(
@@ -56,8 +56,8 @@ curves <- rep(0, nrow(edge_list))
 
 # Identify only the climate → herbivory paths and set outward curves
 
-climate1_to_herbivory <- which(edge_list[,1] %in% c("Climate") & edge_list[,2] == "Herbivory")
-climate_to_herbivory <- which(edge_list[,1] %in% c("Climate (sq)") & edge_list[,2] == "Herbivory")
+climate1_to_herbivory <- which(edge_list[,1] %in% c("Latitude") & edge_list[,2] == "Herbivory")
+climate_to_herbivory <- which(edge_list[,1] %in% c("Latitude (sq)") & edge_list[,2] == "Herbivory")
 
 
 curves[climate1_to_herbivory] <- 5.6
