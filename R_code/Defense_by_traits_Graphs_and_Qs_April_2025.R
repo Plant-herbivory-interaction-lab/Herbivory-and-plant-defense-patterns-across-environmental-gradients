@@ -56,24 +56,11 @@ Garden<-Garden %>%
 
 Combined_data1<-rbind(Field_2022,Field_2023,Garden)%>% filter(SLA>3.9) %>% 
   left_join(PCs %>% 
-              select(Latitude,Pop,Clim_ave_PC1,Soil_PC2,Clim_ave_PC2,Aridity,Latitude_quad)) %>% 
+              select(Latitude,Pop,Clim_ave_PC1,Soil_PC2,Clim_ave_PC2,Aridity,Latitude_quad)
+            %>% mutate(Latitude_sc=scale(Latitude),
+                       Latitude_sc_sq=Latitude_sc^2,)) %>% 
   drop_na(Latitude)%>% 
-  filter(SLA>40) %>% 
-  mutate(
-    Conc_t=log(Conc),
-    SLA_t=log(SLA),
-    Trichomes_t=log(Trichomes),
-    herb_p_t=logit(herb_p),
-    Clim_ave_PC1=Latitude,
-    Clim_ave_PC1_sq=Latitude_quad,
-    Clim_ave_PC1_sc=scale(Clim_ave_PC1)[,1],
-    Clim_PC1_sq_sc=scale(Clim_ave_PC1_sq)[,1],
-    Conc_t_sc=scale(Conc_t)[,1],
-    SLA_t_sc=scale(SLA_t)[,1],
-    Trichomes_t_sc=scale(Trichomes_t)[,1],
-    herb_p_t_sc=scale(herb_p_t)[,1],
-    Plant=c(1:length(Conc))
-  )  
+  filter(SLA>40)
 
 if(loc=="Field"|loc=="Garden"){Combined_data1<-Combined_data1 %>% 
   #select(!c(Spines)) %>% 
@@ -134,7 +121,19 @@ if(long==T){Combined_data1<-Combined_data1 %>%
     .default = name))}
 
 
-Combined_data1<-Combined_data1 %>% ungroup()
+Combined_data1<-Combined_data1 %>% ungroup() %>% 
+  mutate(
+    Conc_t=log(Conc),
+    SLA_t=log(SLA),
+    Trichomes_t=log(Trichomes),
+    herb_p_t=logit(herb_p),
+    Conc_t_sc=scale(Conc_t)[,1],
+    SLA_t_sc=scale(SLA_t)[,1],
+    Trichomes_t_sc=scale(Trichomes_t)[,1],
+    herb_p_t_sc=scale(herb_p_t)[,1],
+    Plant=c(1:length(Conc))
+  )  
+
 Combined_data1
 }
 
@@ -161,19 +160,19 @@ SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1", "lm2",
   
   method<-get(mod_fun)
   
-  lm1 <- method(as.formula(paste0('herb_p_t_sc ~ Clim_PC1_sq_sc + Clim_ave_PC1_sc *(Trichomes_t_sc + Conc_t_sc + SLA_t_sc)', random)), DF_short_I_field)
-  lm1.1 <- method(as.formula(paste0('herb_p_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random)), DF_short_I_field)
-  lm1.2 <- update(lm1.1, . ~ . - Clim_PC1_sq_sc)
-  lm1.3 <- update(lm1, . ~ . - Clim_PC1_sq_sc)
+  lm1 <- method(as.formula(paste0('herb_p_t_sc ~ Latitude_sc + Latitude_sc_sq *(Trichomes_t_sc + Conc_t_sc + SLA_t_sc)', random)), DF_short_I_field)
+  lm1.1 <- method(as.formula(paste0('herb_p_t_sc ~ Latitude_sc + Latitude_sc_sq + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random)), DF_short_I_field)
+  lm1.2 <- update(lm1.1, . ~ . - Latitude_sc_sq)
+  lm1.3 <- update(lm1, . ~ . - Latitude_sc_sq)
   
-  lm2 <- method(as.formula(paste0('Conc_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc', random)), DF_short_I_field)
-  lm2.1 <- update(lm2, . ~ . - Clim_PC1_sq_sc)
+  lm2 <- method(as.formula(paste0('Conc_t_sc ~ Latitude_sc + Latitude_sc_sq', random)), DF_short_I_field)
+  lm2.1 <- update(lm2, . ~ . - Latitude_sc_sq)
   
-  lm3 <- method(as.formula(paste0('SLA_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc', random)), DF_short_I_field)
-  lm3.1 <- update(lm3, . ~ . - Clim_PC1_sq_sc)
+  lm3 <- method(as.formula(paste0('SLA_t_sc ~ Latitude_sc + Latitude_sc_sq', random)), DF_short_I_field)
+  lm3.1 <- update(lm3, . ~ . - Latitude_sc_sq)
   
-  lm4 <- method(as.formula(paste0('Trichomes_t_sc ~ Clim_ave_PC1_sc + Clim_PC1_sq_sc', random)), DF_short_I_field)
-  lm4.1 <- update(lm4, . ~ . - Clim_PC1_sq_sc)
+  lm4 <- method(as.formula(paste0('Trichomes_t_sc ~ Latitude_sc + Latitude_sc_sq', random)), DF_short_I_field)
+  lm4.1 <- update(lm4, . ~ . - Latitude_sc_sq)
   
   # Create a named list of models
   model_list <- list(lm1 = lm1, lm1.1 = lm1.1,lm1.2 = lm1.2, lm1.3 = lm1.3,
@@ -360,8 +359,8 @@ Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1
 
 
 # Field climate versus trichomes
-ClimXtrich<-Custom_ggplot()+
-  labs(x="Climate productivity",y="Trichomes") +
+ClimXtrich<-Custom_ggplot(predictor = "Latitude")+
+  labs(y="Trichomes") +
   C_theme;ClimXtrich
 
 ClimXglyc<-Custom_ggplot(predictor = 'Clim_ave_PC1',response = "Conc", family = "gaussian",deg=1)+
@@ -418,32 +417,33 @@ Herb_by_time<-function(herb='herb_p_t_sc',family.var='poisson',time="Early",ad_f
   
   Data<- rbind(Data,Data1)
   
-glmmTMB(as.formula(paste0(herb, '~ Clim_ave_PC1_sc + Clim_PC1_sq_sc + (Trichomes_t_sc + Conc_t_sc + SLA_t_sc)',ad_form)),
+model<-glmmTMB(as.formula(paste0(herb, '~ Latitude_sc + Latitude_sc_sq + (Trichomes_t_sc + Conc_t_sc + SLA_t_sc)',ad_form)),
         family=family.var,data=Data)
+list(Data,model)
 }
 
 # Models of herbivory using the 75th quantile, mean, and max herbivory.
 all_herb_mod_quant<-Herb_by_time(herb='quant_herb_0.75',family=beta_family(),time='Early|Mid|Late',ad_form='*Time')
-AIC(all_herb_mod_quant)
-emtrends(all_herb_mod_quant,~Time,var="SLA_t_sc",infer=T)
-emtrends(all_herb_mod_quant,~Time,var="Conc_t_sc",infer=T)
-emtrends(all_herb_mod_quant,~Time,var="Trichomes_t_sc",infer=T)
-emtrends(all_herb_mod_quant,~Time,var="Clim_ave_PC1_sc",infer=T)
-emtrends(all_herb_mod_quant,~Time,var="Clim_PC1_sq_sc",infer=T)
+AIC(all_herb_mod_quant[[2]])
+emtrends(all_herb_mod_quant[[2]],~Time,var="SLA_t_sc",infer=T)
+emtrends(all_herb_mod_quant[[2]],~Time,var="Conc_t_sc",infer=T)
+emtrends(all_herb_mod_quant[[2]],~Time,var="Trichomes_t_sc",infer=T)
+emtrends(all_herb_mod_quant[[2]],~Time,var="Latitude_sc",infer=T)
+emtrends(all_herb_mod_quant[[2]],~Time,var="Latitude_sc_sq",infer=T)
 
 all_herb_mod_mean<-Herb_by_time(herb='herb_p',family=beta_family(),time='Early|Mid|Late',ad_form='*Time')
-AIC(all_herb_mod_mean)
-emtrends(all_herb_mod_mean,~Time,var="SLA_t_sc",infer=T)
-emtrends(all_herb_mod_mean,~Time,var="Conc_t_sc",infer=T)
-emtrends(all_herb_mod_mean,~Time,var="Trichomes_t_sc",infer=T)
-emtrends(all_herb_mod_mean,~Time,var="Clim_ave_PC1_sc",infer=T)
-emtrends(all_herb_mod_mean,~Time,var="Clim_PC1_sq_sc",infer=T)
+AIC(all_herb_mod_mean[[2]])
+emtrends(all_herb_mod_mean[[2]],~Time,var="SLA_t_sc",infer=T)
+emtrends(all_herb_mod_mean[[2]],~Time,var="Conc_t_sc",infer=T)
+emtrends(all_herb_mod_mean[[2]],~Time,var="Trichomes_t_sc",infer=T)
+emtrends(all_herb_mod_mean[[2]],~Time,var="Latitude_sc",infer=T)
+emtrends(all_herb_mod_mean[[2]],~Time,var="Latitude_sc_sq",infer=T)
 
 all_herb_mod_max<-Herb_by_time(herb='max_herb',family=beta_family(),time='Early|Mid|Late',ad_form='*Time')
-AIC(all_herb_mod_max)
-emtrends(all_herb_mod_max,~Time,var="SLA_t_sc",infer=T)
-emtrends(all_herb_mod_max,~Time,var="Conc_t_sc",infer=T)
-emtrends(all_herb_mod_max,~Time,var="Trichomes_t_sc",infer=T)
+AIC(all_herb_mod_max[[2]])
+emtrends(all_herb_mod_max[[2]],~Time,var="SLA_t_sc",infer=T)
+emtrends(all_herb_mod_max[[2]],~Time,var="Conc_t_sc",infer=T)
+emtrends(all_herb_mod_max[[2]],~Time,var="Trichomes_t_sc",infer=T)
 
 # Appendix: AICs at different herbivory observations -----
 # Herbviory data from early in the year
@@ -511,3 +511,20 @@ ggsave("Appendix.jpg",
        device = "jpg",plot = appendix,
        path = "Figures",dpi = 400,width = 12, 
        height = 12,limitsize = F)
+
+trait_x_herb_plot<-function(response,y_lab){ggplot(data = all_herb_mod_max[[1]] %>% pivot_longer(cols = c(Trichomes,SLA,Conc)),
+       aes(x=value,y=!!sym(response),col=Time)) +
+  geom_point()+
+  geom_smooth(method="glm",formula=y~x,
+              method.args=list(family=beta_family()),
+              se=F)+
+  facet_wrap(~name,scale="free_x",nrow=2)+
+  C_theme + theme(legend.position = c(0.75,0.2))+
+    labs(x="Trait value",y=y_lab)}
+
+
+trait_x_herb_plot("herb_p","Average herbviory")
+
+trait_x_herb_plot("max_herb","Max herbviory")
+
+trait_x_herb_plot("quant_herb_0.75","Herbviory (75th quantile)")
