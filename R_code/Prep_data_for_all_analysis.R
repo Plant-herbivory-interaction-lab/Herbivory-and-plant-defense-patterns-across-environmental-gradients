@@ -28,7 +28,7 @@ Field_2023<-dbReadTable(con,
   mutate(
          herb=herb_p,
          herb_p=(transform_perc(herb_p)),
-         Date=as.Date(Date,origin = "1970-01-01"))
+         Date=as.Date(Date,origin = "1970-01-01")) 
 
 ### Data from the field in 2022
 Field_2022<-dbReadTable(con,"Field_2022") %>% 
