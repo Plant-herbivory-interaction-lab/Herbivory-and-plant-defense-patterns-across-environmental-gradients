@@ -41,12 +41,16 @@ edge_labels <- round(weights, 3)
 # Define node order (top to bottom)
 node_names <- c("Herbivory", "Glycoalkaloids", "SLA", "Trichomes", "Latitude", "Latitude (sq)")
 
+# DEfine edge label locations
+edge_label_locations<-c(0.5,0.5,0.5,0.5,0.5,0.5,0.7,0.4,0.4,0.7,0.5)
+
+
 # Define custom layout positions with increased spacing
 layout_matrix <- matrix(c(
   0,  1,  # herb_p_t (higher top)
-  -1,  0,  # Conc (middle left)
+  -0.8,  0,  # Conc (middle left)
   0,  0,  # SLA (middle center)
-  1,  0,  # Trichomes (middle right)
+  0.8,  0,  # Trichomes (middle right)
   -0.5, -1,  # Clim_ave_PC1 (bottom left)
   0.5, -1   # Clim_PC1_sq (bottom right)
 ), byrow = TRUE, ncol = 2)
@@ -64,7 +68,7 @@ curves[climate1_to_herbivory] <- 5.6
 curves[climate_to_herbivory] <- -5.6
 
 
- # Enlarged labels with backgroun
+ # Enlarged labels with background
 
 temp_file<-tempfile(fileext = ".svg")
 
@@ -73,13 +77,15 @@ svglite(temp_file, width = 60, height = 60)
 # Plot with qgraph
   qgraph(edge_list, layout = layout_matrix, labels = node_names, directed = TRUE,
                        edge.labels = edge_labels, edge.color = edge_colors, edge.width = edge_widths,
-                       lty = edge_lty, curve = curves, edge.label.position = 0.7,
+                       edge.label.cex = 1.3,
+                       lty = edge_lty, curve = curves, edge.label.position = edge_label_locations,
                        edge.label.bg = "white",curveShape = -1.5,
+                       mar = c(3,5,3,5),
                        #filetype="jpg",
                        #filename = filename,
                        #height = 9, width = 9,
-         label.cex = 9, 
-                       shape="rectangle",vsize2=5,vsize=16,label.scale=F,border.width=2.1)
+         label.cex = 12, 
+                       shape="rectangle",vsize2=7,vsize=22,label.scale=F,border.width=2.1)
 
 dev.off()
 

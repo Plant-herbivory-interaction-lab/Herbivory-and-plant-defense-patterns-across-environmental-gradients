@@ -364,16 +364,16 @@ Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1
 
 # Field climate versus trichomes
 ClimXtrich<-Custom_ggplot(predictor = "Latitude")+
-  labs(y="Trichomes") +
+  labs(y="Trichomes",x="Latitude") +
   C_theme;ClimXtrich
 
-ClimXglyc<-Custom_ggplot(predictor = 'Clim_ave_PC1',response = "Conc", family = "gaussian",deg=1)+
-  labs(x="Climate productivity",y="Glycoalkaloids (mg/mg)") +
+ClimXglyc<-Custom_ggplot(predictor = "Latitude",response = "Conc", family = "gaussian",deg=1)+
+  labs(x="Latitude",y="Glycoalkaloids (mg/mg)") +
   C_theme;ClimXglyc
 
 # Field climate versus Herbivores
-ClimsqXherb<-Custom_ggplot(predictor = 'Clim_ave_PC1',response = "herb_p", family = beta_family(),deg=2)+
-  labs(x="Climate productivity",y="Herbivory (%)") +
+ClimsqXherb<-Custom_ggplot(predictor = "Latitude",response = "herb_p", family = beta_family(),deg=2)+
+  labs(x="Latitude",y="Herbivory (%)") +
   C_theme;ClimsqXherb
 
 # Field glycoalkaloids versus Herbivory
@@ -391,13 +391,13 @@ ggsave("Field_pan.jpg",
 ## Garden figure ----
 
 # Garden climate versus glycoalkaloids
-climXglyc<-Custom_ggplot(loc = "Garden",predictor = 'Clim_ave_PC1',response = "Conc", family = gaussian(link = "log"),deg=1,random = "+(1|Pop)")+
-  labs(x="Climate productivity",y="Glycoalkaloids (mg/mg)") +
+climXglyc<-Custom_ggplot(loc = "Garden",predictor = "Latitude",response = "Conc", family = gaussian(link = "log"),deg=1,random = "+(1|Pop)")+
+  labs(x="Latitude",y="Glycoalkaloids (mg/mg)") +
   C_theme;climXglyc
 
 # Garden climate versus trichomes
-climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = 'Clim_ave_PC1',response = "Trichomes", family = gaussian(link = "log"),deg=2,random = "+(1|Pop)")+
-  labs(x="Climate productivity",y="Trichomes") +
+climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Latitude",response = "Trichomes", family = gaussian(link = "log"),deg=2,random = "+(1|Pop)")+
+  labs(x="Latitude",y="Trichomes") +
   C_theme;climsqXtri_gard
 
 herbXSLA_gard<-Custom_ggplot(loc = "Garden",predictor = 'SLA',response = "herb_p", family = beta_family(),deg=1,random = "+(1|Pop)")+
