@@ -40,6 +40,7 @@ Field_2022<-dbReadTable(con,"Field_2022") %>%
 ### Data from the common garden 2023
 Garden<-dbReadTable(con, "Garden_2023") %>% 
   full_join(dbReadTable(con,"leaf_traits_garden")) %>% 
+  drop_na(Trichomes) %>% 
   mutate(Herby=ifelse(Herby>100,100,Herby),
          fl_m=as.numeric(fl_m),
          fl_m=ifelse(is.na(fl_m),0,fl_m),
