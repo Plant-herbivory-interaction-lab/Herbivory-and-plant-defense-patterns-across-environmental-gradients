@@ -145,7 +145,7 @@ C_theme<-theme_bw(base_size = 18)+
 # SEMs ----
 # SEM of the plant traits, climate and herbivore relations at the plant individual level.
 
-SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1", "lm2", "lm3", "lm4"), random = "+ (1|Time:Pop)",Time="mid",
+SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1", "lm2", "lm3", "lm4"), random = "+ (1|Pop:Time)",Time="mid",
                         byDate=F,start_date="2023-06-15",end_date="2023-07-29",corError = list(
                           quote(SLA_t_sc %~~% Trichomes_t_sc),
                           quote(SLA_t_sc %~~% Conc_t_sc)
@@ -160,7 +160,7 @@ SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1", "lm2",
   
   method<-get(mod_fun)
   
-  lm1 <- method(as.formula(paste0('herb_p_t_sc ~ Latitude_sc + Latitude_sc_sq *(Trichomes_t_sc + Conc_t_sc + SLA_t_sc)', random)), DF_short_I_field)
+  lm1 <- method(as.formula(paste0('herb_p_t_sc ~ Latitude_sc_sq + Latitude_sc *(Trichomes_t_sc + Conc_t_sc + SLA_t_sc)', random)), DF_short_I_field)
   lm1.1 <- method(as.formula(paste0('herb_p_t_sc ~ Latitude_sc + Latitude_sc_sq + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random)), DF_short_I_field)
   lm1.2 <- update(lm1.1, . ~ . - Latitude_sc_sq)
   lm1.3 <- update(lm1, . ~ . - Latitude_sc_sq)
@@ -496,30 +496,8 @@ ggsave("Appendix_S2.jpg",
        path = "Figures",dpi = 400,width = 12, 
        height = 12,limitsize = F)
 
-# Figure S3: Herbivory by traits in different times of the year ----
-trait_x_herb_plot<-function(response,y_lab){ggplot(data = all_herb_mod_max[[1]] %>% pivot_longer(cols = c(Trichomes,SLA,Conc)),
-       aes(x=value,y=!!sym(response),col=Time)) +
-  geom_point()+
-  geom_smooth(method="glm",formula=y~x,
-              method.args=list(family=beta_family()),
-              se=F)+
-  facet_wrap(~name,scale="free_x",nrow=2)+
-  C_theme + theme(legend.position = c(0.75,0.2))+
-    labs(x="Trait value",y=y_lab)}
-
-
-trait_x_herb_ave<-trait_x_herb_plot("herb_p","Average herbviory")
-
-trait_x_herb_plot("max_herb","Max herbviory")
-
-trait_x_herb_plot("quant_herb_0.75","Herbviory (75th quantile)")
-
-ggsave("Appendix_S3.jpg",
-       device = "jpg",plot = trait_x_herb_ave,
-       path = "Figures",dpi = 400,width = 12, 
-       height = 12,limitsize = F)
-
-# Herbviory in response to plant traits and climete at different times of the year ----
+# Herbivory in response to plant traits and climete at different times of the year ----
+# Herbivory graphing function
 Herb_by_time<-function(herb='herb_p_t_sc',family.var='poisson',time="Early",ad_form=""){
   Data<-Data_prep(loc = "Garden",byDate = F,Time.var = time,grouptime = T)
   Data1<-Data_prep(loc = "Garden",byDate = T,grouptime = F,start_date = "2023-04-15",end_date = "2023-09-15") %>% 
@@ -588,3 +566,25 @@ all_sem<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random
 AIC(all_sem,aicc = T)
 summary(all_sem)
 
+# Figure S3: Herbivory by traits in different times of the year ----
+trait_x_herb_plot<-function(response,y_lab){ggplot(data = all_herb_mod_max[[1]] %>% pivot_longer(cols = c(Trichomes,SLA,Conc)),
+       aes(x=value,y=!!sym(response),col=Time)) +
+  geom_point()+
+  geom_smooth(method="glm",formula=y~x,
+              method.args=list(family=beta_family()),
+              se=F)+
+  facet_wrap(~name,scale="free_x",nrow=2)+
+  C_theme + theme(legend.position = c(0.75,0.2))+
+    labs(x="Trait value",y=y_lab)}
+
+
+trait_x_herb_ave<-trait_x_herb_plot("herb_p","Average herbviory")
+
+trait_x_herb_plot("max_herb","Max herbviory")
+
+trait_x_herb_plot("quant_herb_0.75","Herbviory (75th quantile)")
+
+ggsave("Appendix_S3.jpg",
+       device = "jpg",plot = trait_x_herb_ave,
+       path = "Figures",dpi = 400,width = 12, 
+       height = 12,limitsize = F)
