@@ -33,15 +33,16 @@ edge_colors <- ifelse(weights > 0, "black", "darkred")
 edge_lty <- ifelse(p_values < 0.05, 1, 2)  # 1 = solid, 2 = dashed
 
 # Define edge widths based on effect size
-edge_widths <- sqrt(rank(abs(weights)))
+edge_widths <- ifelse(p_values < 0.05,abs(weights)*20,1)
+print(edge_widths)
 
 # Define estimates as edge labels (rounded to 2 decimals)
-edge_labels <- round(weights, 3)  
+edge_labels <- ifelse(p_values < 0.05,round(weights, 3),NA)  
 
 # Define node order (top to bottom)
 node_names <- c("Herbivory", "Glycoalkaloids", "SLA", "Trichomes", "Latitude", "Latitude (sq)")
 
-# DEfine edge label locations
+# Define edge label locations
 edge_label_locations<-c(0.5,0.5,0.5,0.5,0.5,0.5,0.7,0.4,0.4,0.7,0.5)
 
 
@@ -77,7 +78,7 @@ svglite(temp_file, width = 60, height = 60)
 # Plot with qgraph
   qgraph(edge_list, layout = layout_matrix, labels = node_names, directed = TRUE,
                        edge.labels = edge_labels, edge.color = edge_colors, edge.width = edge_widths,
-                       edge.label.cex = 1.3,
+                       edge.label.cex = 1.5,
                        lty = edge_lty, curve = curves, edge.label.position = edge_label_locations,
                        edge.label.bg = "white",curveShape = -1.5,
                        mar = c(3,5,3,5),
