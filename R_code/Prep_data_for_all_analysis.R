@@ -35,7 +35,11 @@ Field_2022<-dbReadTable(con,"Field_2022") %>%
   mutate(herb_p=Herbivory/100,
          herb=herb_p,
          herb_p=(transform_perc(herb_p)),
-         Date=as.Date(Date,origin = "1970-01-01"))
+         Date=as.Date(Date,origin = "1970-01-01")) %>% 
+  # Filtered data from the field collected late in the year.
+  # This data does not change the outcome of the results, but the data isn't consistent with other herbivory data.
+  # This data was collected when we collected the roots to be grown in the common garden.
+  filter(Date<as.Date("2022-09-01")) 
 
 ### Data from the common garden 2023
 Garden<-dbReadTable(con, "Garden_2023") %>% 
@@ -53,7 +57,7 @@ Garden<-dbReadTable(con, "Garden_2023") %>%
                   include.lowest = TRUE, 
                   right = FALSE),
          herb=Herby/100,
-         herb_p=(transform_perc(herb)))
+         herb_p=(transform_perc(herb))) 
 
 #### Import the climate and soil data ----
 
