@@ -82,6 +82,8 @@ if(loc=="Garden"){
   Combined_data1<-Combined_data1 %>%
   {if(grouptime==F){group_by(.,Plant_ID)}else{group_by(.,Plant_ID,Time,Loc)}} %>% 
   summarise(Pop=unique(Pop),
+            Loc=unique(Loc),
+            Time=unique(Time),
             Date=sample(c(min(Date),max(Date)),size=1),
             quant_herb_0.75=as.vector(quantile(herb_p)[3]),
             max_herb=max(herb_p),
