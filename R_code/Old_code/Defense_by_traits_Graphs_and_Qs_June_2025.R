@@ -38,21 +38,27 @@ source("R_code/Psem_graphing.R")
 Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
                     Treatment=F,Time.var='Mid',start_date="2023-06-15",
                     end_date="2023-07-29",byDate=F,grouptime=F,...){
+
+  
 Field_2022<-Field_2022 %>% 
   select(Plant_ID,Date,Trichomes:herb) %>% 
   mutate(Loc="Field",
-         Time="2022")
+         Plant_ID=paste0(Pop,"-",Plant_ID),
+         Time="2022") %>% 
+  left_join(herbs_2022)
+
 
 Field_2023<-Field_2023 %>% 
-  select(Plant_ID,Date,herb_p:herb) %>% 
+  select(Pop,Plant_ID,Date,herb_p:herb) %>% 
   mutate(Loc="Field",
          Time="2023",
-         #Conc=Conc*2.5
-         ) # This is do to using different amounts of leaf material.
+         ) %>% 
+  left_join(herbs_2023)
 
 Garden<-Garden %>% 
   select(Plant_ID,Date,Pop,Spines,Trichomes,SLA,Conc,herb_p,herb,Time) %>% 
-  mutate(Loc="Garden")
+  mutate(Loc="Garden",
+         Total_herbs=NA)
 
 Combined_data1<-rbind(Field_2022,Field_2023,Garden)%>% filter(SLA>3.9) %>% 
   left_join(PCs %>% 
@@ -82,6 +88,8 @@ if(loc=="Garden"){
   Combined_data1<-Combined_data1 %>%
   {if(grouptime==F){group_by(.,Plant_ID)}else{group_by(.,Plant_ID,Time,Loc)}} %>% 
   summarise(Pop=unique(Pop),
+            Loc = if (PopLevel) unique(Loc) else first(Loc),
+            Time = if (PopLevel) unique(Time) else first(Time),
             Date=sample(c(min(Date),max(Date)),size=1),
             quant_herb_0.75=as.vector(quantile(herb_p)[3]),
             max_herb=max(herb_p),
@@ -131,7 +139,8 @@ Combined_data1<-Combined_data1 %>% ungroup() %>%
     SLA_t_sc=scale(SLA_t)[,1],
     Trichomes_t_sc=scale(Trichomes_t)[,1],
     herb_p_t_sc=scale(herb_p_t)[,1],
-    Plant=c(1:length(Conc))
+    Plant=c(1:length(Conc)),
+    Total_herbs=scale(Total_herbs)[,1]
   )  
 
 Combined_data1
@@ -160,8 +169,8 @@ SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1", "lm2",
   
   method<-get(mod_fun)
   
-  lm1 <- method(as.formula(paste0('herb_p_t_sc ~ Latitude_sc_sq + Latitude_sc *(Trichomes_t_sc + Conc_t_sc + SLA_t_sc)', random)), DF_short_I_field)
-  lm1.1 <- method(as.formula(paste0('herb_p_t_sc ~ Latitude_sc + Latitude_sc_sq + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random)), DF_short_I_field)
+  lm1 <- method(as.formula(paste0('herb_p_t_sc ~ Latitude_sc_sq + Latitude_sc *(Trichomes_t_sc + Conc_t_sc + SLA_t_sc+Total_herbs)', random)), DF_short_I_field)
+  lm1.1 <- method(as.formula(paste0('herb_p_t_sc ~ Latitude_sc + Latitude_sc_sq + Trichomes_t_sc + Conc_t_sc + SLA_t_sc+Total_herbs', random)), DF_short_I_field)
   lm1.2 <- update(lm1.1, . ~ . - Latitude_sc_sq)
   lm1.3 <- update(lm1, . ~ . - Latitude_sc_sq)
   
@@ -588,3 +597,18 @@ ggsave("Appendix_S3.jpg",
        device = "jpg",plot = trait_x_herb_ave,
        path = "Figures",dpi = 400,width = 12, 
        height = 12,limitsize = F)
+
+# Figure S4: Herbivory versus glycoalkaloids in different populations ----
+ggplot(Data_prep(),aes(x=Conc,y=herb_p)) +
+  geom_point()+
+  geom_smooth(method="glm",
+              method.args=list(family=beta_family())) +
+  facet_wrap(~round(Latitude,2),scales="free",nrow=7) +
+  C_theme + theme(text = element_text(size=12))
+
+ggplot(Data_prep(),aes(x=Trichomes,y=herb_p)) +
+  geom_point()+
+  geom_smooth(method="glm",
+              method.args=list(family=beta_family())) +
+  facet_wrap(~round(Latitude,2),scales="free",nrow=7) +
+  C_theme + theme(text = element_text(size=12))
