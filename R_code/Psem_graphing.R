@@ -36,7 +36,7 @@ edge_lty <- ifelse(p_values < 0.05, 1, 2)  # 1 = solid, 2 = dashed
 edge_widths <- ifelse(p_values < 0.05,abs(weights)*20,1)
 
 # Define estimates as edge labels (rounded to 2 decimals)
-edge_labels <- ifelse(p_values < 0.05,round(weights, 3),NA)  
+edge_labels <- ifelse(p_values < 0.1,round(weights, 3),NA)  
 
 # Define node order (top to bottom)
 node_names <- c("Herbivory", "Glycoalkaloids", "SLA", "Trichomes", "Latitude", "Latitude (sq)")
@@ -48,9 +48,9 @@ edge_label_locations<-c(0.5,0.5,0.5,0.5,0.5,0.5,0.7,0.4,0.4,0.7,0.5)
 # Define custom layout positions with increased spacing
 layout_matrix <- matrix(c(
   0,  1,  # herb_p_t (higher top)
-  -0.8,  0,  # Conc (middle left)
+  -0.7,  0,  # Conc (middle left)
   0,  0,  # SLA (middle center)
-  0.8,  0,  # Trichomes (middle right)
+  0.7,  0,  # Trichomes (middle right)
   -0.5, -1,  # Clim_ave_PC1 (bottom left)
   0.5, -1   # Clim_PC1_sq (bottom right)
 ), byrow = TRUE, ncol = 2)
@@ -77,15 +77,15 @@ svglite(temp_file, width = 60, height = 60)
 # Plot with qgraph
   qgraph(edge_list, layout = layout_matrix, labels = node_names, directed = TRUE,
                        edge.labels = edge_labels, edge.color = edge_colors, edge.width = edge_widths,
-                       edge.label.cex = 1.5,
+                       edge.label.cex = 1.8,
                        lty = edge_lty, curve = curves, edge.label.position = edge_label_locations,
                        edge.label.bg = "white",curveShape = -1.5,
-                       mar = c(3,5,3,5),
+                       mar = c(3,7,3,7),
                        #filetype="jpg",
                        #filename = filename,
                        #height = 9, width = 9,
-         label.cex = 12, 
-                       shape="rectangle",vsize2=7,vsize=22,label.scale=F,border.width=2.1)
+         label.cex = 14, 
+                       shape="rectangle",vsize2=8,vsize=25,label.scale=F,border.width=2.1)
 
 dev.off()
 

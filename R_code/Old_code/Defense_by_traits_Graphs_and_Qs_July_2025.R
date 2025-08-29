@@ -49,8 +49,7 @@ Combined_data1<-Combined_data1%>%
   drop_na()%>% left_join(dbReadTable(con,"Combined_herbs_pop") %>% 
                                    select(Pop,Time,loc,N_Herbivores_mean,N_Herbivores_sum,Feeding_guild) %>%
                                    filter(Feeding_guild=="Chewing"),
-                                 by = join_by(Pop, Year==Time,Loc==loc)) %>% 
-  filter(SLA>40&SLA<270)
+                                 by = join_by(Pop, Year==Time,Loc==loc)) 
 
 if(loc=="Field"|loc=="Garden"){Combined_data1<-Combined_data1 %>% 
   #select(!c(Spines)) %>% 
@@ -75,11 +74,12 @@ if(loc=="Garden"){
   summarise(Pop=unique(Pop),
             Loc = if (PopLevel) unique(Loc) else first(Loc),
             Time = if (PopLevel) unique(Time) else first(Time),
-            Date=sample(c(min(Date),max(Date)),size=1),
-            quant_herb_0.75=as.vector(quantile(herb_p)[3]),
-            max_herb=max(herb_p),
+            Date=sample(c(min(Date,na.rm = T),max(Date,na.rm = T)),size=1),
+            quant_herb_0.75=as.vector(quantile(herb_p,na.rm = T)[3]),
+            max_herb=max(herb_p,na.rm = T),
             across(where(is.numeric), ~ mean(., na.rm = TRUE))) %>% 
-  ungroup() %>% drop_na(SLA,Date)
+  ungroup() #%>% 
+    #filter(SLA>40&SLA<270)
 }
 
  
@@ -92,7 +92,7 @@ if(PopLevel==T&Treatment==F){Combined_data1<-Combined_data1 %>%
 
 
 if(PopLevel==T){Combined_data1<-Combined_data1 %>% 
-  summarise(across(where(is.numeric), \ (x) mean(x, na.rm = TRUE))) %>% 
+  summarise(across(where(is.numeric), \ (x) mean(x, na.rm = TRUE)),Plant_N=length(Pop)) %>% 
   ungroup()}
 
 
@@ -127,7 +127,7 @@ Combined_data1<-Combined_data1 %>% ungroup() %>%
     Trichomes_t_sc=scale(Trichomes_t)[,1],
     herb_p_t_sc=scale(herb_p_t)[,1],
     Plant=c(1:length(Conc))
-  )  
+  )  %>% filter(SLA_t_sc>-3&SLA_t_sc<3)
 
 Combined_data1
 }
@@ -143,36 +143,36 @@ C_theme<-theme_bw(base_size = 18)+
 SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1", "lm2", "lm3", "lm4"), random = "+ (1|Pop:Time)",Time="mid",
                         byDate=F,start_date="2023-06-15",end_date="2023-07-29",corError = list(
                           quote(SLA_t_sc %~~% Trichomes_t_sc),
-                          quote(SLA_t_sc %~~% Conc_t_sc)
-                        )) {
-  DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,start_date = start_date, end_date = end_date) 
-  
+                          quote(SLA_t_sc %~~% Conc_t_sc))) {
 
-  print(min(DF_short_I_field$Date))
-  print(max(DF_short_I_field$Date))
  
-  
   method<-get(mod_fun)
   
-  lm1 <- method(as.formula(paste0('herb_p_t_sc ~ Latitude_sc_sq + Latitude_sc *(Trichomes_t_sc + Conc_t_sc + SLA_t_sc)', random)), DF_short_I_field)
-  lm1.1 <- method(as.formula(paste0('herb_p_t_sc ~ Latitude_sc + Latitude_sc_sq + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random)), DF_short_I_field)
-  lm1.2 <- update(lm1.1, . ~ . - Latitude_sc_sq)
-  lm1.3 <- update(lm1, . ~ . - Latitude_sc_sq)
+  formula_strings <- c(
+    lm1 = paste0('herb_p_t_sc ~ Latitude_sc_sq + Latitude_sc *(Trichomes_t_sc + Conc_t_sc + SLA_t_sc)', random),
+    lm1.1 = paste0('herb_p_t_sc ~ Latitude_sc + Latitude_sc_sq + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random), 
+    lm1.2 = paste0('herb_p_t_sc ~ Latitude_sc + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random),
+    lm1.3 = paste0('herb_p_t_sc ~ Latitude_sc *(Trichomes_t_sc + Conc_t_sc + SLA_t_sc)', random),
+    lm2 = paste0('Conc_t_sc ~ Latitude_sc + Latitude_sc_sq', random),           
+    lm2.1 = paste0('Conc_t_sc ~ Latitude_sc',random),           
+    lm3 = paste0('SLA_t_sc ~ Latitude_sc + Latitude_sc_sq', random),
+    lm3.1 = paste0('SLA_t_sc ~ Latitude_sc', random),           
+    lm4 = paste0('Trichomes_t_sc ~ Latitude_sc + Latitude_sc_sq', random),  
+    lm4.1 = paste0('Trichomes_t_sc ~ Latitude_sc', random)                  
+  )
   
-  lm2 <- method(as.formula(paste0('Conc_t_sc ~ Latitude_sc + Latitude_sc_sq', random)), DF_short_I_field)
-  lm2.1 <- update(lm2, . ~ . - Latitude_sc_sq)
+  DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,
+                                start_date = start_date, 
+                                end_date = end_date) %>% 
+    select(c(Date,unique(unlist(lapply(formula_strings, function(fstr) {
+           all.vars(as.formula(fstr))
+      }))))) %>% drop_na()
   
-  lm3 <- method(as.formula(paste0('SLA_t_sc ~ Latitude_sc + Latitude_sc_sq', random)), DF_short_I_field)
-  lm3.1 <- update(lm3, . ~ . - Latitude_sc_sq)
   
-  lm4 <- method(as.formula(paste0('Trichomes_t_sc ~ Latitude_sc + Latitude_sc_sq', random)), DF_short_I_field)
-  lm4.1 <- update(lm4, . ~ . - Latitude_sc_sq)
+  print(min(DF_short_I_field$Date))
+  print(max(DF_short_I_field$Date))
   
-  # Create a named list of models
-  model_list <- list(lm1 = lm1, lm1.1 = lm1.1,lm1.2 = lm1.2, lm1.3 = lm1.3,
-                     lm2 = lm2, lm2.1 = lm2.1,
-                     lm3 = lm3, lm3.1 = lm3.1,
-                     lm4 = lm4, lm4.1 = lm4.1)
+  model_list <- lapply(formula_strings, function(fstr) method(as.formula(fstr), DF_short_I_field))
  
   AICs<-sapply(model_list,FUN=AIC)
   
@@ -392,7 +392,7 @@ climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Latitude",response = 
   labs(x="Latitude",y="Trichomes") +
   C_theme;climsqXtri_gard
 
-herbXSLA_gard<-Custom_ggplot(loc = "Garden|Field",predictor = 'SLA',response = "herb_p", family = beta_family(),deg=1,random = "+(1|Pop)")+
+herbXSLA_gard<-Custom_ggplot(loc = "Garden",predictor = 'SLA',response = "herb_p", family = beta_family(),deg=1,random = "+(1|Pop)")+
   labs(x="SLA",y="Herbivory (%)") +
   C_theme;herbXSLA_gard
 
