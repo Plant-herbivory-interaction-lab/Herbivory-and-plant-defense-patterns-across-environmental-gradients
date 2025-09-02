@@ -263,8 +263,8 @@ map_clim<-ggplot() +
 ggsave("map_clim_fig_1.pdf",
        device = "pdf",plot = map_clim,
        unit = "in",
-       path = "Figures",dpi = 400,width = 10, 
-       height = 7,limitsize = F)
+       path = "Figures",dpi = 400,width = 6, 
+       height = 4,limitsize = F)
 
 # Figure 2: SEMs ----
 Field_sem<-semGraph(Non_interaction_field);Field_sem
