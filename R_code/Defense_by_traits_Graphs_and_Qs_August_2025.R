@@ -250,7 +250,7 @@ OR <- crop(cn,clipxy)
 
 map_clim<-ggplot() + 
   geom_spatvector(data=OR,fill="NA",color="black") +
-  geom_point(data=obs,aes(x=longitude,y=latitude),shape=21,size=0.25,fill="grey",alpha=0.5)+
+  geom_point(data=obs,aes(x=longitude,y=latitude),shape=21,size=0.25,fill="grey",alpha=0.25)+
   geom_point(data=Pop_info,aes(x=Longitude,y=Latitude,shape = Year, fill = Year),size=3)+
   scale_shape_manual(values = c(21,22,23))+
   scale_fill_manual(values = c("darkred","darkgray","white"))+
@@ -262,8 +262,9 @@ map_clim<-ggplot() +
 
 ggsave("map_clim_fig_1.pdf",
        device = "pdf",plot = map_clim,
-       path = "Figures",dpi = 400,width = 6, 
-       height = 4,limitsize = F)
+       unit = "in",
+       path = "Figures",dpi = 400,width = 10, 
+       height = 7,limitsize = F)
 
 # Figure 2: SEMs ----
 Field_sem<-semGraph(Non_interaction_field);Field_sem
