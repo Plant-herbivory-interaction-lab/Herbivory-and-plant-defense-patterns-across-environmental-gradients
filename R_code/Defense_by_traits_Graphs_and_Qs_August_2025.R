@@ -25,7 +25,6 @@ library(emmeans)
 conflicts_prefer(dplyr::select(),
                  dplyr::filter)
 
-
 # Database connection ----
 con <-dbConnect(SQLite(), 'Data/Data.db')
 
