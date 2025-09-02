@@ -230,11 +230,13 @@ AIC(Non_interaction_Garden,aicc = T)
 Pop_info<-dbReadTable(con,
                       'pop_info_2022_and_2023') %>% 
   select(Pop,Latitude,Longitude) %>% 
-  left_join(Data_prep() %>% 
-              group_by(Pop) %>% 
-              reframe(Year=unique(Year)))
-
-# Add a grouing where color changes based on which year it was sampled and whether it was sampled both years.
+  right_join(Data_prep(PopLevel = T) %>% select(Pop,Time)) %>% 
+  group_by(Pop) %>% summarise(
+    Latitude  = first(Latitude),
+    Longitude = first(Longitude),
+    Year = if (n_distinct(Time) == 1) as.character(first(Time)) else "Both Years",
+    .groups   = "drop"
+    )
 
 tempdir<-tempdir()
 
@@ -249,7 +251,9 @@ OR <- crop(cn,clipxy)
 map_clim<-ggplot() + 
   geom_spatvector(data=OR,fill="NA",color="black") +
   geom_point(data=obs,aes(x=longitude,y=latitude),shape=21,size=0.25,fill="grey",alpha=0.5)+
-  geom_point(data=Pop_info,aes(x=Longitude,y=Latitude,fill=Year),shape=21,size=3)+
+  geom_point(data=Pop_info,aes(x=Longitude,y=Latitude,shape = Year, fill = Year),size=3)+
+  scale_shape_manual(values = c(21,22,23))+
+  scale_fill_manual(values = c("darkred","darkgray","white"))+
   theme(panel.background = element_blank(),
         legend.position = "top")+
   theme_void(base_size = 10);map_clim
