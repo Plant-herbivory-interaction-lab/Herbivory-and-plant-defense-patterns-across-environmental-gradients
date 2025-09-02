@@ -278,10 +278,6 @@ ggsave("SEM.jpg",
        path = "Figures",dpi = 400,width = 10, 
        height = 5,limitsize = F)
 
-
-
-
-
 # Figures 3&4: Significant trends in the SEM ---- 
 Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1',deg=2,random="+(1|Pop:Time)",family="poisson"){
   Data<-Data_prep(loc=loc) %>% 
