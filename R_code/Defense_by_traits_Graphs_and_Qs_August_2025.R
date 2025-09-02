@@ -229,7 +229,12 @@ AIC(Non_interaction_Garden,aicc = T)
 ## Figure 1: Maps ----
 Pop_info<-dbReadTable(con,
                       'pop_info_2022_and_2023') %>% 
-  select(Pop,Latitude,Longitude)
+  select(Pop,Latitude,Longitude) %>% 
+  left_join(Data_prep() %>% 
+              group_by(Pop) %>% 
+              reframe(Year=unique(Year)))
+
+# Add a grouing where color changes based on which year it was sampled and whether it was sampled both years.
 
 tempdir<-tempdir()
 
@@ -237,24 +242,14 @@ cn <- gadm(country = "USA", level = 1,path=tempdir)
 
 obs<-dbReadTable(con,"Plant_range")
 
-mat <- raster(worldclim_global("bio",res=2.5,path=tempdir))*10
-
 clipxy <- c(-100,-65,25,50)
-
-mat<-rast(crop(mat,clipxy))
 
 OR <- crop(cn,clipxy)
 
-br <- colorRampPalette(c("darkblue","blue","cyan","green","yellow","orange","red"))
-
 map_clim<-ggplot() + 
-  geom_spatraster(data=mat*0.1)+
   geom_spatvector(data=OR,fill="NA",color="black") +
   geom_point(data=obs,aes(x=longitude,y=latitude),shape=21,size=0.25,fill="grey",alpha=0.5)+
-  geom_point(data=Pop_info,aes(x=Longitude,y=Latitude),shape=21,size=3,fill="darkred")+
-    scale_fill_gradientn(colors=br(10),
-                       name=bquote(atop("Mean annual","Temperature (\u00B0C)")),
-                       na.value="transparent")+
+  geom_point(data=Pop_info,aes(x=Longitude,y=Latitude,fill=Year),shape=21,size=3)+
   theme(panel.background = element_blank(),
         legend.position = "top")+
   theme_void(base_size = 10);map_clim
