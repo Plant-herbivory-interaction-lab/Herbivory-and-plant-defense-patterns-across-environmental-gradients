@@ -32,7 +32,6 @@ con <-dbConnect(SQLite(), 'Data/Data.db')
 source("R_code/Prep_data_for_all_analysis_July.R")
 source("R_code/Psem_graphing.R")
 
-
 Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
                     Treatment=F,Time.var='Mid',start_date="2023-06-15",
                     end_date="2023-07-29",byDate=F,grouptime=F,...){
