@@ -36,7 +36,6 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
                     Treatment=F,Time.var='Mid',start_date="2023-06-15",
                     end_date="2023-07-29",byDate=F,grouptime=F,...){
 
-
 Combined_data1<-Combined_data1%>% 
   left_join(PCs %>% 
               select(Latitude,Pop,Clim_ave_PC1,Soil_PC1,Soil_PC2,Clim_ave_PC2,Aridity,Latitude_quad)
