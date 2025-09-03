@@ -260,7 +260,7 @@ map_clim<-ggplot() +
 
 
 ggsave("map_clim_fig_1.jpg",
-       device = "pdf",plot = map_clim,
+       device = "jpg",plot = map_clim,
        path = "Figures",dpi = 400,width = 6, 
        height = 4)
 
