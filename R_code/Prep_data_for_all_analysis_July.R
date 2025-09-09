@@ -30,7 +30,6 @@ Combined_data1<-dbReadTable(con,
          Date=as.Date(Date,origin = "1970-01-01")) 
 
 
-
 ### Data from the common garden 2023
 Garden<-dbReadTable(con, "Graden_trait_data") %>% 
   mutate(
