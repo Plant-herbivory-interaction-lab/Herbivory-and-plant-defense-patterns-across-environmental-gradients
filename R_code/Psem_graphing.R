@@ -33,7 +33,7 @@ edge_colors <- ifelse(weights > 0, "black", "darkred")
 edge_lty <- ifelse(p_values < 0.05, 1, 2)  # 1 = solid, 2 = dashed
 
 # Define edge widths based on effect size
-edge_widths <- ifelse(p_values < 0.05,abs(weights)*20,1)
+edge_widths <- ifelse(p_values < 0.1,abs(weights)*20,1)
 
 # Define estimates as edge labels (rounded to 2 decimals)
 edge_labels <- ifelse(p_values < 0.1,round(weights, 3),NA)  
