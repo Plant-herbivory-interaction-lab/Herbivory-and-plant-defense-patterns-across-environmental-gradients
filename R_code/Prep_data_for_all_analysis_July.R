@@ -31,7 +31,7 @@ Combined_data1<-dbReadTable(con,
 
 
 ### Data from the common garden 2023
-Garden<-dbReadTable(con, "Graden_trait_data") %>% 
+Garden<-dbReadTable(con, "Garden_trait_data") %>% 
   mutate(
     herb_p=(transform_perc(herb)),
     Date=as.Date(Date,origin = "1970-01-01")) 
