@@ -21,6 +21,8 @@ library(raster)
 library(tidyterra)
 library(DHARMa)
 library(emmeans)
+library(GGally)
+library(ggplotify)
 
 conflicts_prefer(dplyr::select(),
                  dplyr::filter)
@@ -31,15 +33,14 @@ con <-dbConnect(SQLite(), 'Data/Data.db')
 # Import and prep data ----
 source("R_code/Prep_data_for_all_analysis_July.R")
 source("R_code/Psem_graphing.R")
+source("R_code/GGpairs_mod.R")
 
 Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
                     Treatment=F,Time.var='Mid',start_date="2023-06-15",
                     end_date="2023-07-29",byDate=F,grouptime=F,...){
 
 Combined_data1<-Combined_data1%>% 
-  left_join(PCs %>% 
-              select(Latitude,Pop,Clim_ave_PC1,Soil_PC1,Soil_PC2,Clim_ave_PC2,Aridity,Latitude_quad)
-            %>% mutate(Latitude_sc=scale(Latitude),
+  left_join(PCs  %>% mutate(Latitude_sc=scale(Latitude),
                        Latitude_sc_sq=Latitude_sc^2,)) %>% 
   drop_na()%>% left_join(dbReadTable(con,"Combined_herbs_pop") %>% 
                                    select(Pop,Time,loc,N_Herbivores_mean,N_Herbivores_sum,Feeding_guild) %>%
@@ -225,10 +226,10 @@ AIC(Non_interaction_Garden,aicc = T)
 Pop_info<-dbReadTable(con,
                       'pop_info_2022_and_2023') %>% 
   select(Pop,Latitude,Longitude) %>% 
-  right_join(Data_prep(PopLevel = T) %>% select(Pop,Time)) %>% 
+  right_join(Data_prep(PopLevel = T)) %>% 
   group_by(Pop) %>% summarise(
-    Latitude  = first(Latitude),
-    Longitude = first(Longitude),
+    height=mean(Height,na.rm=T),
+    across(where(is.numeric), first),
     Year = if (n_distinct(Time) == 1) as.character(first(Time)) else "Both Years",
     .groups   = "drop"
     )
@@ -249,11 +250,41 @@ map_clim<-ggplot() +
   geom_point(data=Pop_info,aes(x=Longitude,y=Latitude,shape = Year, fill = Year),size=3)+
   scale_shape_manual(values = c(21,22,23))+
   scale_fill_manual(values = c("darkred","darkgray","white"))+
-  theme(panel.background = element_blank(),
-        legend.position = "top")+
-  theme_void(base_size = 10);map_clim
+  theme(panel.background = element_blank())+
+  theme_void(base_size = 10) +
+  theme(legend.position = c(0.75,0.2));map_clim
 
 
+
+
+make_plots <- function(data, x_var, y_vars, ncol = 2) {
+  plots <- lapply(seq_along(y_vars), function(i) {
+    y <- y_vars[i]
+    p <- ggplot(data, aes_string(x = x_var, y = y)) +
+      geom_point() +
+      C_theme
+    
+    # Remove x-axis text/label except for bottom row
+    nrow <- ceiling(length(y_vars) / ncol)
+    row_index <- ceiling(i / ncol)
+    if (row_index < nrow) {
+      p <- p + theme(axis.title.x = element_blank(),
+                     axis.text.x  = element_blank(),
+                     axis.ticks.x = element_blank())
+    }
+    p
+  })
+  
+  wrap_plots(plots, ncol = ncol)
+}
+
+make_plots(mtcars, "wt", c("mpg", "hp", "qsec", "disp"), ncol = 2)
+
+
+
+
+base + inset_element(pm, left = 0, bottom = 0, right = 1, top = 1, align_to = "panel") + 
+  inset_element(map_clim, left = 0.45, bottom = 0.25, right = 1.1, top = 1, align_to = "panel")
 
 ggsave("map_clim_fig_1.jpg",
        device = "jpg",plot = map_clim,
