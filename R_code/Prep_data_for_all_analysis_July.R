@@ -53,10 +53,13 @@ sqrt_transform <- function(x) {
 }
 
 Clim_ave<-dbReadTable(con,"Bioclims_1970_ave") %>% 
-  select(!c(Pop,Aridity))  %>% 
-  rename_with(.cols = ends_with("bio_1"):ends_with("bio_19"), 
+  select(
+         wc2.1_30s_bio_1,
+         wc2.1_30s_bio_4,wc2.1_30s_bio_12,
+         wc2.1_30s_bio_18)  %>% 
+  rename_with(.cols = matches("bio_.*"), 
               .fn = ~ str_replace_all(., "wc2.1_30s_bio_(\\d+)$", "BIO\\1")) %>% 
-  mutate(across(BIO13:BIO19),sqrt_transform(.)) %>% 
+  mutate(across(BIO18),sqrt_transform(.)) %>% 
   scale() %>% 
   as.data.frame()
 
@@ -83,6 +86,12 @@ PCs <- bind_cols(combined_data) %>% cbind(Pop_info) %>%
               select(Pop,Aridity,wc2.1_30s_bio_1,
                      wc2.1_30s_bio_4,wc2.1_30s_bio_12,
                      wc2.1_30s_bio_18)) %>% 
-  rename() %>% 
-  mutate(Latitude_quad=poly(Latitude,2)[,2])
+  rename(
+    MAT = wc2.1_30s_bio_1,
+    T_sd = wc2.1_30s_bio_4,
+    AP = wc2.1_30s_bio_12,
+    PWQ = wc2.1_30s_bio_18
+  ) %>% 
+  mutate('Climate productivity' = -Clim_ave_PC1,
+    Latitude_quad=poly(Latitude,2)[,2])
 
