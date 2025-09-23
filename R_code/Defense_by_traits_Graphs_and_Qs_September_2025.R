@@ -1,5 +1,5 @@
 ## Code by: Jacob Herschberger
-## Date: March 2025
+## Date: September 2025
 ## Email: j.herschberger@ufl.edu
 ## Project: Culprits of plant defense variation across a latitudinal gradient.
 
@@ -23,6 +23,7 @@ library(DHARMa)
 library(emmeans)
 library(GGally)
 library(ggplotify)
+library(grid)
 
 conflicts_prefer(dplyr::select(),
                  dplyr::filter)
@@ -129,9 +130,9 @@ Combined_data1
 }
 
 # Graph theme setup----
-C_theme<-theme_bw(base_size = 18)+
+C_theme<-function(size=18){theme_bw(base_size = size)+
   theme(panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank())
+        panel.grid.major = element_blank())}
 
 # SEMs ----
 # SEM of the plant traits, climate and herbivore relations at the plant individual level.
@@ -250,46 +251,69 @@ map_clim<-ggplot() +
   geom_point(data=Pop_info,aes(x=Longitude,y=Latitude,shape = Year, fill = Year),size=3)+
   scale_shape_manual(values = c(21,22,23))+
   scale_fill_manual(values = c("darkred","darkgray","white"))+
-  theme(panel.background = element_blank())+
-  theme_void(base_size = 10) +
-  theme(legend.position = c(0.75,0.2));map_clim
-
+  theme_void(base_size = 14) +
+  theme(
+    legend.position = "inside",
+    legend.position.inside = c(0.8, 0.2)
+    );map_clim
 
 
 
 make_plots <- function(data, x_var, y_vars, ncol = 2) {
+  nplots <- length(y_vars)
+  
+  # Determine bottom-most plot index for each column
+  bottom_plots <- sapply(1:ncol, function(col) {
+    # indices of plots in this column
+    idx <- seq(col, nplots, by = ncol)
+    max(idx)  # last plot in this column
+  })
+  
   plots <- lapply(seq_along(y_vars), function(i) {
     y <- y_vars[i]
-    p <- ggplot(data, aes_string(x = x_var, y = y)) +
-      geom_point() +
-      C_theme
     
-    # Remove x-axis text/label except for bottom row
-    nrow <- ceiling(length(y_vars) / ncol)
-    row_index <- ceiling(i / ncol)
-    if (row_index < nrow) {
-      p <- p + theme(axis.title.x = element_blank(),
-                     axis.text.x  = element_blank(),
-                     axis.ticks.x = element_blank())
+    # wrap y-axis label if longer than 8 chars
+    y_lab <- if (nchar(y) > 8) stringr::str_wrap(y, width = 8) else y
+    
+    p <- ggplot(data, aes(x = .data[[x_var]], y = .data[[y]])) +
+      geom_point() +
+      C_theme(size = 14) +
+      labs(y = y_lab, x = NULL)
+    
+    # Show ticks only if this plot is the bottom-most in its column
+    if (!(i %in% bottom_plots)) {
+      p <- p + theme(
+        axis.text.x  = element_blank(),
+        axis.ticks.x = element_blank()
+      )
+    } else {
+      # Optional: customize tick length or style
+      p <- p + theme(axis.ticks.length = unit(3, "pt"))
     }
+    
     p
   })
   
-  wrap_plots(plots, ncol = ncol)
+  # label placeholder
+  label_plot <- ggplot() + 
+    theme_void() + 
+    labs(title = x_var) + 
+    theme(plot.title = element_text(hjust = 0.5,size=14))
+  
+  # combine plots + label row
+  wrap_elements(wrap_elements(wrap_plots(plots, ncol = ncol)) / label_plot +
+                  plot_layout(heights = c(0.9, 0.001))) 
 }
 
-make_plots(mtcars, "wt", c("mpg", "hp", "qsec", "disp"), ncol = 2)
 
+vars<-make_plots(PCs, "Latitude", c("Climate productivity","T_sd", "MAT",  "PWQ","AP"), ncol = 2)
 
+clim_vars<-(vars + map_clim) + plot_annotation(tag_levels = "A")
 
-
-base + inset_element(pm, left = 0, bottom = 0, right = 1, top = 1, align_to = "panel") + 
-  inset_element(map_clim, left = 0.45, bottom = 0.25, right = 1.1, top = 1, align_to = "panel")
-
-ggsave("map_clim_fig_1.jpg",
-       device = "jpg",plot = map_clim,
-       path = "Figures",dpi = 400,width = 6, 
-       height = 4)
+ggsave("fig_1.jpg",
+       device = "jpg",plot = clim_vars,
+       path = "Figures",dpi = 400,width = 12, 
+       height = 6)
 
 # Figure 2: SEMs ----
 Field_sem<-semGraph(Non_interaction_field);Field_sem
