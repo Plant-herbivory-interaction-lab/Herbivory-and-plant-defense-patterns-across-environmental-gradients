@@ -139,7 +139,7 @@ C_theme<-function(size=18){theme_bw(base_size = size)+
 # SEMs ----
 # SEM of the plant traits, climate and herbivore relations at the plant individual level.
 
-SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1.1", "lm2", "lm3", "lm4"), random = "+ (1|Pop:Time)",Time="mid",
+SEM_results <- function(Loc = "Field", Clim_var="Latitude",mod_fun='glmmTMB',model = c("lm1.1", "lm2", "lm3", "lm4"), random = "+ (1|Pop:Time)",Time="mid",
                         byDate=F,start_date="2023-06-15",end_date="2023-07-29",corError = list(
                           quote(SLA_t_sc %~~% Trichomes_t_sc),
                           quote(SLA_t_sc %~~% Conc_t_sc))) {
@@ -148,14 +148,14 @@ SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1.1", "lm2
   method<-get(mod_fun)
   
   formula_strings <- c(
-    lm1.1 = paste0('herb_p_t_sc ~ Climate_productivity + Climate_productivity_quad + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random), 
-    lm1.2 = paste0('herb_p_t_sc ~ Climate_productivity + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random),
-    lm2 = paste0('Conc_t_sc ~ Climate_productivity + Climate_productivity_quad', random),           
-    lm2.1 = paste0('Conc_t_sc ~ Climate_productivity',random),           
-    lm3 = paste0('SLA_t_sc ~ Climate_productivity + Climate_productivity_quad', random),
-    lm3.1 = paste0('SLA_t_sc ~ Climate_productivity', random),           
-    lm4 = paste0('Trichomes_t_sc ~ Climate_productivity + Climate_productivity_quad', random),  
-    lm4.1 = paste0('Trichomes_t_sc ~ Climate_productivity', random)                  
+    lm1.1 = paste0('herb_p_t_sc ~',Clim_var, '_sc + ',Clim_var, '_sc_sq + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random), 
+    lm1.2 = paste0('herb_p_t_sc ~ ',Clim_var, '_sc + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random),
+    lm2 = paste0('Conc_t_sc ~ ',Clim_var, '_sc + ',Clim_var, '_sc_sq', random),           
+    lm2.1 = paste0('Conc_t_sc ~ ',Clim_var, '_sc',random),           
+    lm3 = paste0('SLA_t_sc ~ ',Clim_var, '_sc + ',Clim_var, '_sc_sq', random),
+    lm3.1 = paste0('SLA_t_sc ~ ',Clim_var, '_sc', random),           
+    lm4 = paste0('Trichomes_t_sc ~ ',Clim_var, '_sc + ',Clim_var, '_sc_sq', random),  
+    lm4.1 = paste0('Trichomes_t_sc ~ ',Clim_var, '_sc', random)                  
   )
   
   DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,
@@ -363,21 +363,21 @@ Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1
 # Field climate versus trichomes
 ClimXtrich<-Custom_ggplot(predictor = "Latitude")+
   labs(y="Trichomes",x="Latitude") +
-  C_theme;ClimXtrich
+  C_theme();ClimXtrich
 
 ClimXglyc<-Custom_ggplot(predictor = "Latitude",response = "Conc", family = "gaussian",deg=1)+
   labs(x="Latitude",y="Glycoalkaloids (mg/mg)") +
-  C_theme;ClimXglyc
+  C_theme();ClimXglyc
 
 # Field climate versus Herbivores
 ClimsqXherb<-Custom_ggplot(predictor = "Latitude",response = "herb_p", family = beta_family(),deg=2)+
   labs(x="Latitude",y="Herbivory (%)") +
-  C_theme;ClimsqXherb
+  C_theme();ClimsqXherb
 
 # Field glycoalkaloids versus Herbivory
 glycXherb<-Custom_ggplot(predictor = 'Conc',response = "herb_p", family = beta_family(),deg=1)+
   labs(x="Glycoalkaloids (mg/mg)",y='Herbivory (%)') +
-  C_theme;glycXherb
+  C_theme();glycXherb
 
 Field_pan<-((ClimXtrich|ClimXglyc)/(ClimsqXherb|glycXherb))+plot_annotation(tag_levels = "A");Field_pan
 
@@ -391,16 +391,16 @@ ggsave("Field_pan.jpg",
 # Garden climate versus glycoalkaloids
 climXglyc<-Custom_ggplot(loc = "Garden",predictor = "Latitude",response = "Conc", family = gaussian(link = "log"),deg=1,random = "+(1|Pop)")+
   labs(x="Latitude",y="Glycoalkaloids (mg/mg)") +
-  C_theme;climXglyc
+  C_theme();climXglyc
 
 # Garden climate versus trichomes
 climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Latitude",response = "Trichomes", family = gaussian(link = "log"),deg=2,random = "+(1|Pop)")+
   labs(x="Latitude",y="Trichomes") +
-  C_theme;climsqXtri_gard
+  C_theme();climsqXtri_gard
 
 herbXSLA_gard<-Custom_ggplot(loc = "Garden",predictor = 'SLA',response = "herb_p", family = beta_family(),deg=1,random = "+(1|Pop)")+
   labs(x="SLA",y="Herbivory (%)") +
-  C_theme;herbXSLA_gard
+  C_theme();herbXSLA_gard
 
 
 gard_pan<-(climsqXtri_gard|climXglyc)+plot_annotation(tag_levels = "A");gard_pan
