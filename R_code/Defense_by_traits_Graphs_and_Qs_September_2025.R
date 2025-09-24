@@ -5,7 +5,6 @@
 
 # Import packages ----
 # Run install.packages([Package name]) if package is not installed
-
 library(conflicted)
 library(DBI)
 library(RSQLite)
