@@ -42,7 +42,9 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
 
 Combined_data1<-Combined_data1%>% 
   left_join(PCs  %>% mutate(Latitude_sc=scale(Latitude),
-                       Latitude_sc_sq=Latitude_sc^2,)) %>% 
+                       Latitude_sc_sq=Latitude_sc^2,
+                       'Productivity_sc'= scale(`Climate PC1`,center = T),
+                       'Productivity_sc_sq' =  Latitude_sc_sq)) %>% 
   drop_na()%>% left_join(dbReadTable(con,"Combined_herbs_pop") %>% 
                                    select(Pop,Time,loc,N_Herbivores_mean,N_Herbivores_sum,Feeding_guild) %>%
                                    filter(Feeding_guild=="Chewing"),

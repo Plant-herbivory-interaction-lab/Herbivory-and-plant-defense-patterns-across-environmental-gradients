@@ -92,8 +92,5 @@ PCs <- bind_cols(combined_data) %>% cbind(Pop_info) %>%
     AP = wc2.1_30s_bio_12,
     PWQ = wc2.1_30s_bio_18
   ) %>% 
-  mutate('Climate productivity' = -Clim_ave_PC1,
-         'Climate_productivity'= `Climate productivity`,
-         'Climate_productivity_quad' =  poly(`Climate productivity`,2)[,2],
-    Latitude_quad=poly(Latitude,2)[,2])
+  mutate('Climate PC1' = -Clim_ave_PC1)
 
