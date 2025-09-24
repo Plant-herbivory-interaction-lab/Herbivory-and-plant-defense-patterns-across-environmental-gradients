@@ -7,13 +7,16 @@ semGraph<-function(fit=fit) {
   library(grid)
 edges<-summary(fit, fit=T,rsquare=T,conserve=T,standardize="scale")$coefficients[,c("Response","Predictor","Std.Estimate","P.Value")] %>% 
   filter(!grepl("~",Response)&!grepl("Loc",Predictor)) %>% 
-  mutate(Response=case_when(grepl("herb", Response) ~ 'Herbivory',
+  mutate(
+    across(where(is.character), ~ sub("_.*", "", .)),
+    across(where(is.character), ~ sub("_.*", "", .)),
+    Response=case_when(grepl("herb", Response) ~ 'Herbivory',
                             grepl("Conc", Response) ~ 'Glycoalkaloids',
                             grepl("SLA", Response) ~ 'SLA',
                             grepl("Trichomes", Response) ~ 'Trichomes',
                             .default = Response),
-         Predictor = case_when(Predictor == 'Climate_productivity'~ 'Productivity',
-                               Predictor == 'Climate_productivity_quad'~ 'Productivity (sq)',
+    Predictor = case_when(grepl("_sc$", Predictor) ~ sub("_sc$", "", Predictor),
+                               grepl("_sc_sq$", Predictor) ~ paste0(sub("_sc_sq$", "", Predictor), " (sq)"),
                                grepl("Conc", Predictor) ~ 'Glycoalkaloids',
                                grepl("SLA", Predictor) ~ 'SLA',
                                grepl("Trichomes", Predictor) ~ 'Trichomes',
@@ -39,7 +42,7 @@ edge_widths <- ifelse(p_values < 0.1,abs(weights)*20,1)
 edge_labels <- ifelse(p_values < 0.1,round(weights, 3),NA)  
 
 # Define node order (top to bottom)
-node_names <- c("Herbivory", "Glycoalkaloids", "SLA", "Trichomes", "Productivity", "Productivity (sq)")
+node_names <- c("Herbivory", "Glycoalkaloids", "SLA", "Trichomes", "Latitude", "Latitude (sq)")
 
 # Define edge label locations
 edge_label_locations<-c(0.5,0.5,0.5,0.5,0.5,0.5,0.7,0.4,0.4,0.7,0.5)
@@ -60,8 +63,8 @@ curves <- rep(0, nrow(edge_list))
 
 # Identify only the climate → herbivory paths and set outward curves
 
-climate1_to_herbivory <- which(edge_list[,1] %in% c("Productivity") & edge_list[,2] == "Herbivory")
-climate_to_herbivory <- which(edge_list[,1] %in% c("Productivity (sq)") & edge_list[,2] == "Herbivory")
+climate1_to_herbivory <- which(edge_list[,1] %in% c("Latitude") & edge_list[,2] == "Herbivory")
+climate_to_herbivory <- which(edge_list[,1] %in% c("Latitude (sq)") & edge_list[,2] == "Herbivory")
 
 
 curves[climate1_to_herbivory] <- 5.6
