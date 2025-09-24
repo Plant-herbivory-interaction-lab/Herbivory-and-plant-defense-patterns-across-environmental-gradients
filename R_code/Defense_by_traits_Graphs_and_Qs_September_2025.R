@@ -146,14 +146,14 @@ SEM_results <- function(Loc = "Field", mod_fun='glmmTMB',model = c("lm1.1", "lm2
   method<-get(mod_fun)
   
   formula_strings <- c(
-    lm1.1 = paste0('herb_p_t_sc ~ Latitude_sc + Latitude_sc_sq + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random), 
-    lm1.2 = paste0('herb_p_t_sc ~ Latitude_sc + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random),
-    lm2 = paste0('Conc_t_sc ~ Latitude_sc + Latitude_sc_sq', random),           
-    lm2.1 = paste0('Conc_t_sc ~ Latitude_sc',random),           
-    lm3 = paste0('SLA_t_sc ~ Latitude_sc + Latitude_sc_sq', random),
-    lm3.1 = paste0('SLA_t_sc ~ Latitude_sc', random),           
-    lm4 = paste0('Trichomes_t_sc ~ Latitude_sc + Latitude_sc_sq', random),  
-    lm4.1 = paste0('Trichomes_t_sc ~ Latitude_sc', random)                  
+    lm1.1 = paste0('herb_p_t_sc ~ Climate_productivity + Climate_productivity_quad + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random), 
+    lm1.2 = paste0('herb_p_t_sc ~ Climate_productivity + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random),
+    lm2 = paste0('Conc_t_sc ~ Climate_productivity + Climate_productivity_quad', random),           
+    lm2.1 = paste0('Conc_t_sc ~ Climate_productivity',random),           
+    lm3 = paste0('SLA_t_sc ~ Climate_productivity + Climate_productivity_quad', random),
+    lm3.1 = paste0('SLA_t_sc ~ Climate_productivity', random),           
+    lm4 = paste0('Trichomes_t_sc ~ Climate_productivity + Climate_productivity_quad', random),  
+    lm4.1 = paste0('Trichomes_t_sc ~ Climate_productivity', random)                  
   )
   
   DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,
@@ -306,7 +306,7 @@ make_plots <- function(data, x_var, y_vars, ncol = 2) {
 }
 
 
-vars<-make_plots(PCs, "Latitude", c("Climate productivity","T_sd", "MAT",  "PWQ","AP"), ncol = 2)
+vars<-make_plots(PCs, "Latitude", c("Climate productivity","Tsd", "MAT",  "PWQ","AP"), ncol = 2)
 
 clim_vars<-(vars + map_clim) + plot_annotation(tag_levels = "A")
 

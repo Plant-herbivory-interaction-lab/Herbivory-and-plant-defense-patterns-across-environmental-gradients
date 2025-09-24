@@ -12,8 +12,8 @@ edges<-summary(fit, fit=T,rsquare=T,conserve=T,standardize="scale")$coefficients
                             grepl("SLA", Response) ~ 'SLA',
                             grepl("Trichomes", Response) ~ 'Trichomes',
                             .default = Response),
-         Predictor = case_when(Predictor == 'Latitude_sc'~ 'Latitude',
-                               Predictor == 'Latitude_sc_sq'~ 'Latitude (sq)',
+         Predictor = case_when(Predictor == 'Climate_productivity'~ 'Productivity',
+                               Predictor == 'Climate_productivity_quad'~ 'Productivity (sq)',
                                grepl("Conc", Predictor) ~ 'Glycoalkaloids',
                                grepl("SLA", Predictor) ~ 'SLA',
                                grepl("Trichomes", Predictor) ~ 'Trichomes',
@@ -39,7 +39,7 @@ edge_widths <- ifelse(p_values < 0.1,abs(weights)*20,1)
 edge_labels <- ifelse(p_values < 0.1,round(weights, 3),NA)  
 
 # Define node order (top to bottom)
-node_names <- c("Herbivory", "Glycoalkaloids", "SLA", "Trichomes", "Latitude", "Latitude (sq)")
+node_names <- c("Herbivory", "Glycoalkaloids", "SLA", "Trichomes", "Productivity", "Productivity (sq)")
 
 # Define edge label locations
 edge_label_locations<-c(0.5,0.5,0.5,0.5,0.5,0.5,0.7,0.4,0.4,0.7,0.5)
@@ -60,8 +60,8 @@ curves <- rep(0, nrow(edge_list))
 
 # Identify only the climate → herbivory paths and set outward curves
 
-climate1_to_herbivory <- which(edge_list[,1] %in% c("Latitude") & edge_list[,2] == "Herbivory")
-climate_to_herbivory <- which(edge_list[,1] %in% c("Latitude (sq)") & edge_list[,2] == "Herbivory")
+climate1_to_herbivory <- which(edge_list[,1] %in% c("Productivity") & edge_list[,2] == "Herbivory")
+climate_to_herbivory <- which(edge_list[,1] %in% c("Productivity (sq)") & edge_list[,2] == "Herbivory")
 
 
 curves[climate1_to_herbivory] <- 5.6
@@ -85,7 +85,7 @@ svglite(temp_file, width = 60, height = 60)
                        #filename = filename,
                        #height = 9, width = 9,
          label.cex = 14, 
-                       shape="rectangle",vsize2=8,vsize=25,label.scale=F,border.width=2.1)
+                       shape="rectangle",vsize2=8,vsize=27,label.scale=F,border.width=2.1)
 
 dev.off()
 
