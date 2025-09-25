@@ -201,12 +201,12 @@ SEM_results <- function(Loc = "Field", Clim_var="Latitude",mod_fun='glmmTMB',mod
 
 # Hypothesis 1: Herbivory and plant traits are linearly associated with latitude.
 # Field
-climate_field<-SEM_results(model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"))
+climate_field<-SEM_results(Clim_var="Productivity",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"))
 summary(climate_field)
 AIC(climate_field)
 
 #Garden
-Climate_Garden<-SEM_results(Loc="Garden",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"),random = "",mod_fun='lm',
+Climate_Garden<-SEM_results(Clim_var="Productivity",Loc="Garden",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"),random = "",mod_fun='lm',
                             corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
                             byDate = T)
 summary(Climate_Garden)
@@ -214,12 +214,12 @@ AIC(Climate_Garden,aicc = T)
 
 # Hypothesis 2: Herbivory and plant traits are quadratically associated with latitude.
 # Field
-Non_interaction_field<-SEM_results(model = c("lm1.1", "lm2", "lm3", "lm4"))
+Non_interaction_field<-SEM_results(Clim_var="Productivity",model = c("lm1.1", "lm2", "lm3", "lm4"))
 summary(Non_interaction_field)
 AIC(Non_interaction_field)
 
 # Garden
-Non_interaction_Garden<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
+Non_interaction_Garden<-SEM_results(Clim_var="Productivity",Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
                                     corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
                                     byDate = T)
 summary(Non_interaction_Garden)
@@ -361,17 +361,17 @@ Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1
 
 
 # Field climate versus trichomes
-ClimXtrich<-Custom_ggplot(predictor = "Latitude")+
-  labs(y="Trichomes",x="Latitude") +
+ClimXtrich<-Custom_ggplot(predictor = "Clim_ave_PC1")+
+  labs(y="Trichomes",x="Productivity") +
   C_theme();ClimXtrich
 
-ClimXglyc<-Custom_ggplot(predictor = "Latitude",response = "Conc", family = "gaussian",deg=1)+
-  labs(x="Latitude",y="Glycoalkaloids (mg/mg)") +
+ClimXglyc<-Custom_ggplot(predictor = "Clim_ave_PC1",response = "Conc", family = "gaussian",deg=1)+
+  labs(x="Productivity",y="Glycoalkaloids (mg/mg)") +
   C_theme();ClimXglyc
 
 # Field climate versus Herbivores
-ClimsqXherb<-Custom_ggplot(predictor = "Latitude",response = "herb_p", family = beta_family(),deg=2)+
-  labs(x="Latitude",y="Herbivory (%)") +
+ClimsqXherb<-Custom_ggplot(predictor = "Clim_ave_PC1",response = "herb_p", family = beta_family(),deg=2)+
+  labs(x="Productivity",y="Herbivory (%)") +
   C_theme();ClimsqXherb
 
 # Field glycoalkaloids versus Herbivory
@@ -389,27 +389,31 @@ ggsave("Field_pan.jpg",
 ## Garden figure ----
 
 # Garden climate versus glycoalkaloids
-climXglyc<-Custom_ggplot(loc = "Garden",predictor = "Latitude",response = "Conc", family = gaussian(link = "log"),deg=1,random = "+(1|Pop)")+
-  labs(x="Latitude",y="Glycoalkaloids (mg/mg)") +
+climXglyc<-Custom_ggplot(loc = "Garden",predictor = "Clim_ave_PC1",response = "Conc", family = gaussian(link = "log"),deg=1,random = "+(1|Pop)")+
+  labs(x="Productivity",y="Glycoalkaloids (mg/mg)") +
   C_theme();climXglyc
 
 # Garden climate versus trichomes
-climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Latitude",response = "Trichomes", family = gaussian(link = "log"),deg=2,random = "+(1|Pop)")+
-  labs(x="Latitude",y="Trichomes") +
+climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Clim_ave_PC1",response = "Trichomes", family = gaussian(link = "log"),deg=2,random = "+(1|Pop)")+
+  labs(x="Productivity",y="Trichomes") +
   C_theme();climsqXtri_gard
 
 herbXSLA_gard<-Custom_ggplot(loc = "Garden",predictor = 'SLA',response = "herb_p", family = beta_family(),deg=1,random = "+(1|Pop)")+
   labs(x="SLA",y="Herbivory (%)") +
   C_theme();herbXSLA_gard
 
+blank<-ggplot() + 
+  theme_void()
 
-gard_pan<-(climsqXtri_gard|climXglyc)+plot_annotation(tag_levels = "A");gard_pan
+
+gard_pan<-wrap_plots(list(climsqXtri_gard,climXglyc,herbXSLA_gard),ncol = 2)+
+  plot_annotation(tag_levels = "A");gard_pan
 
 
 ggsave("gard_pan.jpg",
        device = "jpg",plot = gard_pan,
        path = "Figures",dpi = 400,width = 12, 
-       height = 6,limitsize = F)
+       height = 12,limitsize = F)
 
 # Figure S1: PCs and latitude by PCs graphs ----
 
