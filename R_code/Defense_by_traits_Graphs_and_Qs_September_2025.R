@@ -81,7 +81,8 @@ if(loc=="Garden"){
     #filter(SLA>40&SLA<270)
 }
 
- 
+ test4<-Combined_data1
+ print(test4)
 
 if(PopLevel==T&Treatment==T){Combined_data1<-Combined_data1 %>% 
   group_by(Pop,Loc,Treatment,Time)}
