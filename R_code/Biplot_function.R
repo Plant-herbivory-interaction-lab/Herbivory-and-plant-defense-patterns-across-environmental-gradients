@@ -1,4 +1,5 @@
 require(ggrepel)
+
 PCbiplot <- function(data1=data,rot_x=1,rot_y=1,font_size=14,ext=4) {
   PC<-data1  %>% 
     drop_na() %>% 
