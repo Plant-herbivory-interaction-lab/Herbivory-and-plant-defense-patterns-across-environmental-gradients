@@ -25,6 +25,7 @@ library(GGally)
 library(ggplotify)
 library(grid)
 
+
 conflicts_prefer(dplyr::select(),
                  dplyr::filter)
 
@@ -36,53 +37,57 @@ source("R_code/Prep_data_for_all_analysis_July.R")
 source("R_code/Psem_graphing.R")
 source("R_code/GGpairs_mod.R")
 
+Trait_data<-dbReadTable(con,
+                        "Combined_herbivory_and_trait_data") %>% 
+  mutate(
+    herb_p=(transform_perc(herb_p)),
+    Date=as.Date(Date,origin = "1970-01-01"))
+
+PCs<-dbReadTable(con,
+                 "Bioclims_1970_ave") %>% mutate(Latitude_sc=scale(Latitude),
+                                                 Latitude_sc_sq=Latitude_sc^2,
+                                                 `Climate PC1`=-Clim_PC1,
+                                                 `Productivity`=`Climate PC1`,
+                                                 'Productivity_sc'= scale(Clim_PC1,center = T),
+                                                 'Productivity_sc_sq' =  Productivity_sc^2)
+
 Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
                     Treatment=F,Time.var='Mid',start_date="2023-06-15",
-                    end_date="2023-07-29",byDate=F,grouptime=F,...){
+                    end_date="2023-07-29",byDate=F,group=NULL,...){
 
-Combined_data1<-Combined_data1%>% 
-  left_join(PCs  %>% mutate(Latitude_sc=scale(Latitude),
-                       Latitude_sc_sq=Latitude_sc^2,
-                       'Productivity_sc'= scale(`Climate PC1`,center = T),
-                       'Productivity_sc_sq' =  Productivity_sc^2)) %>% 
-  drop_na()%>% left_join(dbReadTable(con,"Combined_herbs_pop") %>% 
-                                   select(Pop,Time,loc,N_Herbivores_mean,N_Herbivores_sum,Feeding_guild) %>%
-                                   filter(Feeding_guild=="Chewing"),
-                                 by = join_by(Pop, Year==Time,Loc==loc)) 
+Combined_data1<- Trait_data%>% 
+  left_join(PCs)
 
 if(loc=="Field"|loc=="Garden"){Combined_data1<-Combined_data1 %>% 
-  #select(!c(Spines)) %>% 
-  #drop_na() %>% 
   dplyr::filter(Loc==loc)}
 
 
 if(loc=="Garden"){
   
-  
   if(byDate==T){
     Combined_data1<-Combined_data1 %>%
-    filter(Date >= as.Date(start_date) & Date <= as.Date(end_date))}
+      filter(Date >= as.Date(start_date) & Date <= as.Date(end_date))}
     else{
       Combined_data1<-Combined_data1 %>%
         filter(str_detect(Time,Time.var))
   }
- 
-  
-  Combined_data1<-Combined_data1 %>%
-  {if(grouptime==F){group_by(.,Plant_ID)}else{group_by(.,Plant_ID,Time,Loc)}} %>% 
-  summarise(Pop=unique(Pop),
-            Loc = if (PopLevel) unique(Loc) else first(Loc),
-            Time = if (PopLevel) unique(Time) else first(Time),
-            Date=sample(c(min(Date,na.rm = T),max(Date,na.rm = T)),size=1),
-            quant_herb_0.75=as.vector(quantile(herb_p,na.rm = T)[3]),
-            max_herb=max(herb_p,na.rm = T),
-            across(where(is.numeric), ~ mean(., na.rm = TRUE))) %>% 
-  ungroup() #%>% 
-    #filter(SLA>40&SLA<270)
+
+  if (!is.null(group)) {
+    Combined_data1 <- group_by(Combined_data1, !!!syms(group)) %>%
+    summarise(
+      Pop = unique(Pop),
+      Loc = if (PopLevel) unique(Loc) else first(Loc),
+      Time = if (PopLevel) unique(Time) else first(Time),
+      Date = sample(c(min(Date, na.rm = TRUE), max(Date, na.rm = TRUE)), size = 1),
+      count = n(),
+      flowers = sum(fl_m > 0, fl_h > 0, na.rm = TRUE),
+      quant_herb_0.75 = as.vector(quantile(herb_p, na.rm = TRUE)[3]),
+      max_herb = max(herb_p, na.rm = TRUE),
+      across(where(is.numeric), ~ mean(., na.rm = TRUE))
+    ) %>%
+    ungroup()}
 }
 
- test4<-Combined_data1
- print(test4)
 
 if(PopLevel==T&Treatment==T){Combined_data1<-Combined_data1 %>% 
   group_by(Pop,Loc,Treatment,Time)}
@@ -140,8 +145,10 @@ C_theme<-function(size=18){theme_bw(base_size = size)+
 # SEMs ----
 # SEM of the plant traits, climate and herbivore relations at the plant individual level.
 
-SEM_results <- function(Loc = "Field", Clim_var="Latitude",mod_fun='glmmTMB',model = c("lm1.1", "lm2", "lm3", "lm4"), random = "+ (1|Pop:Time)",Time="mid",
-                        byDate=F,start_date="2023-06-15",end_date="2023-07-29",corError = list(
+SEM_results <- function(Loc = "Field", Clim_var="Latitude",mod_fun='glmmTMB',
+                        model = c("lm1.1", "lm2", "lm3", "lm4"), random = "+ (1|Pop:Time)",Time="mid",
+                        group="Plant_ID",
+                        byDate=T,start_date="2023-06-15",end_date="2023-07-29",corError = list(
                           quote(SLA_t_sc %~~% Trichomes_t_sc),
                           quote(SLA_t_sc %~~% Conc_t_sc))) {
 
@@ -161,7 +168,7 @@ SEM_results <- function(Loc = "Field", Clim_var="Latitude",mod_fun='glmmTMB',mod
   
   DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,
                                 start_date = start_date, 
-                                end_date = end_date) %>% 
+                                end_date = end_date,group=group) %>% 
     select(c(Date,unique(unlist(lapply(formula_strings, function(fstr) {
            all.vars(as.formula(fstr))
       }))))) %>% drop_na()
@@ -228,11 +235,10 @@ AIC(Non_interaction_Garden,aicc = T)
 
 ## Figure 1: Maps ----
 Pop_info<-dbReadTable(con,
-                      'pop_info_2022_and_2023') %>% 
+                      "Field_2022_cords") %>% 
   select(Pop,Latitude,Longitude) %>% 
   right_join(Data_prep(PopLevel = T)) %>% 
   group_by(Pop) %>% summarise(
-    height=mean(Height,na.rm=T),
     across(where(is.numeric), first),
     Year = if (n_distinct(Time) == 1) as.character(first(Time)) else "Both Years",
     .groups   = "drop"
@@ -242,15 +248,22 @@ tempdir<-tempdir()
 
 cn <- gadm(country = "USA", level = 1,path=tempdir)
 
-obs<-dbReadTable(con,"Plant_range")
-
 clipxy <- c(-100,-65,25,50)
 
 OR <- crop(cn,clipxy)
 
+obs<-dbReadTable(con,"Solanum_carolinense_inat") %>% 
+  drop_na(latitude) %>% 
+  rename(Longitude=longitude,
+         Latitude=latitude) %>% 
+  filter(
+    Longitude >= clipxy[1], Longitude <= clipxy[2],
+    Latitude  >= clipxy[3], Latitude  <= clipxy[4]
+  )
+
 map_clim<-ggplot() + 
   geom_spatvector(data=OR,fill="NA",color="black") +
-  geom_point(data=obs,aes(x=longitude,y=latitude),shape=21,size=0.1,fill="grey",alpha=0.25)+
+  geom_point(data=obs,aes(x=Longitude,y=Latitude),shape=21,size=0.1,fill="grey",alpha=0.25)+
   geom_point(data=Pop_info,aes(x=Longitude,y=Latitude,shape = Year, fill = Year),size=3)+
   scale_shape_manual(values = c(21,22,23))+
   scale_fill_manual(values = c("darkred","darkgray","white"))+
@@ -262,56 +275,75 @@ map_clim<-ggplot() +
 
 
 
-make_plots <- function(data, x_var, y_vars, ncol = 2) {
+make_plots <- function(data, x_var, y_vars, ncol = 2, extra_plots = NULL) {
   nplots <- length(y_vars)
   
-  # Determine bottom-most plot index for each column
+  # Identify bottom-most plot in each column
   bottom_plots <- sapply(1:ncol, function(col) {
-    # indices of plots in this column
     idx <- seq(col, nplots, by = ncol)
-    max(idx)  # last plot in this column
+    max(idx)
   })
   
+  # Create main plots
   plots <- lapply(seq_along(y_vars), function(i) {
     y <- y_vars[i]
-    
-    # wrap y-axis label if longer than 8 chars
-    y_lab <- if (nchar(y) > 8) stringr::str_wrap(y, width = 8) else y
+    y_lab <- if (nchar(y) > 8) str_wrap(y, width = 8) else y
     
     p <- ggplot(data, aes(x = .data[[x_var]], y = .data[[y]])) +
       geom_point() +
-      C_theme(size = 14) +
-      labs(y = y_lab, x = NULL)
+      C_theme(size = 12) +
+      labs(y = y_lab)
     
-    # Show ticks only if this plot is the bottom-most in its column
-    if (!(i %in% bottom_plots)) {
-      p <- p + theme(
-        axis.text.x  = element_blank(),
-        axis.ticks.x = element_blank()
-      )
+    # Show x-axis only for bottom-most plot in each column
+    if (i %in% bottom_plots) {
+      p <- p + labs(x = x_var)
     } else {
-      # Optional: customize tick length or style
-      p <- p + theme(axis.ticks.length = unit(3, "pt"))
+      p <- p + theme(
+        #axis.text.x  = element_blank(),
+        #axis.ticks.x = element_blank(),
+        axis.title.x = element_blank()
+      )
     }
     
     p
   })
   
-  # label placeholder
-  label_plot <- ggplot() + 
-    theme_void() + 
-    labs(title = x_var) + 
-    theme(plot.title = element_text(hjust = 0.5,size=14))
+  # Insert extra plots at specific positions if provided
+  if (!is.null(extra_plots)) {
+    # extra_plots should be a named list: names are indices where to insert
+    positions <- as.integer(names(extra_plots))
+    for (i in seq_along(extra_plots)) {
+      pos <- positions[i]
+      p <- extra_plots[[i]]
+      
+      # Wrap y-label and apply theme
+      y_lab <- p$labels$y
+      if (is.null(y_lab)) y_lab <- ""
+      wrapped_y <- if (nchar(y_lab) > 12) str_wrap(y_lab, width = 12) else y_lab
+      p <- p + labs(y = wrapped_y) + C_theme(size = 12)
+      
+      # Insert the plot at the desired position
+      if (pos > length(plots)) {
+        plots[[pos]] <- p
+      } else {
+        plots <- append(plots, list(p), after = pos - 1)
+      }
+    }
+  }
   
-  # combine plots + label row
-  wrap_elements(wrap_elements(wrap_plots(plots, ncol = ncol)) / label_plot +
-                  plot_layout(heights = c(0.9, 0.001))) 
+  wrap_plots(plots, ncol = ncol)
 }
 
 
-vars<-make_plots(PCs, "Latitude", c("Climate productivity","Tsd", "MAT",  "PWQ","AP"), ncol = 2)
 
-clim_vars<-(vars + map_clim) + plot_annotation(tag_levels = "A")
+PC_plot<-PCbiplot(PCs %>% select('MAT':'PWQ'),font_size = 2.5) 
+
+vars<-make_plots(PCs, "Latitude", 
+                 c("Productivity","AP","MAT","PWQ","Tsd"), 
+                 ncol = 2,
+                 extra_plots = list("1"=PC_plot))
+
+clim_vars<-(vars | map_clim) + plot_annotation(tag_levels = "A")
 
 ggsave("fig_1.jpg",
        device = "jpg",plot = clim_vars,
@@ -362,16 +394,16 @@ Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1
 
 
 # Field climate versus trichomes
-ClimXtrich<-Custom_ggplot(predictor = "Clim_ave_PC1")+
+ClimXtrich<-Custom_ggplot(predictor = "Clim_PC1")+
   labs(y="Trichomes",x="Productivity") +
   C_theme();ClimXtrich
 
-ClimXglyc<-Custom_ggplot(predictor = "Clim_ave_PC1",response = "Conc", family = "gaussian",deg=1)+
+ClimXglyc<-Custom_ggplot(predictor = "Productivity",response = "Conc", family = "gaussian",deg=1)+
   labs(x="Productivity",y="Glycoalkaloids (mg/mg)") +
   C_theme();ClimXglyc
 
 # Field climate versus Herbivores
-ClimsqXherb<-Custom_ggplot(predictor = "Clim_ave_PC1",response = "herb_p", family = beta_family(),deg=2)+
+ClimsqXherb<-Custom_ggplot(predictor = "Productivity",response = "herb_p", family = beta_family(),deg=2)+
   labs(x="Productivity",y="Herbivory (%)") +
   C_theme();ClimsqXherb
 
@@ -390,12 +422,12 @@ ggsave("Field_pan.jpg",
 ## Garden figure ----
 
 # Garden climate versus glycoalkaloids
-climXglyc<-Custom_ggplot(loc = "Garden",predictor = "Clim_ave_PC1",response = "Conc", family = gaussian(link = "log"),deg=1,random = "+(1|Pop)")+
+climXglyc<-Custom_ggplot(loc = "Garden",predictor = "Productivity",response = "Conc", family = gaussian(link = "log"),deg=1,random = "+(1|Pop)")+
   labs(x="Productivity",y="Glycoalkaloids (mg/mg)") +
   C_theme();climXglyc
 
 # Garden climate versus trichomes
-climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Clim_ave_PC1",response = "Trichomes", family = gaussian(link = "log"),deg=2,random = "+(1|Pop)")+
+climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Productivity",response = "Trichomes", family = gaussian(link = "log"),deg=2,random = "+(1|Pop)")+
   labs(x="Productivity",y="Trichomes") +
   C_theme();climsqXtri_gard
 
@@ -407,14 +439,14 @@ blank<-ggplot() +
   theme_void()
 
 
-gard_pan<-wrap_plots(list(climsqXtri_gard,climXglyc,herbXSLA_gard),ncol = 2)+
+gard_pan<-wrap_plots(list(climsqXtri_gard,climXglyc),ncol = 2)+
   plot_annotation(tag_levels = "A");gard_pan
 
 
 ggsave("gard_pan.jpg",
        device = "jpg",plot = gard_pan,
        path = "Figures",dpi = 400,width = 12, 
-       height = 12,limitsize = F)
+       height = 6,limitsize = F)
 
 # Figure S1: PCs and latitude by PCs graphs ----
 
@@ -465,32 +497,28 @@ cor.test(scale(cor_data[,c('Latitude')])^2,cor_data[,c('Soil_PC2')])
 
 
 # Figure S2: Herbivory and phenology through time ----
-Pop_level<-Garden %>% group_by(Pop,Date)%>% 
-  summarise(count=n(),
-            flowers = sum(fl_m>0, fl_h>0, na.rm = TRUE),
-            quant_herb_0.75=as.vector(quantile(herb_p)[3]),
-            maxHerb=max(Herby),
-            across(c(ht:leaves,Herby,Trichomes:Spines), \ (x) mean(x, na.rm = TRUE))) %>%
-  mutate(Flowering_p=flowers/count) %>% 
-  ungroup()
+Pop_level<-Data_prep(loc = "Garden",byDate = T,
+                     start_date ="2023-04-15" , end_date = "2023-08-29",
+                     group = c('Pop','Date')) %>% 
+  mutate(Flowering_p=flowers/count) 
 
-Leaves_time<-ggplot(Pop_level,aes(Date,leaves,,col=Pop)) +
+Leaves_time<-ggplot(Pop_level,aes(Date,Leaves,,col=Pop)) +
   geom_point(show.legend=F)+
   geom_smooth(method="glm",show.legend=F,formula = y~poly(x,2),se=F)+
   labs(y="Leaves")+
-  C_theme;Leaves_time
+  C_theme(14);Leaves_time
 
 Flowers_time<-ggplot(Pop_level,aes(Date,Flowering_p,col=Pop)) +
   geom_point(show.legend=F)+
   geom_smooth(show.legend=F,se=F)+
   labs(y='Proportion flowering')+
-  C_theme;Flowers_time
+  C_theme(14);Flowers_time
 
-Herbivory_time<-ggplot(Pop_level,aes(Date,maxHerb,col=Pop)) +
+Herbivory_time<-ggplot(Pop_level,aes(Date,max_herb,col=Pop)) +
   geom_point()+
   geom_smooth(method="glm",se=F,formula = y~poly(x,2))+
   labs(y="Herbivory (%)")+
-  C_theme;Herbivory_time
+  C_theme(14);Herbivory_time
 
 appendix<-((Leaves_time | Flowers_time)/(Herbivory_time | plot_spacer()))+plot_annotation(tag_levels = "A");appendix
 
@@ -502,8 +530,9 @@ ggsave("Appendix_S2.jpg",
 # Herbivory in response to plant traits and climete at different times of the year ----
 # Herbivory graphing function
 Herb_by_time<-function(herb='herb_p_t_sc',family.var='poisson',time="Early",ad_form=""){
-  Data<-Data_prep(loc = "Garden",byDate = F,Time.var = time,grouptime = T)
-  Data1<-Data_prep(loc = "Garden",byDate = T,grouptime = F,start_date = "2023-04-15",end_date = "2023-09-15") %>% 
+  Data<-Data_prep(loc = "Garden",byDate = F,Time.var = time,group = 'Plant_ID')
+  Data1<-Data_prep(loc = "Garden",byDate = T,
+                   start_date = "2023-04-15",end_date = "2023-09-15",group = 'Plant_ID') %>% 
     mutate(Time="All",
            Loc='Garden')
   
@@ -570,14 +599,19 @@ AIC(all_sem,aicc = T)
 summary(all_sem)
 
 # Figure S3: Herbivory by traits in different times of the year ----
-trait_x_herb_plot<-function(response,y_lab){ggplot(data = all_herb_mod_max[[1]] %>% pivot_longer(cols = c(Trichomes,SLA,Conc)),
-       aes(x=value,y=!!sym(response),col=Time)) +
+trait_x_herb_plot<-function(response,y_lab){
+  Data<-all_herb_mod_max[[1]] %>% 
+    pivot_longer(cols = c(Trichomes,SLA,Conc)) %>% 
+    mutate(Time=as.factor(Time))
+  ggplot(data = Data,
+       aes(x=value,y=!!sym(response),col = Time)) +
   geom_point()+
   geom_smooth(method="glm",formula=y~x,
               method.args=list(family=beta_family()),
               se=F)+
   facet_wrap(~name,scale="free_x",nrow=2)+
-  C_theme + theme(legend.position = c(0.75,0.2))+
+  C_theme(14) + 
+    theme(legend.position = c(0.75,0.2))+
     labs(x="Trait value",y=y_lab)}
 
 

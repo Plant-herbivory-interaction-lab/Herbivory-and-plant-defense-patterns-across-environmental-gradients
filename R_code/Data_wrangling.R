@@ -25,7 +25,7 @@ con <-dbConnect(SQLite(), 'Data/Data.db') # Connect to the database
 
 Coords<-dbReadTable(con,"Field_2023_pop_info") %>% 
   select(Pop,Latitude,Longitude) %>% 
-  rbind(.,dbReadTable(con,"Horsenettle_Jun22_data_field_cords") %>% 
+  rbind(.,dbReadTable(con,"Field_2022_cords") %>% 
           select(Latitude:Pop)) %>% drop_na() %>% 
   distinct(Pop, .keep_all = TRUE)
 
@@ -68,10 +68,11 @@ for (i in 1:nrow(pp1)){
 Clim_ave<-biovari %>% 
   select(Pop,Latitude,bio1,bio4,bio12,bio18) %>% 
   mutate(
-    bio18=sqrt(bio18),
-    Clim_ave_PC1= prcomp(across(bio1:bio18), scale. = TRUE)$x[, c("PC1")],
-    Clim_ave_PC2= prcomp(across(bio1:bio18), scale. = TRUE)$x[, c("PC2")],
-    'Climate PC1' = -Clim_ave_PC1
+    bio4=bio4/100,
+    bio12=bio12/10,
+    bio18=bio18/10,
+    Clim_PC1= prcomp(across(bio1:bio18), scale. = TRUE)$x[, c("PC1")],
+    Clim_PC2= prcomp(across(bio1:bio18), scale. = TRUE)$x[, c("PC2")],
   ) %>% 
   rename(
     MAT = bio1,
@@ -125,7 +126,7 @@ glyc_2022<-full_join(Glyco,weight) %>%
     Plant_ID=Collect_Label,
     Year=2022,
     Time="2022",
-    loc="Field"
+    Loc="Field"
   ) %>% select(Plant_ID,Time,Year,Conc)
 # (y-b)/slope gives the glycoalkaloid conc in samples
 # 1.5 mL is the total volume of the sample before transferring
@@ -189,23 +190,95 @@ glyc_2023<-Samples %>%
 
 # Import field -----
 ## Field 2022 ----
-Field_2022<-dbReadTable(con,"Horsenettle_Jun22_data_field")%>% 
-  select(Date,Height,Herbivory,L_area,L_weight,Trichomes,Latitude,Longitude,Collect_Label) %>% 
+Field_2022<-dbReadTable(con,"Field_2022_traits")%>% 
+  select(Date,Height,Herbivory,L_area,L_weight,Trichomes,
+         Latitude,Longitude,Collect_Label,Fl_herm,Fl_male,Height) %>% 
   mutate(
+    fl_m=Fl_male,
+    fl_h=Fl_herm,
+    Loc='Field',
+    Leaves=NA,
     herb_p=Herbivory/100,
     Plant_ID=Collect_Label,
     Date= gsub("-(?!2023$)\\d{2,4}$", "-2022", Date,perl = T),
     Date=as.Date(Date, format = "%b-%d-%Y")
   ) %>% full_join(glyc_2022,by=join_by(Collect_Label==Plant_ID)) %>% 
-  difference_left_join(
-    dbReadTable(con,"Horsenettle_Jun22_data_field_cords"),
+  difference_full_join(
+    dbReadTable(con,"Field_2022_cords") %>% 
+      drop_na(Pop),
     by = c("Latitude","Longitude"),
     max_dist = 0.01, # tolerance in degrees (~11 m)
     distance_col = NULL
   ) %>% 
-  select(Pop,Date,Plant_ID,Time,Year,L_area,L_weight,Trichomes,Conc,herb_p) %>% 
+  select(Pop,Date,Plant_ID,Loc,Time,Year,L_area,L_weight,Trichomes,
+         Conc,herb_p,fl_m,fl_h,Leaves,Height) %>% 
   # Filtered data from the field collected late in the year.
   # This data does not change the outcome of the results, but the data isn't consistent with other herbivory data.
   # This data was collected when we collected the roots to be grown in the common garden.
-  filter(Date<as.Date("2022-09-01")) 
-  
+  filter(Date<as.Date("2022-09-01")) %>% drop_na(Trichomes)
+
+## Field 2023 ----
+Field_2023<-dbReadTable(con,"Field_2023_traits") %>% 
+  mutate(
+    fl_m=Fl_male,
+    fl_h=Fl_herm,
+    Loc="Field",
+    Time="2023",
+    Year="2023",
+    herb_p=(Epitrix_herb+Chew_herb)/100,
+    L_area=Leaf_Area,
+    L_weight=Leaf_Weight,
+    Date=as.Date(Date, format = "%m/%d/%y")
+  ) %>% left_join(glyc_2023) %>% 
+  select(Pop,Date,Plant_ID,Loc,Time,Year,L_area,L_weight,Trichomes,
+         Conc,herb_p,fl_m,fl_h,Leaves,Height)
+
+# Garden data ----
+Garden_2023<-glyc_2023 %>% 
+  filter(Experiement=="Dudu") %>% pivot_wider(id_cols = Plant_ID,
+                                              names_from = Leaf_location,
+                                              values_from = Conc,
+                                              values_fn = mean
+  ) %>% rename(Conc_T="T",Conc_B="B") %>% 
+  full_join(dbReadTable(con,"Garden_leaf_traits" ) %>% 
+              mutate(
+                Plant_ID=paste0(Pop,"-",Plant_ID,Rep)
+              )) %>%
+  mutate(Trichomes = rowMeans(across(starts_with("Trichomes"),
+                                     as.numeric), na.rm = TRUE),
+         Spines= rowMeans(across(starts_with("Spines"),
+                                 as.numeric), na.rm = TRUE),
+         Conc=rowMeans(across(starts_with("Conc"),as.numeric), 
+                       na.rm = TRUE),
+         L_area=rowMeans(across(starts_with("L_area"),
+                                as.numeric), na.rm = TRUE),
+         L_weight=rowMeans(across(starts_with("L_weight"),
+                                  as.numeric), na.rm = TRUE))%>% 
+  select(Plant_ID,L_area,L_weight,Trichomes,Conc) %>% drop_na() %>% 
+  right_join(dbReadTable(con,"Garden_plant_info") %>% 
+               right_join(dbReadTable(con,"Garden_survey")) %>% 
+               filter(Treatment=="Cont"),by=join_by(Plant_ID==Plant_ID)) %>%
+  drop_na(Date) %>% 
+  mutate(
+    Leaves=leaves,
+    herb_p=as.numeric(Chewing)/100,
+    Date=as.Date(Date, format = "%m/%d/%y"),
+    Year="2023",
+    Loc="Garden",
+    Time=cut(Date, 
+             breaks = seq(min(Date),max(Date),length.out=4), 
+             labels = c("Early", "Mid", "Late"), 
+             include.lowest = TRUE, 
+             right = FALSE),
+  ) %>% 
+  select(Pop,Date,Plant_ID,Loc,Time,Year,L_area,L_weight,Trichomes,
+         Conc,herb_p,fl_m,fl_h,Leaves,Height)
+
+# Combine data ----
+Combined_data<-rbind(Field_2022,Field_2023,Garden_2023) %>% 
+  drop_na(Trichomes,Conc,herb_p) %>% 
+  mutate(SLA=L_area/L_weight) %>% 
+  filter(Conc>0)
+
+dbWriteTable(con,"Combined_herbivory_and_trait_data",Combined_data,overwrite=T)
+
