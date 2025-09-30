@@ -14,6 +14,7 @@ library(sf)
 library(terra)
 library(dismo)
 library(car)
+library(fuzzyjoin)
 
 conflict_prefer("select", "dplyr")
 conflict_prefer("extract", "raster")
@@ -79,7 +80,7 @@ Clim_ave<-biovari %>%
     PWQ = bio18
   ) 
 
-dbWriteTable(con,"Bioclims_1970_ave")
+dbWriteTable(con,"Bioclims_1970_ave",Clim_ave,overwrite=T)
 
 # Glycoalkaloid concentration calculations Field 2022----
 
@@ -117,7 +118,7 @@ Glyco<-dbReadTable(con,"Glycoalk_Spring_2023_abs")%>%
 weight<-dbReadTable(con,"Glycoalk_Spring_2023_weight")%>% 
   dplyr::select(!Notes)
 
-field_total_glyco_weight<-full_join(Glyco,weight) %>% 
+glyc_2022<-full_join(Glyco,weight) %>% 
   dplyr::select(Sample_Label,Abs,Weight,Collect_Label) %>% 
   mutate(Conc=(Abs-lm1$coefficients[1])/lm1$coefficients[2]*0.5/0.3*1.5/Weight) %>% 
   drop_na() %>% mutate(
@@ -173,7 +174,7 @@ Samples<-dbReadTable(con,"Glycoalk_fall_2023_Samples") %>%
     ) %>% 
   mutate(Sample=as.numeric(Sample))
 
-Total_glyc<-Samples %>% 
+glyc_2023<-Samples %>% 
   group_by(.,Plant_ID,Leaf_location) %>% 
   reframe(Abs=mean(Abs),
           Leaf_weight=unique(Leaf_weight),
@@ -185,3 +186,26 @@ Total_glyc<-Samples %>%
 # 1.5 mL is the total volume of the sample before transferring
 # I transferred 0.3 mL
 # 5 mL is the volume used before final step
+
+# Import field -----
+## Field 2022 ----
+Field_2022<-dbReadTable(con,"Horsenettle_Jun22_data_field")%>% 
+  select(Date,Height,Herbivory,L_area,L_weight,Trichomes,Latitude,Longitude,Collect_Label) %>% 
+  mutate(
+    herb_p=Herbivory/100,
+    Plant_ID=Collect_Label,
+    Date= gsub("-(?!2023$)\\d{2,4}$", "-2022", Date,perl = T),
+    Date=as.Date(Date, format = "%b-%d-%Y")
+  ) %>% full_join(glyc_2022,by=join_by(Collect_Label==Plant_ID)) %>% 
+  difference_left_join(
+    dbReadTable(con,"Horsenettle_Jun22_data_field_cords"),
+    by = c("Latitude","Longitude"),
+    max_dist = 0.01, # tolerance in degrees (~11 m)
+    distance_col = NULL
+  ) %>% 
+  select(Pop,Date,Plant_ID,Time,Year,L_area,L_weight,Trichomes,Conc,herb_p) %>% 
+  # Filtered data from the field collected late in the year.
+  # This data does not change the outcome of the results, but the data isn't consistent with other herbivory data.
+  # This data was collected when we collected the roots to be grown in the common garden.
+  filter(Date<as.Date("2022-09-01")) 
+  
