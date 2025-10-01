@@ -173,7 +173,7 @@ Field_pan<-((ClimXtrich|ClimXglyc)/(ClimsqXherb|glycXherb))+plot_annotation(tag_
 ggsave("Field_pan.jpg",
        device = "jpg",plot = Field_pan,
        path = "Figures",dpi = 400,width = 12, 
-       height = 12,limitsize = F)
+       height = 11,limitsize = F)
 
 ## Garden figure ----
 
@@ -231,10 +231,10 @@ Herbivory_time<-ggplot(Pop_level,aes(Date,max_herb,col=Pop)) +
 
 appendix<-((Leaves_time | Flowers_time)/(Herbivory_time | plot_spacer()))+plot_annotation(tag_levels = "A");appendix
 
-ggsave("Appendix_S2.jpg",
+ggsave("Appendix_S1.jpg",
        device = "jpg",plot = appendix,
        path = "Figures",dpi = 400,width = 12, 
-       height = 12,limitsize = F)
+       height = 11,limitsize = F)
 
 # Herbivory in response to plant traits and climete at different times of the year ----
 # Herbivory graphing function
@@ -307,7 +307,7 @@ all_sem<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random
 AIC(all_sem,aicc = T)
 summary(all_sem)
 
-# Figure S3: Herbivory by traits in different times of the year ----
+# Figure S2: Herbivory by traits in different times of the year ----
 trait_x_herb_plot<-function(response,y_lab){
   Data<-all_herb_mod_quant[[1]] %>% 
     pivot_longer(cols = c(Trichomes,SLA,Conc)) %>% 
