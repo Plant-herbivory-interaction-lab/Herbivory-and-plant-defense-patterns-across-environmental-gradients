@@ -54,11 +54,20 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
     group_by(Pop,Loc,Treatment,Time)}
   
   if(PopLevel==T&Treatment==F){Combined_data1<-Combined_data1 %>% 
-    group_by(Pop,Loc,Time)}
+    group_by(Pop,Loc,Year)}
   
   
   if(PopLevel==T){Combined_data1<-Combined_data1 %>% 
-    summarise(across(where(is.numeric), \ (x) mean(x, na.rm = TRUE)),Plant_N=length(Pop)) %>% 
+    summarise(across(where(is.numeric), \ (x) mean(x, na.rm = TRUE)),
+              Plant_N=length(Pop),
+              Conc_t=log(Conc),
+              SLA_t=log(SLA),
+              Trichomes_t=log(Trichomes),
+              herb_p_t=logit(herb_p),
+              Conc_t_sc=scale(Conc_t)[,1],
+              SLA_t_sc=scale(SLA_t)[,1],
+              Trichomes_t_sc=scale(Trichomes_t)[,1],
+              herb_p_t_sc=scale(herb_p_t)[,1]) %>% 
     ungroup()}
   
   
@@ -105,7 +114,7 @@ C_theme<-function(size=18){theme_bw(base_size = size)+
 
 
 ## SEM function ----
-SEM_results <- function(Loc = "Field", Clim_var="Latitude",mod_fun='glmmTMB',
+SEM_results <- function(Loc = "Field", lin="Latitude",sq="Latitude",mod_fun='glmmTMB',
                         model = c("lm1.1", "lm2", "lm3", "lm4"), random = "+ (1|Pop:Time)",Time="mid",
                         group="Plant_ID",
                         byDate=T,start_date="2023-06-15",end_date="2023-07-29",corError = list(
@@ -116,14 +125,14 @@ SEM_results <- function(Loc = "Field", Clim_var="Latitude",mod_fun='glmmTMB',
   method<-get(mod_fun)
   
   formula_strings <- c(
-    lm1.1 = paste0('herb_p_t_sc ~',Clim_var, '_sc + ',Clim_var, '_sc_sq + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random), 
-    lm1.2 = paste0('herb_p_t_sc ~ ',Clim_var, '_sc + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random),
-    lm2 = paste0('Conc_t_sc ~ ',Clim_var, '_sc + ',Clim_var, '_sc_sq', random),           
-    lm2.1 = paste0('Conc_t_sc ~ ',Clim_var, '_sc',random),           
-    lm3 = paste0('SLA_t_sc ~ ',Clim_var, '_sc + ',Clim_var, '_sc_sq', random),
-    lm3.1 = paste0('SLA_t_sc ~ ',Clim_var, '_sc', random),           
-    lm4 = paste0('Trichomes_t_sc ~ ',Clim_var, '_sc + ',Clim_var, '_sc_sq', random),  
-    lm4.1 = paste0('Trichomes_t_sc ~ ',Clim_var, '_sc', random)                  
+    lm1.1 = paste0('herb_p_t_sc ~',lin, '_sc + ',sq, '_sc_sq + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random), 
+    lm1.2 = paste0('herb_p_t_sc ~ ',lin, '_sc + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random),
+    lm2 = paste0('Conc_t_sc ~ ',lin, '_sc + ',sq, '_sc_sq', random),           
+    lm2.1 = paste0('Conc_t_sc ~ ',lin, '_sc',random),           
+    lm3 = paste0('SLA_t_sc ~ ',lin, '_sc + ',sq, '_sc_sq', random),
+    lm3.1 = paste0('SLA_t_sc ~ ',lin, '_sc', random),           
+    lm4 = paste0('Trichomes_t_sc ~ ',lin, '_sc + ',sq, '_sc_sq', random),  
+    lm4.1 = paste0('Trichomes_t_sc ~ ',lin, '_sc', random)                  
   )
   
   DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,
@@ -241,6 +250,7 @@ Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1
   
   m<-glmmTMB(as.formula(paste0(response,'~poly(',predictor,',',deg,')', random)),Data,family = family)
   
+  
   predicted<-as.data.frame(predict_response(m,
                                             terms=c(paste0(predictor,'[',paste(values, collapse = ", "),']')), margin="empirical",
   ))
@@ -290,10 +300,10 @@ semGraph<-function(fit=fit) {
   edge_lty <- ifelse(p_values < 0.05, 1, 2)  # 1 = solid, 2 = dashed
   
   # Define edge widths based on effect size
-  edge_widths <- ifelse(p_values < 0.1,abs(weights)*20,1)
+  edge_widths <- ifelse(p_values < 0.05,abs(weights)*20,1)
   
   # Define estimates as edge labels (rounded to 2 decimals)
-  edge_labels <- ifelse(p_values < 0.1,round(weights, 3),NA)  
+  edge_labels <- ifelse(p_values < 0.05,round(weights, 3),NA)  
   
   # Define node order (top to bottom)
   node_names <- c("Herbivory", "Glycoalkaloids", "SLA", "Trichomes", as.vector(edge_list[10,1]), as.vector(edge_list[11,1]))

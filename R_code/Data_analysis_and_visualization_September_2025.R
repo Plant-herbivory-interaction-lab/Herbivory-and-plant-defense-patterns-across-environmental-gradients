@@ -53,27 +53,27 @@ PCs<-dbReadTable(con,
 # SEM results ----
 # Hypothesis 1: Herbivory and plant traits are linearly associated with latitude.
 # Field
-climate_field<-SEM_results(Clim_var="Productivity",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"))
+climate_field<-SEM_results(lin="Productivity",sq='Productivity',model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"))
 summary(climate_field)
 AIC(climate_field)
 
 #Garden
-Climate_Garden<-SEM_results(Clim_var="Productivity",Loc="Garden",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"),random = "",mod_fun='lm',
+Climate_Garden<-SEM_results(lin="Productivity",sq='Productivity',Loc="Garden",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"),random = "",mod_fun='lm',
                             corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
-                            byDate = T)
+                            byDate = T,group = c("Plant_ID"))
 summary(Climate_Garden)
 AIC(Climate_Garden,aicc = T)
 
 # Hypothesis 2: Herbivory and plant traits are quadratically associated with latitude.
 # Field
-Non_interaction_field<-SEM_results(Clim_var="Productivity",model = c("lm1.1", "lm2", "lm3", "lm4"))
+Non_interaction_field<-SEM_results(lin="Productivity",sq='Productivity',model = c("lm1.1", "lm2", "lm3", "lm4"))
 summary(Non_interaction_field)
 AIC(Non_interaction_field)
 
 # Garden
-Non_interaction_Garden<-SEM_results(Clim_var="Productivity",Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
+Non_interaction_Garden<-SEM_results(lin="Productivity",sq='Productivity',Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
                                     corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
-                                    byDate = T)
+                                    byDate = T,group = c("Plant_ID"))
 summary(Non_interaction_Garden)
 AIC(Non_interaction_Garden,aicc = T)
 
@@ -84,7 +84,7 @@ Pop_info<-dbReadTable(con,
   right_join(Data_prep(PopLevel = T)) %>% 
   group_by(Pop) %>% summarise(
     across(where(is.numeric), first),
-    Year = if (n_distinct(Time) == 1) as.character(first(Time)) else "Both Years",
+    Year = if (n_distinct(Year) == 1) as.character(first(Year)) else "Both Years",
     .groups   = "drop"
     )
 
@@ -117,14 +117,15 @@ map_clim<-ggplot() +
     legend.position.inside = c(0.8, 0.2)
     );map_clim
 
-PC_plot<-PCbiplot(PCs %>% select('MAT':'PWQ'),font_size = 2.5) 
+PC_plot<-PCbiplot(PCs %>% select('MAT':'PWQ'),font_size = 2.5,rot_x = -1) 
 
 vars<-make_plots(PCs, "Latitude", 
                  c("Productivity","AP","MAT","PWQ","Tsd"), 
                  ncol = 2,
                  extra_plots = list("1"=PC_plot))
 
-clim_vars<-(vars | map_clim) + plot_annotation(tag_levels = "A")
+clim_vars<-(vars | map_clim) + 
+  plot_annotation(tag_levels = "A")
 
 ggsave("fig_1.jpg",
        device = "jpg",plot = clim_vars,
@@ -149,7 +150,7 @@ ggsave("SEM.jpg",
 
 
 # Field climate versus trichomes
-ClimXtrich<-Custom_ggplot(predictor = "Clim_PC1")+
+ClimXtrich<-Custom_ggplot(predictor = "Productivity")+
   labs(y="Trichomes",x="Productivity") +
   C_theme();ClimXtrich
 
@@ -166,6 +167,7 @@ ClimsqXherb<-Custom_ggplot(predictor = "Productivity",response = "herb_p", famil
 # Field glycoalkaloids versus Herbivory
 glycXherb<-Custom_ggplot(predictor = 'Conc',response = "herb_p", family = beta_family(),deg=1)+
   labs(x="Glycoalkaloids (mg/mg)",y='Herbivory (%)') +
+  scale_y_continuous(labels = function(x) paste0(x * 100))+
   C_theme();glycXherb
 
 Field_pan<-((ClimXtrich|ClimXglyc)/(ClimsqXherb|glycXherb))+plot_annotation(tag_levels = "A");Field_pan
@@ -187,14 +189,6 @@ climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Productivity",respons
   labs(x="Productivity",y="Trichomes") +
   C_theme();climsqXtri_gard
 
-herbXSLA_gard<-Custom_ggplot(loc = "Garden",predictor = 'SLA',response = "herb_p", family = beta_family(),deg=1,random = "+(1|Pop)")+
-  labs(x="SLA",y="Herbivory (%)") +
-  scale_y_continuous(labels = function(x) paste0(x * 100))+
-  C_theme();herbXSLA_gard
-
-blank<-ggplot() + 
-  theme_void()
-
 
 gard_pan<-wrap_plots(list(climsqXtri_gard,climXglyc),ncol = 2)+
   plot_annotation(tag_levels = "A");gard_pan
@@ -205,7 +199,34 @@ ggsave("gard_pan.jpg",
        path = "Figures",dpi = 400,width = 12, 
        height = 6,limitsize = F)
 
-# Figure S1: Herbivory and phenology through time ----
+# Population level correlation of defense traits ----
+
+Pop_cor<-full_join(
+Data_prep(loc="Field",PopLevel = T) %>% 
+  select(Pop,Trichomes_t_sc,SLA_t_sc,Conc_t_sc) %>% 
+  pivot_longer(.,cols=c(Trichomes_t_sc,SLA_t_sc,Conc_t_sc),
+               values_to = "Field"), 
+Data_prep(loc="Garden",PopLevel = T)%>% 
+  select(Pop,Trichomes_t_sc,SLA_t_sc,Conc_t_sc) %>% 
+  pivot_longer(.,cols=c(Trichomes_t_sc,SLA_t_sc,Conc_t_sc),
+               values_to = "Garden"),
+by = join_by(Pop==Pop,name==name)
+) %>% rename(.,"Trait"=name) 
+
+
+emtrends(lm(Garden~Field*Trait,data=Pop_cor),~Trait,var = "Field",infer=T)
+
+# Height versus defense traits ----
+Data_prep(loc="Graden|Field") %>% 
+  select(Loc,Height,Trichomes_t_sc,SLA_t_sc,Conc_t_sc) %>% 
+  mutate(Height=scale(Height)) %>% 
+  pivot_longer(.,cols=c(Trichomes_t_sc,SLA_t_sc,Conc_t_sc)) %>% 
+  lm(value~Height*name*Loc,.,) %>% 
+  emtrends(.,~name*Loc,var="Height",infer=T)
+
+  
+  
+# Figure S2: Herbivory and phenology through time in the garden----
 Pop_level<-Data_prep(loc = "Garden",byDate = T,
                      start_date ="2023-04-15" , end_date = "2023-08-29",
                      group = c('Pop','Date')) %>% 
@@ -231,7 +252,7 @@ Herbivory_time<-ggplot(Pop_level,aes(Date,max_herb,col=Pop)) +
 
 appendix<-((Leaves_time | Flowers_time)/(Herbivory_time | plot_spacer()))+plot_annotation(tag_levels = "A");appendix
 
-ggsave("Appendix_S1.jpg",
+ggsave("Appendix_S2.jpg",
        device = "jpg",plot = appendix,
        path = "Figures",dpi = 400,width = 12, 
        height = 11,limitsize = F)
@@ -307,7 +328,7 @@ all_sem<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random
 AIC(all_sem,aicc = T)
 summary(all_sem)
 
-# Figure S2: Herbivory by traits in different times of the year ----
+# Figure S3: Herbivory by traits in different times of the year ----
 trait_x_herb_plot<-function(response,y_lab){
   Data<-all_herb_mod_quant[[1]] %>% 
     pivot_longer(cols = c(Trichomes,SLA,Conc)) %>% 
