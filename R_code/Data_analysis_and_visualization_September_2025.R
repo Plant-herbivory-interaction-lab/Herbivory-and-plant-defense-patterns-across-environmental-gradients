@@ -333,5 +333,5 @@ trait_x_herb_plot("quant_herb_0.75","Herbviory (75th quantile)")
 ggsave("Appendix_S3.jpg",
        device = "jpg",plot = trait_x_herb_ave,
        path = "Figures",dpi = 400,width = 12, 
-       height = 12,limitsize = F)
+       height = 11,limitsize = F)
 
