@@ -206,7 +206,7 @@ Data_prep(loc="Field",PopLevel = T) %>%
   select(Pop,Trichomes_t_sc,SLA_t_sc,Conc_t_sc) %>% 
   pivot_longer(.,cols=c(Trichomes_t_sc,SLA_t_sc,Conc_t_sc),
                values_to = "Field"), 
-Data_prep(loc="Garden",PopLevel = T)%>% 
+Data_prep(loc="Garden",PopLevel = T,byDate = F,Time.var = "Mid|Early|Late")%>% 
   select(Pop,Trichomes_t_sc,SLA_t_sc,Conc_t_sc) %>% 
   pivot_longer(.,cols=c(Trichomes_t_sc,SLA_t_sc,Conc_t_sc),
                values_to = "Garden"),
