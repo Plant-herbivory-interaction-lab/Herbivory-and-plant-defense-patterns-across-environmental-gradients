@@ -75,10 +75,10 @@ Clim_ave<-biovari %>%
     Clim_PC2= prcomp(across(bio1:bio18), scale. = TRUE)$x[, c("PC2")],
   ) %>% 
   rename(
-    MAT = bio1,
-    Tsd = bio4,
-    AP = bio12,
-    PWQ = bio18
+    'MAT' = bio1,
+    'Tsd' = bio4,
+    'AP' = bio12,
+    'PWQ' = bio18
   ) 
 
 dbWriteTable(con,"Bioclims_1970_ave",Clim_ave,overwrite=T)

@@ -47,7 +47,13 @@ PCs<-dbReadTable(con,
                                                  `Climate PC1`=-Clim_PC1,
                                                  `Productivity`=`Climate PC1`,
                                                  'Productivity_sc'= scale(`Climate PC1`,center = T),
-                                                 'Productivity_sc_sq' =  Productivity_sc^2)
+                                                 'Productivity_sc_sq' =  Productivity_sc^2) %>% 
+  rename(
+    'MAT (°C)' = MAT,
+    'Tsd (°C)' = Tsd,
+    'AP (cm)' = AP,
+    'PWQ (cm)' = PWQ
+  ) 
 
 
 # SEM results ----
@@ -117,10 +123,10 @@ map_clim<-ggplot() +
     legend.position.inside = c(0.8, 0.2)
     );map_clim
 
-PC_plot<-PCbiplot(PCs %>% select('MAT':'PWQ'),font_size = 2.5,rot_x = -1) 
+PC_plot<-PCbiplot(PCs %>% select('MAT (°C)':'PWQ (cm)'),font_size = 2.5,rot_x = -1) 
 
 vars<-make_plots(PCs, "Latitude", 
-                 c("Productivity","AP","MAT","PWQ","Tsd"), 
+                 c("Productivity","AP (cm)","MAT (°C)","PWQ (cm)","Tsd (°C)"), 
                  ncol = 2,
                  extra_plots = list("1"=PC_plot))
 
