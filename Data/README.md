@@ -1,4 +1,4 @@
-# Table names and descriptions
+# Table names and descriptions.
 
 | Table name | description |
 | :--- | :--- |
@@ -22,19 +22,70 @@
 
 
 
-## Field_2022
-This table includes the herbivory and plant defense traits measurements collected during the 2022 field season.
+## Column names, units, table locations, and descriptions.
 
-| variables | units | description |
-| :--- | :---: | :--- |
-|Date | Numeric | The number that indicates when the data was collected. This number indicates a date orgin of 1970-01-01|
-|Plant_ID | Numeric | Indicates the plant number in a specific population |
-|Herbivory | Percent | The percent herbivory estimation of the whole plant |
-|Trichomes | Numeric | The number of trichomes in a 500 mm squared area |       
-|SLA | cm<sup>2</sup>/g | The specific leaf area of the collected leaf |
-|Spines | Numeric | Number of spines on the mid-rib of the collected leaf |      
-|Conc | mg/mg | Glycoalkaloid concentration per miligram of dried leaf matter |
-|Pop | Categorical | Population acronym of the collected populations |
+| column name | units | table location(s) | description |
+| :--- | :---: | :--- | :--- |
+|AP | cm | Bioclims_1970_ave.csv | Annual precipitation. |
+|Buds | numeric |Field_2022_traits.csv, Field_2023_traits.csv | The number of flower buds on a plant. |
+|Chew_herb | Percent | Field_2023_traits.csv | Chewing herbivory percentage on the whole plant. |
+|	Clim_PC1 | NA | Bioclims_1970_ave.csv | The first axis of the principal component analysis. |
+|	Clim_PC2 | NA | Bioclims_1970_ave.csv | The second axis of the principal component analysis. |
+| Collect_Label | character | Field_2022_traits.csv | Root and leaf collection label. |
+| Conc |mg/mg | Combined_herbivory_and_trait_data.csv | Glycoalkaloid concentration per miligram of dried leaf matter. |
+|Date | Date | Combined_herbivory_and_trait_data.csv, Field_2022_traits.csv, Field_2023_traits.csv | The number that indicates when the data was collected.|
+|Email | Character | Field_2023_pop_info.csv | Email  of the contacted person for data collection permission.|
+|Epitrix_herb | percent | Field_2023_traits.csv | Percent of herbivory on the plants.|
+|fl_h| numeric |Combined_herbivory_and_trait_data.csv | The number of hermaphroditic flowers on a plant. |
+|Fl_herm| numeric |Field_2022_traits.csv, Field_2023_traits.csv | The number of hermaphroditic flowers on a plant. |
+|fl_m| numeric |Combined_herbivory_and_trait_data.csv | The number of male flowers on a plant. |
+|Fl_male| numeric |Field_2022_traits.csv, Field_2023_traits.csv | The number of male flowers on a plant. |
+|Fruits | numeric |Field_2023_traits.csv | The number of fruits on a plant. |
+|Height| cm |Combined_herbivory_and_trait_data.csv, Field_2022_traits.csv, Field_2023_traits.csv | The height of a plant. |
+|herb_p | proportion |Combined_herbivory_and_trait_data.csv | The proportion of herbivory estimation of the whole plant. |
+|Herbivory | percent |Field_2022_traits.csv | The percent herbivory estimation of the whole plant. |
+|Latitude | Arc degrees | Bioclims_1970_ave.csv, Field_2022_traits.csv, Field_2023_pop_info.csv | The latitudenal value of the plant population. |
+|Leaves | numeric |Combined_herbivory_and_trait_data.csv, Field_2023_traits.csv | The number of leaves on a plant. |
+| Longitude | Arc degrees | Field_2022_cords.csv, Field_2022_traits.csv, Field_2023_pop_info.csv | The longitudenal value of the plant population. | 
+| Location_name | Character | Field_2023_pop_info.csv | Population location description. |
+| L_area | cm<sup>2</sup> | Combined_herbivory_and_trait_data.csv, Field_2022_traits.csv | Leaf area used to calculate SLA. |
+| Leaf_area | cm<sup>2</sup> | Field_2023_traits.csv | Leaf area used to calculate SLA. |
+| L_weight| grams | Combined_herbivory_and_trait_data.csv, Field_2022_traits.csv | Leaf weight used to calculate SLA.  |
+| Leaf_weight| grams | Field_2023_traits.csv | Leaf weight used to calculate SLA.  |
+| Loc | Character | Combined_herbivory_and_trait_data.csv | Location of the data. | 
+|MAT | °C | Bioclims_1970_ave.csv | Mean annual temperature. |
+|Mining_herb | Percent | Field_2023_traits.csv | Mining damage percentage on the whole plant. |
+|Leaves | numeric |Combined_herbivory_and_trait_data.csv | The number of leaves on a plant. |
+| Phenology | Character | Field_2022_traits.csv, Field_2023_traits.csv | Plant phenological stage (v = vegatative, B = budding, Fl = flowering). | 
+| Plant_cover | percent | Field_2022_traits.csv | Percent of focal plant coverage. | 
+| Pop | Character | Bioclims_1970_ave.csv, Combined_herbivory_and_trait_data.csv, Field_2022_cords.csv, Field_2023_pop_info.csv, Field_2023_traits.csv | Unique name for a population. | 
+| Pop_area | m<sup>2</sup>| Field_2022_traits.csv, Field_2023_pop_info.csv | The estimated area that the poulation covered. | 
+| Pop_ID | Character | Field_2022_cords.csv| Unique name for a population. | 
+| Population | Character | Field_2022_cords.csv| Unique name for a population. | 
+|Plant_ID | Character  | Combined_herbivory_and_trait_data.csv, Field_2022_traits.csv, Field_2023_traits.csv | A value that indicates a unique ID of the plants that were sampled. |
+|PWQ | cm | Bioclims_1970_ave.csv | Precipitation of the wettest quarter. |
+|Region | Character | Field_2022_cords.csv, Field_2022_traits.csv | Region of where the poulation was collected. |
+|Roots | Character |  Field_2022_traits.csv | Yes or no whether roots weere collected. |
+|Spines | numeric |  Field_2022_traits.csv  | Number of leaves on the leaf mid rib. |
+|SLA | cm<sup>2</sup>/g |  Combined_herbivory_and_trait_data.csv | The specific leaf area of the collected leaf. |
+|Stem_dens| n per m<sup>2</sup> | Field_2023_traits.csv | Number of stems in 1 square meter surrounding the focal plant. |
+| Time | Character | Combined_herbivory_and_trait_data.csv | Time of when the data was collected. The variable can be year or early, middle, and late of the common garden data. | 
+| Trichomes | n per 0.24 cm<sup>2</sup>  | Combined_herbivory_and_trait_data.csv, Field_2022_traits.csv | Trichomes counted in the given area. | 
+|Tsd | °C | Bioclims_1970_ave.csv | Standard deviation of yearly temperature. |
+| Year | Character | Combined_herbivory_and_trait_data.csv | Year of when the data was collected. | 
+
+
+
+
+
+
+|Plant_ID | Numeric  | | Indicates the plant number in a specific population |
+|Herbivory | Percent | |  The percent herbivory estimation of the whole plant |
+|Trichomes | Numeric |  | The number of trichomes in a 500 mm squared area |       
+|SLA | cm<sup>2</sup>/g |  | The specific leaf area of the collected leaf |
+|Spines | Numeric |  | Number of spines on the mid-rib of the collected leaf |      
+|Conc | mg/mg |  | Glycoalkaloid concentration per miligram of dried leaf matter |
+|Pop | Categorical |  | Population acronym of the collected populations |
 
 ## Field_2023
 This table includes the herbivory and plant defense traits measurements collected during the 2023 field season.
@@ -71,23 +122,5 @@ This table includes the population information of plants collected in the field 
 |Pop | Categorical | Population acronym of the collected populations |
 |Place | Character | Description of where the plant was collected |
 |Notes | Character | Population notes of the plant location |
-
-# Soil
-This table includes the soil attributes at the collected poulations using the geodata::soil_world function.
-| variables | units | description |
-| :--- | :---: | :--- |
-|Pop | Categorical | Population acronym of the collected populations |
-| bdod      | kg dm<sup>-3</sup> | Bulk density of the fine earth fraction     |
-| cec       | cmol(+) kg<sup>-1</sup> | Cation Exchange Capacity of the soil        |
-| cfvo      | %                 | Vol. fraction of coarse fragments (> 2 mm)  |
-| nitrogen  | g kg<sup>-1</sup>  | Total nitrogen (N)                          |
-| phh2o     | -                 | pH (H<sub>2</sub>O)                         |
-| sand      | %                 | Sand (> 0.05 mm) in fine earth              |
-| silt      | %                 | Silt (0.002-0.05 mm) in fine earth         |
-| clay      | %                 | Clay (< 0.002 mm) in fine earth            |
-| soc       | g kg<sup>-1</sup>  | Soil organic carbon in fine earth          |
-| ocd       | kg m<sup>-3</sup>  | Organic carbon density                     |
-| ocs       | kg m<sup>-2</sup>  | Organic carbon stocks                      |
-
 
 
