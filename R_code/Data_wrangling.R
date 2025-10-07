@@ -7,8 +7,6 @@
 # Run install.packages([Package name]) if package is not installed
 library(conflicted)
 library(tidyverse)
-library(DBI)
-library(RSQLite)
 library(geodata)
 library(sf)
 library(terra)
@@ -21,11 +19,9 @@ conflict_prefer("extract", "raster")
 conflict_prefer("filter", "dplyr")
 
 # Climate data ----
-con <-dbConnect(SQLite(), 'Data/Data.db') # Connect to the database
-
-Coords<-dbReadTable(con,"Field_2023_pop_info") %>% 
+Coords<-read.csv("Data/Field_2023_pop_info.csv") %>% 
   select(Pop,Latitude,Longitude) %>% 
-  rbind(.,dbReadTable(con,"Field_2022_cords") %>% 
+  rbind(.,read.csv("Data/Field_2022_cords.csv") %>% 
           select(Latitude:Pop)) %>% drop_na() %>% 
   distinct(Pop, .keep_all = TRUE)
 
@@ -81,13 +77,13 @@ Clim_ave<-biovari %>%
     'PWQ' = bio18
   ) 
 
-dbWriteTable(con,"Bioclims_1970_ave",Clim_ave,overwrite=T)
+write.csv(Clim_ave, "Data/Bioclims_1970_ave.csv",row.names = F)
 
 # Glycoalkaloid concentration calculations Field 2022----
 
 ## standard curve ----
 
-Stand<-dbReadTable(con,"Glycoalk_Spring_2023_standard_curve") %>% 
+Stand<-read.csv("Data/Glycoalk_Spring_2023_standard_curve.csv") %>% 
   drop_na(Conc..mg.mL)
 
 
@@ -111,12 +107,12 @@ Stand %>%
   geom_smooth(method = "lm")
 
 ## Total glycoalkaloid ----
-Glyco<-dbReadTable(con,"Glycoalk_Spring_2023_abs")%>% 
+Glyco<-read.csv("Data/Glycoalk_Spring_2023_abs.csv")%>% 
   dplyr::select(!c(Notes,rep))%>% 
   group_by(Sample_Label) %>% 
   summarise(Abs=mean(Abs,na.rm=T))
 
-weight<-dbReadTable(con,"Glycoalk_Spring_2023_weight")%>% 
+weight<-read.csv("Data/Glycoalk_Spring_2023_weight.csv")%>% 
   dplyr::select(!Notes)
 
 glyc_2022<-full_join(Glyco,weight) %>% 
@@ -138,10 +134,10 @@ glyc_2022<-full_join(Glyco,weight) %>%
 # 2023 glycoalkaloids ----
 ## standard curve ----
 
-Plate<-dbReadTable(con,"Glycoalk_fall_2023_blank_plates") %>% 
+Plate<-read.csv("Data/Glycoalk_fall_2023_blank_plates.csv") %>% 
   select(Well,Plate,Abs) %>% rename(.,Blank_ABS=Abs)
 
-Stand<-dbReadTable(con,"Glycoalk_fall_2023_Standard_curve") %>% 
+Stand<-read.csv("Data/Glycoalk_fall_2023_Standard_curve.csv") %>% 
   left_join(Plate) %>% mutate(Abs=(Abs-Blank_ABS)) 
 
 
@@ -166,12 +162,13 @@ Stand %>%
   geom_smooth(method = "lm")
 
 ## Total glycoalkaloid ----
-Samples<-dbReadTable(con,"Glycoalk_fall_2023_Samples") %>% 
+Samples<-read.csv("Data/Glycoalk_fall_2023_Samples.csv") %>% 
   left_join(Plate) %>% 
   filter(Sample!="Blank1",Abs!="NA") %>% 
   mutate(Abs=(as.numeric(Abs)-Blank_ABS)) %>% 
+  mutate(Sample=as.numeric(Sample)) %>% 
   left_join(
-    dbReadTable(con,"Glycoalk_fall_2023_Weight_data")
+    read.csv("Data/Glycoalk_fall_2023_Weight_data.csv")
     ) %>% 
   mutate(Sample=as.numeric(Sample))
 
@@ -190,7 +187,7 @@ glyc_2023<-Samples %>%
 
 # Import field -----
 ## Field 2022 ----
-Field_2022<-dbReadTable(con,"Field_2022_traits")%>% 
+Field_2022<-read.csv("Data/Field_2022_traits.csv")%>% 
   select(Date,Height,Herbivory,L_area,L_weight,Trichomes,
          Latitude,Longitude,Collect_Label,Fl_herm,Fl_male,Height) %>% 
   mutate(
@@ -204,7 +201,7 @@ Field_2022<-dbReadTable(con,"Field_2022_traits")%>%
     Date=as.Date(Date, format = "%b-%d-%Y")
   ) %>% full_join(glyc_2022,by=join_by(Collect_Label==Plant_ID)) %>% 
   difference_full_join(
-    dbReadTable(con,"Field_2022_cords") %>% 
+    read.csv("Data/Field_2022_cords.csv") %>% 
       drop_na(Pop),
     by = c("Latitude","Longitude"),
     max_dist = 0.01, # tolerance in degrees (~11 m)
@@ -218,7 +215,7 @@ Field_2022<-dbReadTable(con,"Field_2022_traits")%>%
   filter(Date<as.Date("2022-09-01")) %>% drop_na(Trichomes)
 
 ## Field 2023 ----
-Field_2023<-dbReadTable(con,"Field_2023_traits") %>% 
+Field_2023<-read.csv("Data/Field_2023_traits.csv") %>% 
   mutate(
     fl_m=Fl_male,
     fl_h=Fl_herm,
@@ -240,7 +237,7 @@ Garden_2023<-glyc_2023 %>%
                                               values_from = Conc,
                                               values_fn = mean
   ) %>% rename(Conc_T="T",Conc_B="B") %>% 
-  full_join(dbReadTable(con,"Garden_leaf_traits" ) %>% 
+  full_join(read.csv("Data/Garden_leaf_traits.csv" ) %>% 
               mutate(
                 Plant_ID=paste0(Pop,"-",Plant_ID,Rep)
               )) %>%
@@ -255,23 +252,25 @@ Garden_2023<-glyc_2023 %>%
          L_weight=rowMeans(across(starts_with("L_weight"),
                                   as.numeric), na.rm = TRUE))%>% 
   select(Plant_ID,L_area,L_weight,Trichomes,Conc) %>% drop_na() %>% 
-  right_join(dbReadTable(con,"Garden_plant_info") %>% 
-               right_join(dbReadTable(con,"Garden_survey")) %>% 
+  right_join(read.csv("Data/Garden_plant_info.csv") %>% 
+               right_join(read.csv("Data/Garden_survey.csv")) %>% 
                filter(Treatment=="Cont"),by=join_by(Plant_ID==Plant_ID)) %>%
-  drop_na(Date) %>% 
   mutate(
     Leaves=leaves,
     herb_p=as.numeric(Chewing)/100,
     Date=as.Date(Date, format = "%m/%d/%y"),
     Year="2023",
     Loc="Garden",
-    Time=cut(Date, 
-             breaks = seq(min(Date),max(Date),length.out=4), 
-             labels = c("Early", "Mid", "Late"), 
-             include.lowest = TRUE, 
-             right = FALSE),
+   Time=cut(Date, 
+            breaks = seq(min(Date, na.rm = T),
+                         max(Date, na.rm = T),
+                         length.out=4), 
+            labels = c("Early", "Mid", "Late"), 
+            include.lowest = TRUE, 
+            right = FALSE)
   ) %>% 
-  select(Pop,Date,Plant_ID,Loc,Time,Year,L_area,L_weight,Trichomes,
+  drop_na(Date) %>% 
+  select(Pop,Date,Time,Plant_ID,Loc,Year,L_area,L_weight,Trichomes,
          Conc,herb_p,fl_m,fl_h,Leaves,Height)
 
 # Combine data ----
@@ -280,5 +279,5 @@ Combined_data<-rbind(Field_2022,Field_2023,Garden_2023) %>%
   mutate(SLA=L_area/L_weight) %>% 
   filter(Conc>0)
 
-dbWriteTable(con,"Combined_herbivory_and_trait_data",Combined_data,overwrite=T)
+write.csv(Combined_data,"Data/Combined_herbivory_and_trait_data.csv",row.names = F)
 

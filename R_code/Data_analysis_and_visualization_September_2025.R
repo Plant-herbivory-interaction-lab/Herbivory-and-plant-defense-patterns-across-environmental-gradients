@@ -6,8 +6,6 @@
 # Import packages ----
 # Run install.packages([Package name]) if package is not installed
 library(conflicted)
-library(DBI)
-library(RSQLite)
 library(glmmTMB)
 library(piecewiseSEM)
 library(performance)
@@ -29,20 +27,16 @@ library(grid)
 conflicts_prefer(dplyr::select(),
                  dplyr::filter)
 
-# Database connection ----
-con <-dbConnect(SQLite(), 'Data/Data.db')
-
 # Import and prep data ----
 source("R_code/Functions.R")
 
-Trait_data<-dbReadTable(con,
-                        "Combined_herbivory_and_trait_data") %>% 
+Trait_data<-read.csv("Data/Combined_herbivory_and_trait_data.csv") %>% 
   mutate(
     herb_p=(transform_perc(herb_p)),
     Date=as.Date(Date,origin = "1970-01-01"))
 
-PCs<-dbReadTable(con,
-                 "Bioclims_1970_ave") %>% mutate(Latitude_sc=scale(Latitude),
+PCs<-read.csv(
+                 "Data/Bioclims_1970_ave.csv") %>% mutate(Latitude_sc=scale(Latitude),
                                                  Latitude_sc_sq=Latitude_sc^2,
                                                  `Climate PC1`=-Clim_PC1,
                                                  `Productivity`=`Climate PC1`,
@@ -84,8 +78,7 @@ summary(Non_interaction_Garden)
 AIC(Non_interaction_Garden,aicc = T)
 
 ## Figure 1: Maps ----
-Pop_info<-dbReadTable(con,
-                      "Field_2022_cords") %>% 
+Pop_info<-read.csv("Data/Field_2022_cords.csv") %>% 
   select(Pop,Latitude,Longitude) %>% 
   right_join(Data_prep(PopLevel = T)) %>% 
   group_by(Pop) %>% summarise(
@@ -102,7 +95,7 @@ clipxy <- c(-100,-65,25,50)
 
 OR <- crop(cn,clipxy)
 
-obs<-dbReadTable(con,"Solanum_carolinense_inat") %>% 
+obs<-read.csv("Data/Solanum_carolinense_inat.csv") %>% 
   drop_na(latitude) %>% 
   rename(Longitude=longitude,
          Latitude=latitude) %>% 
