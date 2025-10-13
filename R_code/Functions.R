@@ -149,13 +149,20 @@ SEM_results <- function(Loc = "Field", lin="Latitude",sq="Latitude",mod_fun='glm
   model_list <- lapply(formula_strings, function(fstr) method(as.formula(fstr), DF_short_I_field))
   
   AICs<-sapply(model_list,FUN=AIC)
+  ICCs<-sapply(model_list,FUN=icc)
   
-  names(AICs)<-c("Quadratic","Linear",
-                 "Conc_sq", "Conc_lin",
-                 "SLA_sq", "SLA_lin",
-                 "Trich_sq","Trich_lin")
+  names<-c("Quadratic","Linear",
+             "Conc_sq", "Conc_lin",
+             "SLA_sq", "SLA_lin",
+             "Trich_sq","Trich_lin")
+  
+  
+  names(AICs)<-names
+  
+  colnames(ICCs)<-names
   
   print(AICs)
+  print(ICCs)
   
   for (m in model) {
     model_list[[m]]$call[[1]] <- as.name(mod_fun)
@@ -192,7 +199,7 @@ make_plots <- function(data, x_var, y_vars, ncol = 2, extra_plots = NULL) {
     
     p <- ggplot(data, aes(x = .data[[x_var]], y = .data[[y]])) +
       geom_point() +
-      C_theme(size = 12) +
+      C_theme(size = 14) +
       labs(y = y_lab)
     
     # Show x-axis only for bottom-most plot in each column
