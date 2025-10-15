@@ -149,7 +149,10 @@ SEM_results <- function(Loc = "Field", lin="Latitude",sq="Latitude",mod_fun='glm
   model_list <- lapply(formula_strings, function(fstr) method(as.formula(fstr), DF_short_I_field))
   
   AICs<-sapply(model_list,FUN=AIC)
-  ICCs<-sapply(model_list,FUN=icc)
+  
+  cus_unlist<-function(x){as.vector(icc(x))}
+  ICCs<-do.call(cbind,sapply(model_list,FUN=cus_unlist,simplify = F))
+  
   
   names<-c("Quadratic","Linear",
              "Conc_sq", "Conc_lin",
@@ -199,7 +202,7 @@ make_plots <- function(data, x_var, y_vars, ncol = 2, extra_plots = NULL) {
     
     p <- ggplot(data, aes(x = .data[[x_var]], y = .data[[y]])) +
       geom_point() +
-      C_theme(size = 14) +
+      C_theme(size = 15) +
       labs(y = y_lab)
     
     # Show x-axis only for bottom-most plot in each column
@@ -228,7 +231,7 @@ make_plots <- function(data, x_var, y_vars, ncol = 2, extra_plots = NULL) {
       y_lab <- p$labels$y
       if (is.null(y_lab)) y_lab <- ""
       wrapped_y <- if (nchar(y_lab) > 12) str_wrap(y_lab, width = 12) else y_lab
-      p <- p + labs(y = wrapped_y) + C_theme(size = 12)
+      p <- p + labs(y = wrapped_y) + C_theme(size = 15)
       
       # Insert the plot at the desired position
       if (pos > length(plots)) {
@@ -307,10 +310,10 @@ semGraph<-function(fit=fit) {
   edge_lty <- ifelse(p_values < 0.05, 1, 2)  # 1 = solid, 2 = dashed
   
   # Define edge widths based on effect size
-  edge_widths <- ifelse(p_values < 0.05,abs(weights)*20,1)
+  edge_widths <- ifelse(p_values < 0.1,abs(weights)*20,1)
   
   # Define estimates as edge labels (rounded to 2 decimals)
-  edge_labels <- ifelse(p_values < 0.05,round(weights, 3),NA)  
+  edge_labels <- ifelse(p_values < 0.1,round(weights, 3),NA)  
   
   # Define node order (top to bottom)
   node_names <- c("Herbivory", "Glycoalkaloids", "SLA", "Trichomes", as.vector(edge_list[10,1]), as.vector(edge_list[11,1]))
@@ -390,7 +393,7 @@ PCbiplot <- function(data1=data,rot_x=1,rot_y=1,font_size=14,ext=4) {
                  arrow=arrow(length=unit(0.2,"cm")), alpha=0.75, color="black")+
     geom_label_repel(data=datapc, aes(x=PC1*ext, y=PC2*ext, label=varnames), 
                      color="black",angle = angle, hjust = hjust,size=font_size,
-                     force = 0.05, label.padding = unit(0.1, "lines")) + 
+                     force = 0.4, label.padding = unit(0.2, "lines")) + 
     labs(x=Lab[1],y=Lab[2])
   
   plot

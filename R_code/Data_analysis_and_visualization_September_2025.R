@@ -42,7 +42,7 @@ PCs<-read.csv(
                                                  `Productivity PC`=`Climate PC1`,
                                                  'Productivity_sc'= scale(`Climate PC1`,center = T),
                                                  'Productivity_sc_sq' =  Productivity_sc^2) %>% 
-  rename(
+  mutate(
     'MAT (°C)' = MAT,
     'Tsd (°C)' = Tsd,
     'AP (cm)' = AP,
@@ -58,9 +58,9 @@ summary(climate_field)
 AIC(climate_field)
 
 #Garden
-Climate_Garden<-SEM_results(lin="Productivity",sq='Productivity',Loc="Garden",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"),random = "",mod_fun='lm',
+Climate_Garden<-SEM_results(lin="Productivity",sq='Productivity',Loc="Garden",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"),random = "+ (1|Pop)",
                             corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
-                            byDate = T,group = c("Plant_ID"))
+                            byDate = T,group = c("Plant_ID","Pop"))
 summary(Climate_Garden)
 AIC(Climate_Garden,aicc = T)
 
@@ -110,13 +110,13 @@ map_clim<-ggplot() +
   geom_point(data=Pop_info,aes(x=Longitude,y=Latitude,shape = Year, fill = Year),size=3)+
   scale_shape_manual(values = c(21,22,23))+
   scale_fill_manual(values = c("darkred","darkgray","white"))+
-  theme_void(base_size = 14) +
+  theme_void(base_size = 16) +
   theme(
     legend.position = "inside",
     legend.position.inside = c(0.8, 0.2)
     );map_clim
 
-PC_plot<-PCbiplot(PCs %>% select('MAT (°C)':'PWQ (cm)'),font_size = 3,rot_x = -1) 
+PC_plot<-PCbiplot(PCs %>% select('MAT':'PWQ'),font_size = 4,rot_x = -1) 
 
 vars<-make_plots(PCs, "Latitude", 
                  c("Productivity PC","AP (cm)","MAT (°C)","PWQ (cm)","Tsd (°C)"), 
@@ -149,17 +149,17 @@ ggsave("SEM.jpg",
 
 
 # Field climate versus trichomes
-ClimXtrich<-Custom_ggplot(predictor = "Productivity")+
-  labs(y="Trichomes",x="Productivity") +
+ClimXtrich<-Custom_ggplot(predictor = "Productivity_sc")+
+  labs(y="Trichomes",x="Productivity PC") +
   C_theme();ClimXtrich
 
-ClimXglyc<-Custom_ggplot(predictor = "Productivity",response = "Conc", family = "gaussian",deg=1)+
-  labs(x="Productivity",y="Glycoalkaloids (mg/mg)") +
+ClimXglyc<-Custom_ggplot(predictor = "Productivity_sc",response = "Conc", family = "gaussian",deg=1)+
+  labs(x="Productivity PC",y="Glycoalkaloids (mg/mg)") +
   C_theme();ClimXglyc
 
 # Field climate versus Herbivores
-ClimsqXherb<-Custom_ggplot(predictor = "Productivity",response = "herb_p", family = beta_family(),deg=2)+
-  labs(x="Productivity",y="Herbivory (%)") +
+ClimsqXherb<-Custom_ggplot(predictor = "Productivity_sc",response = "herb_p", family = beta_family(),deg=2)+
+  labs(x="Productivity PC",y="Herbivory (%)") +
   scale_y_continuous(labels = function(x) paste0(x * 100))+
   C_theme();ClimsqXherb
 
@@ -179,13 +179,13 @@ ggsave("Field_pan.jpg",
 ## Garden figure ----
 
 # Garden climate versus glycoalkaloids
-climXglyc<-Custom_ggplot(loc = "Garden",predictor = "Productivity",response = "Conc", family = gaussian(link = "log"),deg=1,random = "+(1|Pop)")+
-  labs(x="Productivity",y="Glycoalkaloids (mg/mg)") +
+climXglyc<-Custom_ggplot(loc = "Garden",predictor = "Productivity_sc",response = "Conc", family = gaussian(link = "log"),deg=1,random = "+(1|Pop)")+
+  labs(x="Productivity PC",y="Glycoalkaloids (mg/mg)") +
   C_theme();climXglyc
 
 # Garden climate versus trichomes
-climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Productivity",response = "Trichomes", family = gaussian(link = "log"),deg=2,random = "+(1|Pop)")+
-  labs(x="Productivity",y="Trichomes") +
+climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Productivity_sc",response = "Trichomes", family = gaussian(link = "log"),deg=2,random = "+(1|Pop)")+
+  labs(x="Productivity PC",y="Trichomes") +
   C_theme();climsqXtri_gard
 
 
@@ -202,18 +202,29 @@ ggsave("gard_pan.jpg",
 
 Pop_cor<-full_join(
 Data_prep(loc="Field",PopLevel = T) %>% 
-  select(Pop,Trichomes_t_sc,SLA_t_sc,Conc_t_sc) %>% 
-  pivot_longer(.,cols=c(Trichomes_t_sc,SLA_t_sc,Conc_t_sc),
+  select(Pop,Trichomes,SLA,Conc,herb_p) %>% 
+  pivot_longer(.,cols=c(Trichomes,SLA,Conc,herb_p),
                values_to = "Field"), 
 Data_prep(loc="Garden",PopLevel = T,byDate = F,Time.var = "Mid|Early|Late")%>% 
-  select(Pop,Trichomes_t_sc,SLA_t_sc,Conc_t_sc) %>% 
-  pivot_longer(.,cols=c(Trichomes_t_sc,SLA_t_sc,Conc_t_sc),
+  select(Pop,Trichomes,SLA,Conc,herb_p) %>% 
+  pivot_longer(.,cols=c(Trichomes,SLA,Conc,herb_p),
                values_to = "Garden"),
 by = join_by(Pop==Pop,name==name)
 ) %>% rename(.,"Trait"=name) 
 
+Pop_cor%>% filter(Trait == "Trichomes") %>% 
+  select(Field,Garden) %>% drop_na() %>% 
+  cor(method="spearman")
 
-emtrends(lm(Garden~Field*Trait,data=Pop_cor),~Trait,var = "Field",infer=T)
+Pop_cor%>% filter(Trait == "Conc") %>% 
+  select(Field,Garden) %>% drop_na() %>% 
+  cor(method="spearman")
+
+
+Anova(glmmTMB(value~name,data=Pop_cor%>% 
+                pivot_longer(cols = c(Field,Garden)) %>% 
+                      filter(Trait=="herb_p"),
+                      family = beta_family()))
 
 # Height versus defense traits ----
 Data_prep(loc="Graden|Field") %>% 
