@@ -1,9 +1,9 @@
-1st_data_chapter.Rproj
-.Rproj.user
+*.Rproj/
+.Rproj.user/
 .Rhistory
 .RData
 .Ruserdata
-Manuscript_drafts
+Manuscript_drafts/
 SEMs_hypotheses.pptx
 .RDataTmp*
 .DS_Store
