@@ -1,0 +1,3 @@
+# normalize text files and enforce consistent EOL
+* text=auto
+*.Rproj text
