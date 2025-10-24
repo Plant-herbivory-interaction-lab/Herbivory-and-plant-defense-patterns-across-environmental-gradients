@@ -307,7 +307,7 @@ semGraph<-function(fit=fit) {
   edge_colors <- ifelse(weights > 0, "black", "darkred")
   
   # Define line types: Solid for significant (p < 0.05), Dashed for non-significant
-  edge_lty <- ifelse(p_values < 0.05, 1, 2)  # 1 = solid, 2 = dashed
+  edge_lty <- ifelse(p_values < 0.1, 1, 2)  # 1 = solid, 2 = dashed
   
   # Define edge widths based on effect size
   edge_widths <- ifelse(p_values < 0.1,abs(weights)*20,1)

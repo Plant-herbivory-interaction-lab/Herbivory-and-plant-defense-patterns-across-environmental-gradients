@@ -51,39 +51,30 @@ PCs<-read.csv(
 
 
 # SEM results ----
-# Hypothesis 1: Herbivory and plant traits are linearly associated with latitude.
-# Field
-climate_field<-SEM_results(lin="Productivity",sq='Productivity',model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"))
-summary(climate_field)
-AIC(climate_field)
+Field_sem_sum<-SEM_results(lin="Productivity",sq='Productivity',model = c("lm1.1", "lm2", "lm3", "lm4"))
+summary(Field_sem_sum)
 
-#Garden
-Climate_Garden<-SEM_results(lin="Productivity",sq='Productivity',Loc="Garden",model = c("lm1.2", "lm2.1", "lm3.1", "lm4.1"),random = "+ (1|Pop)",
-                            corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
-                            byDate = T,group = c("Plant_ID","Pop"))
-summary(Climate_Garden)
-AIC(Climate_Garden,aicc = T)
-
-# Hypothesis 2: Herbivory and plant traits are quadratically associated with latitude.
-# Field
-Non_interaction_field<-SEM_results(lin="Productivity",sq='Productivity',model = c("lm1.1", "lm2", "lm3", "lm4"))
-summary(Non_interaction_field)
-AIC(Non_interaction_field)
 
 # Garden
-Non_interaction_Garden<-SEM_results(lin="Productivity",sq='Productivity',Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "+ (1|Pop)",mod_fun='glmmTMB',
+Garden_sem_sum<-SEM_results(lin="Productivity",sq='Productivity',Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),
+                        random = "+ (1|Pop)",mod_fun='glmmTMB',
                                     corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
                                     byDate = T,group = c("Plant_ID","Pop"))
-summary(Non_interaction_Garden)
-AIC(Non_interaction_Garden,aicc = T)
+summary(Garden_sem_sum)
+
 
 ## Figure 1: Maps ----
 Pop_info<-read.csv("Data/Field_2022_cords.csv") %>% 
   select(Pop,Latitude,Longitude) %>% 
-  right_join(Data_prep(PopLevel = T)) %>% 
+  rbind(.,read.csv("Data/Field_2023_pop_info.csv") %>% 
+          select(Pop,Latitude,Longitude)) %>% 
+  filter(Pop!="") %>% distinct(.,Pop,.keep_all = TRUE) %>% 
+  right_join(Data_prep(PopLevel = T) %>% 
+               select(Pop,Year),
+             by=join_by(Pop)) %>% 
   group_by(Pop) %>% summarise(
-    across(where(is.numeric), first),
     Year = if (n_distinct(Year) == 1) as.character(first(Year)) else "Both Years",
+    across(where(is.numeric), first),
     .groups   = "drop"
     )
 
@@ -107,7 +98,7 @@ obs<-read.csv("Data/Solanum_carolinense_inat.csv") %>%
 map_clim<-ggplot() + 
   geom_spatvector(data=OR,fill="NA",color="black") +
   geom_point(data=obs,aes(x=Longitude,y=Latitude),shape=21,size=0.1,fill="grey",alpha=0.25)+
-  geom_point(data=Pop_info,aes(x=Longitude,y=Latitude,shape = Year, fill = Year),size=3)+
+  geom_point(data=Pop_info,aes(x=Longitude,y=Latitude,shape = Year, fill = Year),size=3,stroke=1.5)+
   scale_shape_manual(values = c(21,22,23))+
   scale_fill_manual(values = c("darkred","darkgray","white"))+
   theme_void(base_size = 16) +
@@ -123,7 +114,7 @@ vars<-make_plots(PCs, "Latitude",
                  ncol = 2,
                  extra_plots = list("1"=PC_plot))
 
-clim_vars<-(vars | map_clim) + 
+clim_vars<-(map_clim|vars) + 
   plot_annotation(tag_levels = "A")
 
 ggsave("fig_1.jpg",
@@ -132,9 +123,9 @@ ggsave("fig_1.jpg",
        height = 6)
 
 # Figure 2: SEMs ----
-Field_sem<-semGraph(Non_interaction_field);Field_sem
+Field_sem<-semGraph(Field_sem_sum);Field_sem
 
-Garden_sem<-semGraph(Non_interaction_Garden);Garden_sem
+Garden_sem<-semGraph(Field_sem_sum);Garden_sem
 
 SEM_fig<-(Field_sem | Garden_sem)+plot_annotation(tag_levels = "A");SEM_fig
 
