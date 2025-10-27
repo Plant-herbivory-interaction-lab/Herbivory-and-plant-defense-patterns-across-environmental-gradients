@@ -117,7 +117,7 @@ C_theme<-function(size=18){theme_bw(base_size = size)+
 SEM_results <- function(Loc = "Field", lin="Latitude",sq="Latitude",mod_fun='glmmTMB',
                         model = c("lm1.1", "lm2", "lm3", "lm4"), random = "+ (1|Pop:Time)",Time="mid",
                         group="Plant_ID",
-                        byDate=T,start_date="2023-06-15",end_date="2023-07-29",corError = list(
+                        byDate=T,start_date="2023-06-15",end_date="2023-07-29",ICC=T,corError = list(
                           quote(SLA_t_sc %~~% Trichomes_t_sc),
                           quote(SLA_t_sc %~~% Conc_t_sc))) {
   
@@ -146,26 +146,25 @@ SEM_results <- function(Loc = "Field", lin="Latitude",sq="Latitude",mod_fun='glm
   print(min(DF_short_I_field$Date))
   print(max(DF_short_I_field$Date))
   
+  names<-c("Quadratic","Linear",
+           "Conc_sq", "Conc_lin",
+           "SLA_sq", "SLA_lin",
+           "Trich_sq","Trich_lin")
+  
   model_list <- lapply(formula_strings, function(fstr) method(as.formula(fstr), DF_short_I_field))
   
   AICs<-sapply(model_list,FUN=AIC)
   
-  cus_unlist<-function(x){as.vector(icc(x))}
+  print(AICs)
+  
+  if(ICC==T){cus_unlist<-function(x){as.vector(icc(x))}
   ICCs<-do.call(cbind,sapply(model_list,FUN=cus_unlist,simplify = F))
-  
-  
-  names<-c("Quadratic","Linear",
-             "Conc_sq", "Conc_lin",
-             "SLA_sq", "SLA_lin",
-             "Trich_sq","Trich_lin")
-  
-  
-  names(AICs)<-names
   
   colnames(ICCs)<-names
   
-  print(AICs)
-  print(ICCs)
+  names(AICs)<-names
+  
+  print(ICCs)}
   
   for (m in model) {
     model_list[[m]]$call[[1]] <- as.name(mod_fun)
@@ -246,7 +245,7 @@ make_plots <- function(data, x_var, y_vars, ncol = 2, extra_plots = NULL) {
 }
 
 ## Plots with trend linds ----
-Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1',deg=2,random="+(1|Pop:Time)",family="poisson"){
+Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1',deg=2,random="+(1|Pop:Time)",family="poisson",Trend=T){
   Data<-Data_prep(loc=loc,byDate = T,group = "Plant_ID") %>% 
     mutate(Pop=as.factor(Pop))
   
@@ -266,12 +265,15 @@ Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1
   ))
   
   
-  ggplot(data=predicted,aes(x=x,y=predicted))+
-    geom_ribbon(aes(x=x,y=predicted,ymin=conf.low,ymax = conf.high), fill = "grey70",alpha=0.5) + 
-    geom_line(linewidth=1)+
-    geom_point(data=Data,aes(x=!!sym(predictor),y=!!sym(response)),alpha=0.3,shape = 16)+
+  p<-ggplot(data=predicted,aes(x=x,y=predicted))
+    
+  if(Trend==T){p<-p+geom_ribbon(aes(x=x,y=predicted,ymin=conf.low,ymax = conf.high), fill = "grey70",alpha=0.5) + 
+    geom_line(linewidth=1)}
+  
+    p<-p+geom_point(data=Data,aes(x=!!sym(predictor),y=!!sym(response)),alpha=0.3,shape = 16)+
     geom_point(data=Data_pop,aes(x=!!sym(predictor),y=!!sym(response)),col="darkred",size=3)
   
+    return(p)
 }
 
 ## SEM graphing function ----

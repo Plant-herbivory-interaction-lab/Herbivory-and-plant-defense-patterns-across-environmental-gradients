@@ -179,15 +179,22 @@ climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Productivity_sc",resp
   labs(x="Productivity PC",y="Trichomes") +
   C_theme();climsqXtri_gard
 
+climsqXherb_gard<-Custom_ggplot(loc = "Garden",predictor = "Productivity_sc",response = "herb_p", 
+                                family = gaussian(link = "log"),deg=2,random = "+(1|Pop)",
+                                Trend = F)+
+  labs(x="Productivity PC",y="Herbivory (%)") +
+  scale_y_continuous(labels = function(x) paste0(x * 100))+
+  C_theme();climsqXherb_gard
 
-gard_pan<-wrap_plots(list(climsqXtri_gard,climXglyc),ncol = 2)+
+
+gard_pan<-wrap_plots(list(climsqXtri_gard,climXglyc,climsqXherb_gard),ncol = 1)+
   plot_annotation(tag_levels = "A");gard_pan
 
 
 ggsave("gard_pan.jpg",
        device = "jpg",plot = gard_pan,
-       path = "Figures",dpi = 400,width = 12, 
-       height = 6,limitsize = F)
+       path = "Figures",dpi = 400,width = 7, 
+       height = 15,limitsize = F)
 
 # Population level correlation of defense traits ----
 
@@ -205,17 +212,22 @@ by = join_by(Pop==Pop,name==name)
 
 Pop_cor%>% filter(Trait == "Trichomes") %>% 
   select(Field,Garden) %>% drop_na() %>% 
-  cor(method="spearman")
+  summarise(cor = list(cor.test(Field, Garden, method = "spearman"))) %>%
+  pull(cor)
 
 Pop_cor%>% filter(Trait == "Conc") %>% 
   select(Field,Garden) %>% drop_na() %>% 
-  cor(method="spearman")
+  summarise(cor = list(cor.test(Field, Garden, method = "spearman"))) %>%
+  pull(cor)
 
 
-Anova(glmmTMB(value~name,data=Pop_cor%>% 
-                pivot_longer(cols = c(Field,Garden)) %>% 
-                      filter(Trait=="herb_p"),
-                      family = beta_family()))
+gard_v_field_herb<-glmmTMB(herb_p~Loc,data=Data_prep(loc = "Garden|Field"),
+                      family = beta_family())
+
+Anova(gard_v_field_herb)
+
+emmeans(gard_v_field_herb,"Loc",
+        type="response", infer = T)
 
 # Height versus defense traits ----
 Data_prep(loc="Graden|Field") %>% 
@@ -249,6 +261,7 @@ Herbivory_time<-ggplot(Pop_level,aes(Date,max_herb,col=Pop)) +
   geom_point()+
   geom_smooth(method="glm",se=F,formula = y~poly(x,2))+
   labs(y="Herbivory (%)")+
+  scale_y_continuous(labels = function(x) paste0(x * 100))+
   C_theme(14);Herbivory_time
 
 appendix<-((Leaves_time | Flowers_time)/(Herbivory_time | plot_spacer()))+plot_annotation(tag_levels = "A");appendix
@@ -301,14 +314,14 @@ emtrends(all_herb_mod_max[[2]],~Time,var="Trichomes_t_sc",infer=T)
 # Herbviory data from early in the year
 early_sem<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
                        corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
-                       Time='Early',group = "Plant_ID")
+                       Time='Early',group = "Plant_ID",ICC=F)
 AIC(early_sem,aicc=T)
 summary(early_sem)
 
 # Herbviory data from the middle of the year
 mid_sem<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
                      corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
-                     Time='Mid',group = "Plant_ID")
+                     Time='Mid',group = "Plant_ID",ICC=F)
 
 AIC(mid_sem,aicc = T)
 summary(mid_sem)
@@ -316,7 +329,7 @@ summary(mid_sem)
 # Herbviory data from the end of the year
 end_sem<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
                      corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
-                     Time='Late',group = "Plant_ID")
+                     Time='Late',group = "Plant_ID",ICC=F)
 
 AIC(end_sem,aicc = T)
 summary(end_sem)
@@ -324,7 +337,7 @@ summary(end_sem)
 # Herbivory from all time points of the experiment
 all_sem<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
                      corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc),quote(SLA_t_sc %~~% Trichomes_t_sc)),
-                     byDate = T, start_date = "2023-05-15",end_date = "2023-10-15",group = "Plant_ID")
+                     byDate = T, start_date = "2023-05-15",end_date = "2023-10-15",group = "Plant_ID",ICC=F)
 
 AIC(all_sem,aicc = T)
 summary(all_sem)
@@ -346,7 +359,8 @@ trait_x_herb_plot<-function(response,y_lab){
     labs(x="Trait value",y=y_lab)}
 
 
-trait_x_herb_ave<-trait_x_herb_plot("herb_p","Average herbviory")
+trait_x_herb_ave<-trait_x_herb_plot("herb_p","Average herbviory")+
+  scale_y_continuous(labels = function(x) paste0(x * 100))
 
 trait_x_herb_plot("max_herb","Max herbviory")
 
