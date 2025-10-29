@@ -359,7 +359,7 @@ trait_x_herb_plot<-function(response,y_lab){
     labs(x="Trait value",y=y_lab)}
 
 
-trait_x_herb_ave<-trait_x_herb_plot("herb_p","Average herbviory")+
+trait_x_herb_ave<-trait_x_herb_plot("herb_p","Average herbviory (%)")+
   scale_y_continuous(labels = function(x) paste0(x * 100))
 
 trait_x_herb_plot("max_herb","Max herbviory")
