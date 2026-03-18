@@ -30,10 +30,54 @@ conflicts_prefer(dplyr::select(),
 # Import and prep data ----
 source("R_code/Functions.R")
 
+coords<-rbind(read.csv("Data/Field_2023_pop_info.csv") %>% 
+                select(Pop,Latitude,Longitude),
+              read.csv("Data/Field_2022_cords.csv") %>% 
+                select(Pop,Latitude,Longitude)) %>% 
+  filter(Pop!="") %>% 
+  distinct(.,Pop,.keep_all = TRUE)
+
+PP_yearly<-Extract_var_with_const_date(
+  sf::st_as_sf(coords,coords=c('Longitude','Latitude'),
+               crs="+proj=longlat +datum=WGS84"),
+  "MODIS/061/MOD17A3HGF",c("Npp","Npp_QC"),unit="",select = T,buffer = 1500)
+
+PP_8day<-Extract_var_with_const_date(
+  sf::st_as_sf(coords,coords=c('Longitude','Latitude'),
+               crs="+proj=longlat +datum=WGS84"),
+  "MODIS/061/MOD17A2HGF",c("PsnNet","Psn_QC"),select = T,
+  buffer = 1500) 
+
+
+PP_yearly_sum<-PP_yearly %>% 
+  #filter(Npp_QC <= 30) %>% 
+  mutate(Year=year(image_date))%>% 
+  filter(Year<=2013) %>% 
+  group_by(Pop) %>% 
+  summarise(NPP_y=mean(Npp)/1e4)%>% 
+  right_join(coords)
+
+
+PP_8day_sum<-PP_8day %>% 
+  mutate(Year=year(image_date)) %>% 
+  filter(
+    bitwAnd(Psn_QC, 1) == 0 &                    # good quality
+      bitwAnd(bitwShiftR(Psn_QC, 2), 1) == 0 &     # detectors OK
+      bitwAnd(bitwShiftR(Psn_QC, 3), 3) == 0 &     # clear sky
+      bitwAnd(bitwShiftR(Psn_QC, 5), 7) == 0       # best confidence
+  ) %>% group_by(Pop,Year) %>% 
+  summarise(NPP_g=mean(PsnNet)/1e4)%>% 
+  ungroup() %>% 
+  right_join(PP_yearly_sum) %>% 
+  filter(Year=="2023"|Year=="2022")
+
+
+ggpairs(PP_8day_sum %>% select(-c(Pop,Longitude)))
+
 Trait_data<-read.csv("Data/Combined_herbivory_and_trait_data.csv") %>% 
   mutate(
     herb_p=(transform_perc(herb_p)),
-    Date=as.Date(Date,origin = "1970-01-01"))
+    Date=as.Date(Date,origin = "1970-01-01")) 
 
 PCs<-read.csv(
                  "Data/Bioclims_1970_ave.csv") %>% mutate(Latitude_sc=scale(Latitude),
@@ -47,7 +91,9 @@ PCs<-read.csv(
     'Tsd (°C)' = Tsd,
     'AP (cm)' = AP,
     'PWQ (cm)' = PWQ
-  ) 
+  ) %>% 
+  right_join(PP_8day_sum,join_by(Pop))
+
 
 
 # SEM results ----
@@ -125,7 +171,7 @@ ggsave("fig_1.jpg",
 # Figure 2: SEMs ----
 Field_sem<-semGraph(Field_sem_sum);Field_sem
 
-Garden_sem<-semGraph(Field_sem_sum);Garden_sem
+Garden_sem<-semGraph(Garden_sem_sum);Garden_sem
 
 SEM_fig<-(Field_sem | Garden_sem)+plot_annotation(tag_levels = "A");SEM_fig
 
