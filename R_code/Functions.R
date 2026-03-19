@@ -114,10 +114,11 @@ C_theme<-function(size=18){theme_bw(base_size = size)+
 
 
 ## SEM function ----
-SEM_results <- function(Loc = "Field", lin="Latitude",sq="Latitude",mod_fun='glmmTMB',
-                        model = c("lm1.1", "lm2", "lm3", "lm4"), random = "+ (1|Pop:Time)",Time="mid",
+SEM_results <- function(Loc = "Field", lin="Latitude",sq="Latitude",Prod = " + NPP_g",
+                        mod_fun='glmmTMB',
+                        model = c("lm1.1", "lm2", "lm3", "lm4"), random = "+ (1|Pop/Year)",Time="mid",
                         group="Plant_ID",
-                        byDate=T,start_date="2023-06-15",end_date="2023-07-29",ICC=T,corError = list(
+                        byDate=T,start_date="2023-06-15",end_date="2023-07-29",ICC=F,corError = list(
                           quote(SLA_t_sc %~~% Trichomes_t_sc),
                           quote(SLA_t_sc %~~% Conc_t_sc))) {
   
@@ -125,14 +126,14 @@ SEM_results <- function(Loc = "Field", lin="Latitude",sq="Latitude",mod_fun='glm
   method<-get(mod_fun)
   
   formula_strings <- c(
-    lm1.1 = paste0('herb_p_t_sc ~',lin, '_sc + ',sq, '_sc_sq + NPP_g + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random), 
-    lm1.2 = paste0('herb_p_t_sc ~ ',lin, '_sc + NPP_g + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random),
-    lm2 = paste0('Conc_t_sc ~ ',lin, '_sc + ',sq, '_sc_sq + NPP_g', random),           
-    lm2.1 = paste0('Conc_t_sc ~ ',lin, '_sc + NPP_g',random),           
-    lm3 = paste0('SLA_t_sc ~ ',lin, '_sc + ',sq, '_sc_sq + NPP_g', random),
-    lm3.1 = paste0('SLA_t_sc ~ ',lin, '_sc + NPP_g', random),           
-    lm4 = paste0('Trichomes_t_sc ~ ',lin, '_sc + ',sq, '_sc_sq + NPP_g', random),  
-    lm4.1 = paste0('Trichomes_t_sc ~ ',lin, '_sc + NPP_g', random)                  
+    lm1.1 = paste0('herb_p_t_sc ~',lin, '_sc + ',sq, '_sc_sq',  Prod,' + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random), 
+    lm1.2 = paste0('herb_p_t_sc ~ ',lin, '_sc',  Prod,' + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random),
+    lm2 = paste0('Conc_t_sc ~ ',lin, '_sc + ',sq, '_sc_sq',  Prod),           
+    lm2.1 = paste0('Conc_t_sc ~ ',lin, '_sc', Prod),           
+    lm3 = paste0('SLA_t_sc ~ ',lin, '_sc + ',sq, '_sc_sq', Prod),
+    lm3.1 = paste0('SLA_t_sc ~ ',lin, '_sc', Prod),           
+    lm4 = paste0('Trichomes_t_sc ~ ',lin, '_sc + ',sq, '_sc_sq', Prod),  
+    lm4.1 = paste0('Trichomes_t_sc ~ ',lin, '_sc', Prod)                  
   )
   
   DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,

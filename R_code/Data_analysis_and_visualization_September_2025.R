@@ -97,7 +97,7 @@ PCs<-read.csv(
 
 
 # SEM results ----
-Field_sem_sum<-SEM_results(lin="Productivity",sq='Productivity',model = c("lm1.1", "lm2", "lm3", "lm4"))
+Field_sem_sum<-SEM_results(lin="Latitude",sq='Latitude',model = c("lm1.1", "lm2", "lm3", "lm4"))
 summary(Field_sem_sum)
 
 
