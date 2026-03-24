@@ -54,8 +54,7 @@ PP_yearly_sum<-PP_yearly %>%
   mutate(Year=year(image_date))%>% 
   filter(Year<=2013) %>% 
   group_by(Pop) %>% 
-  summarise(NPP_y=mean(Npp)/1e4)%>% 
-  right_join(coords)
+  summarise(NPP_y=sqrt(mean(Npp)/1e4))
 
 
 PP_8day_sum<-PP_8day %>% 
@@ -65,9 +64,10 @@ PP_8day_sum<-PP_8day %>%
       bitwAnd(bitwShiftR(Psn_QC, 2), 1) == 0 &     # detectors OK
       bitwAnd(bitwShiftR(Psn_QC, 3), 3) == 0 &     # clear sky
       bitwAnd(bitwShiftR(Psn_QC, 5), 7) == 0       # best confidence
-  ) %>% group_by(Pop,Year) %>% 
-  summarise(NPP_g=mean(PsnNet)/1e4)%>% 
-  ungroup() %>% 
+  ) %>% group_by(Pop,Year,image_date) %>% 
+  summarise(NPP_g=mean(PsnNet)/1e4, .groups = "drop")%>% 
+  group_by(Pop,Year) %>% 
+  summarise(NPP_g=sum(NPP_g), .groups = "drop")%>%
   right_join(PP_yearly_sum) %>% 
   filter(Year=="2023"|Year=="2022")
 
@@ -77,7 +77,9 @@ ggpairs(PP_8day_sum %>% select(-c(Pop,Longitude)))
 Trait_data<-read.csv("Data/Combined_herbivory_and_trait_data.csv") %>% 
   mutate(
     herb_p=(transform_perc(herb_p)),
-    Date=as.Date(Date,origin = "1970-01-01")) 
+    Date=as.Date(Date,origin = "1970-01-01"))
+
+Trait_data$dummy <- 1
 
 PCs<-read.csv(
                  "Data/Bioclims_1970_ave.csv") %>% mutate(Latitude_sc=scale(Latitude),
@@ -97,16 +99,62 @@ PCs<-read.csv(
 
 
 # SEM results ----
-Field_sem_sum<-SEM_results(lin="Latitude",sq='Latitude',model = c("lm1.1", "lm2", "lm3", "lm4"))
-summary(Field_sem_sum)
+Field_sem_sum_lat<-SEM_results(lat = "Latitude_sc + Latitude_sc_sq",Prod = "",
+                           model = c("lm1", "lm2", "lm3", "lm4"), 
+                           random = "+ (1|Pop:Year)",year_ran=" + (1|Year)")
+summary(Field_sem_sum_lat)
+AIC(Field_sem_sum_lat)
+
+
+Field_sem_sum_prod_year<-SEM_results(lat = "",Prod = "NPP_y",
+                               model = c("lm1", "lm2", "lm3", "lm4", 'lm6'), 
+                               random = "+ (1|Pop:Year)",year_ran=" + (1|Year)")
+summary(Field_sem_sum_prod_year)
+AIC(Field_sem_sum_prod_year)
+
+
+Field_sem_sum_prod_season<-SEM_results(lat = "",Prod = "NPP_g",
+                                     model = c("lm1", "lm2", "lm3", "lm4", 'lm5'), 
+                                     random = "+ (1|Pop:Year)",year_ran=" + (1|Year)")
+summary(Field_sem_sum_prod_season)
+AIC(Field_sem_sum_prod_season)
+
+
+Field_sem_sum_all<-SEM_results(lat = "Latitude_sc + Latitude_sc_sq",Prod = "+ NPP_g + NPP_y",
+                                       model = c("lm1", "lm2", "lm3", "lm4", 'lm5',"lm6"), 
+                                       random = "+ (1|Pop:Year)",year_ran=" + (1|Year)",
+                               corError = list(
+                                 quote(SLA_t_sc %~~% Trichomes_t_sc),
+                                 quote(SLA_t_sc %~~% Conc_t_sc),
+                                 quote(NPP_y %~~% NPP_g )))
+summary(Field_sem_sum_all)
+AIC(Field_sem_sum_all)
 
 
 # Garden
-Garden_sem_sum<-SEM_results(lin="Productivity",sq='Productivity',Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),
-                        random = "+ (1|Pop)",mod_fun='glmmTMB',
+Garden_sem_sum_lat<-SEM_results(lat = "Latitude_sc + Latitude_sc_sq",Prod = "",
+                            Loc="Garden",model = c("lm1", "lm2", "lm3", "lm4"),
+                        random = "+ (1|Pop)", year_ran = "",  mod_fun='glmmTMB',
                                     corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
-                                    byDate = T,group = c("Plant_ID","Pop"))
-summary(Garden_sem_sum)
+                                    byDate = T,group = c("Plant_ID"))
+summary(Garden_sem_sum_lat)
+AIC_psem(Garden_sem_sum_lat)
+
+Garden_sem_sum_NPP<-SEM_results(lat = "",Prod = "NPP_y",
+                                Loc="Garden",model = c("lm1", "lm2", "lm3", "lm4", "lm6"),
+                                random = "+ (1|Pop)", year_ran = "",  mod_fun='glmmTMB',
+                                corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
+                                byDate = T,group = c("Plant_ID"))
+summary(Garden_sem_sum_NPP)
+AIC_psem(Garden_sem_sum_NPP,AIC.type = "dsep",conditional = T)
+
+Garden_sem_sum_all<-SEM_results(lat = "Latitude_sc + Latitude_sc_sq",Prod = " + NPP_y",
+                                Loc="Garden",model = c("lm1", "lm2", "lm3", "lm4", "lm6"),
+                                random = "+ (1|Pop)", year_ran = "",  mod_fun='glmmTMB',
+                                corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
+                                byDate = T,group = c("Plant_ID"))
+summary(Garden_sem_sum_all)
+AIC_psem(Garden_sem_sum_all,AIC.type = "dsep",conditional = T)
 
 
 ## Figure 1: Maps ----

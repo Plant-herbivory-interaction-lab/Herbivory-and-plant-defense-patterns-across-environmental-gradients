@@ -114,11 +114,12 @@ C_theme<-function(size=18){theme_bw(base_size = size)+
 
 
 ## SEM function ----
-SEM_results <- function(Loc = "Field", lin="Latitude",sq="Latitude",Prod = " + NPP_g",
+SEM_results <- function(Loc = "Field", lat="",Prod = " + NPP_g",
                         mod_fun='glmmTMB',
-                        model = c("lm1.1", "lm2", "lm3", "lm4"), random = "+ (1|Pop/Year)",Time="mid",
-                        group="Plant_ID",
-                        byDate=T,start_date="2023-06-15",end_date="2023-07-29",ICC=F,corError = list(
+                        model = c("lm1", "lm2", "lm3", "lm4"), 
+                        random = "+ (1|Year/Pop)", year_ran = "",
+                        Time="mid", group="Plant_ID",
+                        byDate=T,start_date="2023-06-15",end_date="2023-07-29",ICC=T,corError = list(
                           quote(SLA_t_sc %~~% Trichomes_t_sc),
                           quote(SLA_t_sc %~~% Conc_t_sc))) {
   
@@ -126,14 +127,12 @@ SEM_results <- function(Loc = "Field", lin="Latitude",sq="Latitude",Prod = " + N
   method<-get(mod_fun)
   
   formula_strings <- c(
-    lm1.1 = paste0('herb_p_t_sc ~',lin, '_sc + ',sq, '_sc_sq',  Prod,' + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random), 
-    lm1.2 = paste0('herb_p_t_sc ~ ',lin, '_sc',  Prod,' + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random),
-    lm2 = paste0('Conc_t_sc ~ ',lin, '_sc + ',sq, '_sc_sq',  Prod),           
-    lm2.1 = paste0('Conc_t_sc ~ ',lin, '_sc', Prod),           
-    lm3 = paste0('SLA_t_sc ~ ',lin, '_sc + ',sq, '_sc_sq', Prod),
-    lm3.1 = paste0('SLA_t_sc ~ ',lin, '_sc', Prod),           
-    lm4 = paste0('Trichomes_t_sc ~ ',lin, '_sc + ',sq, '_sc_sq', Prod),  
-    lm4.1 = paste0('Trichomes_t_sc ~ ',lin, '_sc', Prod)                  
+    lm1 = paste0('herb_p_t_sc ~',lat,  Prod,' + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random, year_ran), 
+    lm2 = paste0('Conc_t_sc ~ ',lat,  Prod, random, year_ran),           
+    lm3 = paste0('SLA_t_sc ~ ',lat, Prod, random, year_ran),
+    lm4 = paste0('Trichomes_t_sc ~ ',lat, Prod, random),  
+    lm5 = paste0('NPP_g ~ Latitude_sc + Latitude_sc_sq + (1|dummy)'),
+    lm6 = paste0('NPP_y ~ Latitude_sc + Latitude_sc_sq + (1|dummy)')
   )
   
   DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,
@@ -144,13 +143,10 @@ SEM_results <- function(Loc = "Field", lin="Latitude",sq="Latitude",Prod = " + N
     }))))) %>% drop_na()
   
   
+  
   print(min(DF_short_I_field$Date))
   print(max(DF_short_I_field$Date))
   
-  names<-c("Quadratic","Linear",
-           "Conc_sq", "Conc_lin",
-           "SLA_sq", "SLA_lin",
-           "Trich_sq","Trich_lin")
   
   model_list <- lapply(formula_strings, function(fstr) method(as.formula(fstr), DF_short_I_field))
   
@@ -161,10 +157,6 @@ SEM_results <- function(Loc = "Field", lin="Latitude",sq="Latitude",Prod = " + N
   if(ICC==T){cus_unlist<-function(x){as.vector(icc(x))}
   ICCs<-do.call(cbind,sapply(model_list,FUN=cus_unlist,simplify = F))
   
-  colnames(ICCs)<-names
-  
-  names(AICs)<-names
-  
   print(ICCs)}
   
   for (m in model) {
@@ -172,12 +164,7 @@ SEM_results <- function(Loc = "Field", lin="Latitude",sq="Latitude",Prod = " + N
   }
   
   fit <- do.call(psem, c(
-    list(
-      model_list[[model[1]]],
-      model_list[[model[2]]],
-      model_list[[model[3]]],
-      model_list[[model[4]]]
-    ),
+    model_list[model],
     corError,
     list(data = DF_short_I_field)
   ))
