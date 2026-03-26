@@ -63,11 +63,7 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
               Conc_t=log(Conc),
               SLA_t=log(SLA),
               Trichomes_t=log(Trichomes),
-              herb_p_t=logit(herb_p),
-              Conc_t_sc=scale(Conc_t)[,1],
-              SLA_t_sc=scale(SLA_t)[,1],
-              Trichomes_t_sc=scale(Trichomes_t)[,1],
-              herb_p_t_sc=scale(herb_p_t)[,1]) %>% 
+              herb_p_t=logit(herb_p)) %>% 
     ungroup()}
   
   
@@ -97,10 +93,8 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
       SLA_t=log(SLA),
       Trichomes_t=log(Trichomes),
       herb_p_t=logit(herb_p),
-      Conc_t_sc=scale(Conc_t)[,1],
-      SLA_t_sc=scale(SLA_t)[,1],
-      Trichomes_t_sc=scale(Trichomes_t)[,1],
-      herb_p_t_sc=scale(herb_p_t)[,1],
+      across(any_of(c("herb_p_t","Trichomes_t","NPP_g","NPP_g_10y","SLA_t","Conc_t")), 
+             ~as.numeric(scale(.,center = T)), .names = "{.col}_sc"),
       Plant=c(1:length(Conc))
     )  %>% filter(SLA_t_sc>-3&SLA_t_sc<3)
   
@@ -114,7 +108,8 @@ C_theme<-function(size=18){theme_bw(base_size = size)+
 
 
 ## SEM function ----
-SEM_results <- function(Loc = "Field", lat="",Prod = " + NPP_g",
+SEM_results <- function(Loc = "Field", lat="",Prod = " + NPP_g", lat_prod="Latitude_sc",
+                        lat_main="", lat_traits="",
                         mod_fun='glmmTMB',
                         model = c("lm1", "lm2", "lm3", "lm4"), 
                         random = "+ (1|Year/Pop)", year_ran = "",
@@ -127,12 +122,12 @@ SEM_results <- function(Loc = "Field", lat="",Prod = " + NPP_g",
   method<-get(mod_fun)
   
   formula_strings <- c(
-    lm1 = paste0('herb_p_t_sc ~',lat,  Prod,' + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random, year_ran), 
-    lm2 = paste0('Conc_t_sc ~ ',lat,  Prod, random, year_ran),           
-    lm3 = paste0('SLA_t_sc ~ ',lat, Prod, random, year_ran),
-    lm4 = paste0('Trichomes_t_sc ~ ',lat, Prod, random),  
-    lm5 = paste0('NPP_g ~ Latitude_sc + Latitude_sc_sq + (1|dummy)'),
-    lm6 = paste0('NPP_y ~ Latitude_sc + Latitude_sc_sq + (1|dummy)')
+    lm1 = paste0('herb_p_t_sc ~',lat_main,  Prod,' + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random, year_ran), 
+    lm2 = paste0('Conc_t_sc ~ ',lat_traits,  Prod, random, year_ran),           
+    lm3 = paste0('SLA_t_sc ~ ',lat_traits, Prod, random, year_ran),
+    lm4 = paste0('Trichomes_t_sc ~ ',lat_traits, Prod, random),  
+    lm5 = paste0('NPP_g_10y_sc ~', lat_prod, '+ (1|dummy)'),
+    lm6 = paste0('NPP_g_sc ~', lat_prod, '+ (1|dummy)')
   )
   
   DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,
