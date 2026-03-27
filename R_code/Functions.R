@@ -90,10 +90,11 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
   Combined_data1<-Combined_data1 %>% ungroup() %>% 
     mutate(
       Conc_t=log(Conc),
+      date_num=as.numeric(Date),
       SLA_t=log(SLA),
       Trichomes_t=log(Trichomes),
       herb_p_t=logit(herb_p),
-      across(any_of(c("herb_p_t","Trichomes_t","NPP_g","NPP_g_10y","SLA_t","Conc_t")), 
+      across(any_of(c("herb_p_t","Trichomes_t","NPP_g","NPP_g_10y","SLA_t","Conc_t","date_num")), 
              ~as.numeric(scale(.,center = T)), .names = "{.col}_sc"),
       Plant=c(1:length(Conc))
     )  %>% filter(SLA_t_sc>-3&SLA_t_sc<3)
@@ -108,11 +109,11 @@ C_theme<-function(size=18){theme_bw(base_size = size)+
 
 
 ## SEM function ----
-SEM_results <- function(Loc = "Field", lat="",Prod = " + NPP_g", lat_prod="Latitude_sc",
-                        lat_main="", lat_traits="",
+SEM_results <- function(Loc = "Field", lat=NULL,Prod = "NPP_g", lat_prod="Latitude_sc",
+                        lat_main=NULL, lat_traits=NULL, main="Trichomes_t_sc + Conc_t_sc + SLA_t_sc",
                         mod_fun='glmmTMB',
                         model = c("lm1", "lm2", "lm3", "lm4"), 
-                        random = "+ (1|Year/Pop)", year_ran = "",
+                        random = "(1|Year/Pop)", year_ran = "", main_ran = "(1|Pop:Year)",
                         Time="mid", group="Plant_ID",
                         byDate=T,start_date="2023-06-15",end_date="2023-07-29",ICC=T,corError = list(
                           quote(SLA_t_sc %~~% Trichomes_t_sc),
@@ -121,13 +122,18 @@ SEM_results <- function(Loc = "Field", lat="",Prod = " + NPP_g", lat_prod="Latit
   
   method<-get(mod_fun)
   
+  build_formula <- function(terms) {
+    terms <- terms[!sapply(terms, is.null) & terms != ""]
+    paste(terms, collapse = " + ")
+  }
+  
   formula_strings <- c(
-    lm1 = paste0('herb_p_t_sc ~',lat_main,  Prod,' + Trichomes_t_sc + Conc_t_sc + SLA_t_sc', random, year_ran), 
-    lm2 = paste0('Conc_t_sc ~ ',lat_traits,  Prod, random, year_ran),           
-    lm3 = paste0('SLA_t_sc ~ ',lat_traits, Prod, random, year_ran),
-    lm4 = paste0('Trichomes_t_sc ~ ',lat_traits, Prod, random),  
-    lm5 = paste0('NPP_g_10y_sc ~', lat_prod, '+ (1|dummy)'),
-    lm6 = paste0('NPP_g_sc ~', lat_prod, '+ (1|dummy)')
+    lm1 = paste0('herb_p_t_sc ~',build_formula(c(main,  Prod, main_ran, year_ran))), 
+    lm2 = paste0('Conc_t_sc ~ ',build_formula(c(lat_traits,  Prod, random, year_ran))),           
+    lm3 = paste0('SLA_t_sc ~ ',build_formula(c(lat_traits, Prod, random, year_ran))),
+    lm4 = paste0('Trichomes_t_sc ~ ',build_formula(c(lat_traits, Prod, random))),  
+    lm5 = paste0('NPP_g_10y_sc ~', build_formula(c(lat_prod, '(1|dummy)'))),
+    lm6 = paste0('NPP_g_sc ~', build_formula(c(lat_prod, '(1|dummy)')))
   )
   
   DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,
@@ -412,7 +418,7 @@ ee_Initialize()
 ## Extract multiple bands and dates from google earth engine----
 Extract_var_with_const_date <- function(loc,path,subpath,select,
                                         begin = 5,
-                                        end=8,
+                                        end=7,
                                         unit="month",
                                         buffer=1500,
                                         scale=500) {
