@@ -37,10 +37,10 @@ coords<-rbind(read.csv("Data/Field_2023_pop_info.csv") %>%
   filter(Pop!="") %>% 
   distinct(.,Pop,.keep_all = TRUE)
 
-PP_yearly<-Extract_var_with_const_date(
-  sf::st_as_sf(coords,coords=c('Longitude','Latitude'),
-               crs="+proj=longlat +datum=WGS84"),
-  "MODIS/061/MOD17A3HGF",c("Npp","Npp_QC"),unit="",select = T,buffer = 1500)
+#PP_yearly<-Extract_var_with_const_date(
+  #sf::st_as_sf(coords,coords=c('Longitude','Latitude'),
+               #crs="+proj=longlat +datum=WGS84"),
+  #"MODIS/061/MOD17A3HGF",c("Npp","Npp_QC"),unit="",select = T,buffer = 1500)
 
 PP_8day<-Extract_var_with_const_date(
   sf::st_as_sf(coords,coords=c('Longitude','Latitude'),
@@ -49,25 +49,31 @@ PP_8day<-Extract_var_with_const_date(
   buffer = 1500) 
 
 
-PP_yearly_sum<-PP_yearly %>% 
-  #filter(Npp_QC <= 30) %>% 
-  mutate(Year=year(image_date))%>% 
-  filter(Year>=2013) %>% 
-  group_by(Pop) %>% 
-  summarise(NPP_y=sqrt(mean(Npp)/1e4))
+# PP_yearly_sum<-PP_yearly %>% 
+#   #filter(Npp_QC <= 30) %>% 
+#   mutate(Year=year(image_date))%>% 
+#   filter(Year>=2013) %>% 
+#   group_by(Pop) %>% 
+#   summarise(NPP_y=sqrt(mean(Npp)/1e4))
 
 
-PP_g<-PP_8day %>% 
-  mutate(Year=year(image_date),
-         month=month(image_date)) %>% 
-  filter(Year>=2013&month<8) %>% 
-  filter(
-    bitwAnd(Psn_QC, 1) == 0 &                    # good quality
-      bitwAnd(bitwShiftR(Psn_QC, 2), 1) == 0 &     # detectors OK
-      bitwAnd(bitwShiftR(Psn_QC, 3), 3) == 0 &     # clear sky
-      bitwAnd(bitwShiftR(Psn_QC, 5), 7) == 0       # best confidence
-  ) %>% group_by(Pop,Year,image_date) %>% 
-  summarise(NPP_g=mean(PsnNet)/1e4, .groups = "drop")%>% 
+# PP_8day_sum_pix<-PP_8day %>% 
+#   mutate(Year=year(image_date),
+#          month=month(image_date)) %>% 
+#   filter(Year>=2013&month<8) %>% 
+#   filter(
+#     bitwAnd(Psn_QC, 1) == 0 &                    # good quality
+#       bitwAnd(bitwShiftR(Psn_QC, 2), 1) == 0 &     # detectors OK
+#       bitwAnd(bitwShiftR(Psn_QC, 3), 3) == 0 &     # clear sky
+#       bitwAnd(bitwShiftR(Psn_QC, 5), 7) == 0       # best confidence
+#   ) %>% group_by(Pop,Year,image_date) %>% 
+#   summarise(NPP_g=mean(PsnNet)/1e4, .groups = "drop")
+# 
+# write.csv(PP_8day_sum_pix,"Data/PP_8day_sum_pix.csv")
+
+PP_8day_sum_pix<-read.csv("Data/PP_8day_sum_pix.csv")
+
+PP_g<-PP_8day_sum_pix %>% 
   group_by(Pop,Year) %>% 
   summarise(NPP_g=sum(NPP_g), .groups = "drop")
 
@@ -105,38 +111,38 @@ PCs<-read.csv(
 ggpairs(PCs %>% select(Latitude,NPP_g,NPP_g_10y))
 
 # SEM results ----
-Field_sem_lat_indirect<-SEM_results(lat = "",Prod = " + NPP_g_sc",lat_prod="Latitude_sc",
+Field_sem_lat_indirect<-SEM_results(lat = "",Prod = "NPP_g_sc",lat_prod="Latitude_sc",
                            model = c("lm1", "lm2", "lm3", "lm4","lm6"), 
                            random = "+ (1|Pop:Year)",year_ran=" + (1|Year)")
 summary(Field_sem_lat_indirect)
 AIC(Field_sem_lat_indirect)
 
 
-Field_sem_lat_direct<-SEM_results(lat_main = "",Prod = " + NPP_g_sc",lat_prod="Latitude_sc",
+Field_sem_lat_direct<-SEM_results(lat_main = "",Prod = "NPP_g_sc",lat_prod="Latitude_sc",
                                     lat_traits="Latitude_sc",
                                     model = c("lm1", "lm2", "lm3", "lm4","lm6"), 
-                                    random = "+ (1|Pop:Year)",year_ran=" + (1|Year)")
+                                    random = "(1|Pop:Year)",year_ran="(1|Year)")
 summary(Field_sem_lat_direct)
 AIC(Field_sem_lat_direct)
 
 
-Field_sem_lat_direct_herb<-SEM_results(lat_main = "Latitude_sc",Prod = "+ NPP_g_sc",lat_prod="Latitude_sc",
+Field_sem_lat_direct_herb<-SEM_results(lat_main = "Latitude_sc",Prod = "NPP_g_sc",lat_prod="Latitude_sc",
                                   lat_traits="",
                                   model = c("lm1", "lm2", "lm3", "lm4","lm6"), 
-                                  random = "+ (1|Pop:Year)",year_ran=" + (1|Year)")
+                                  random = "(1|Pop:Year)",year_ran=" (1|Year)")
 summary(Field_sem_lat_direct_herb)
 AIC(Field_sem_lat_direct_herb)
 
 
-Field_sem_lat_direct_all<-SEM_results(lat_main = "Latitude_sc",Prod = "+ NPP_g_sc",lat_prod="Latitude_sc",
+Field_sem_lat_direct_all<-SEM_results(lat_main = "Latitude_sc",Prod = "NPP_g_sc",lat_prod="Latitude_sc",
                                        lat_traits="Latitude_sc",
                                        model = c("lm1", "lm2", "lm3", "lm4","lm6"), 
-                                       random = "+ (1|Pop:Year)",year_ran=" + (1|Year)")
+                                       random = "(1|Pop:Year)",year_ran=" + (1|Year)")
 summary(Field_sem_lat_direct_all)
 AIC(Field_sem_lat_direct_all)
 
 
-Field_sem_lat2<-SEM_results(lat_main = "Latitude_sc + Latitude_sc_sq",Prod = "+ NPP_g_sc",lat_prod="Latitude_sc + Latitude_sc_sq",
+Field_sem_lat2<-SEM_results(lat_main = "Latitude_sc + Latitude_sc_sq",Prod = "NPP_g_sc",lat_prod="Latitude_sc + Latitude_sc_sq",
                                       lat_traits="Latitude_sc + Latitude_sc_sq",
                                       model = c("lm1", "lm2", "lm3", "lm4","lm6"), 
                                       random = "+ (1|Pop:Year)",year_ran=" + (1|Year)")
@@ -147,9 +153,11 @@ AIC(Field_sem_lat2)
 # Garden
 
 
-Garden_sem_lat_indirect<-SEM_results(Loc="Garden",lat = "",Prod = " + NPP_g_10y_sc",lat_prod="Latitude_sc",
-                                    model = c("lm1", "lm2", "lm3", "lm4","lm5"), 
-                                    random = "+ (1|Pop)",year_ran="")
+Garden_sem_lat_indirect<-SEM_results(Loc="Garden",lat = NULL,Prod = "date_num_sc*NPP_g_10y_sc",lat_prod="Latitude_sc",
+                                     main = "date_num_sc*Trichomes_t_sc + Conc_t_sc + SLA_t_sc",
+                                    lat_main = NULL,model = c("lm1", "lm2", "lm3", "lm4","lm5"), 
+                                    random = "(1|Pop)",year_ran="", group = c("Plant_ID","Date"),
+                                    start_date = "2023-04-15",end_date = "2023-10-15", main_ran="(1|Pop) + (1|Plant_ID)")
 summary(Garden_sem_lat_indirect)
 AIC_psem(Garden_sem_lat_indirect)
 
@@ -160,7 +168,8 @@ check_collinearity(glmmTMB(herb_p_t_sc~Latitude_sc+NPP_g_10y_sc,data = Garden_se
 Garden_sem_lat_direct<-SEM_results(Loc="Garden",lat_main = "",Prod = " + NPP_g_10y_sc",lat_prod="Latitude_sc",
                                   lat_traits="Latitude_sc",
                                   model = c("lm1", "lm2", "lm3", "lm4","lm5"), 
-                                  random = "+ (1|Pop)",year_ran="")
+                                  random = "+ (1|Pop)",year_ran="", group = c("Plant_ID","Date"),
+                                  start_date = "2023-04-15",end_date = "2023-10-15", main_ran="+ (1|Date/Pop)")
 summary(Garden_sem_lat_direct)
 AIC_psem(Garden_sem_lat_direct)
 
@@ -168,7 +177,8 @@ AIC_psem(Garden_sem_lat_direct)
 Garden_sem_lat_direct_herb<-SEM_results(Loc="Garden",lat_main = "Latitude_sc",Prod = "+ NPP_g_10y_sc",lat_prod="Latitude_sc",
                                        lat_traits="",
                                        model = c("lm1", "lm2", "lm3", "lm4","lm5"), 
-                                       random = "+ (1|Pop)",year_ran="")
+                                       random = "+ (1|Pop)",year_ran="", group = c("Plant_ID","Date"),
+                                       start_date = "2023-04-15",end_date = "2023-10-15", main_ran="+ (1|Date/Pop)")
 summary(Garden_sem_lat_direct_herb)
 AIC_psem(Garden_sem_lat_direct_herb)
 
@@ -176,7 +186,8 @@ AIC_psem(Garden_sem_lat_direct_herb)
 Garden_sem_lat_direct_all<-SEM_results(Loc="Garden",lat_main = "Latitude_sc",Prod = "+ NPP_g_10y_sc",lat_prod="Latitude_sc",
                                       lat_traits="Latitude_sc",
                                       model = c("lm1", "lm2", "lm3", "lm4","lm5"), 
-                                      random = "+ (1|Pop)",year_ran="")
+                                      random = "+ (1|Pop)",year_ran="", group = c("Plant_ID","Date"),
+                                      start_date = "2023-04-15",end_date = "2023-10-15", main_ran="+ (1|Date/Pop)")
 summary(Garden_sem_lat_direct_all)
 AIC_psem(Garden_sem_lat_direct_all)
 
@@ -184,7 +195,8 @@ AIC_psem(Garden_sem_lat_direct_all)
 Garden_sem_lat2<-SEM_results(Loc="Garden",lat_main = "Latitude_sc + Latitude_sc_sq",Prod = "+ NPP_g_10y_sc",lat_prod="Latitude_sc + Latitude_sc_sq",
                             lat_traits="Latitude_sc + Latitude_sc_sq",
                             model = c("lm1", "lm2", "lm3", "lm4","lm5"), 
-                            random = "+ (1|Pop)",year_ran="")
+                            random = "+ (1|Pop)",year_ran="", group = c("Plant_ID","Date"),
+                            start_date = "2023-04-15",end_date = "2023-10-15", main_ran="+ (1|Date/Pop)")
 summary(Garden_sem_lat2)
 AIC_psem(Garden_sem_lat2)
 
