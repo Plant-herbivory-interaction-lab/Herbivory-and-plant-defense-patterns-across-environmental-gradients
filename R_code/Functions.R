@@ -34,37 +34,29 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
     }
     
     if (!is.null(group)) {
-      Combined_data1 <- group_by(Combined_data1, !!!syms(group)) %>%
-        summarise(
+      Combined_data1 <- Combined_data1 %>% summarise(
+          .by = group,
           Pop = unique(Pop),
           Loc = if (PopLevel) unique(Loc) else first(Loc),
           Time = if (PopLevel) unique(Time) else first(Time),
+          Plant_N= if (PopLevel) length(Pop) else NULL,
           Date = sample(c(min(Date, na.rm = TRUE), max(Date, na.rm = TRUE)), size = 1),
           count = n(),
           flowers = sum(fl_m > 0, fl_h > 0, na.rm = TRUE),
           quant_herb_0.75 = as.vector(quantile(herb_p, na.rm = TRUE)[3]),
           max_herb = max(herb_p, na.rm = TRUE),
           across(where(is.numeric), ~ mean(., na.rm = TRUE))
-        ) %>%
-        ungroup()}
+        )}
   }
   
-  
-  if(PopLevel==T&Treatment==T){Combined_data1<-Combined_data1 %>% 
-    group_by(Pop,Loc,Treatment,Time)}
-  
-  if(PopLevel==T&Treatment==F){Combined_data1<-Combined_data1 %>% 
-    group_by(Pop,Loc,Year)}
-  
-  
-  if(PopLevel==T){Combined_data1<-Combined_data1 %>% 
-    summarise(across(where(is.numeric), \ (x) mean(x, na.rm = TRUE)),
-              Plant_N=length(Pop),
-              Conc_t=log(Conc),
-              SLA_t=log(SLA),
-              Trichomes_t=log(Trichomes),
-              herb_p_t=logit(herb_p)) %>% 
-    ungroup()}
+  if (!is.null(group)& PopLevel==T) {
+    Combined_data1 <- Combined_data1 %>% summarise(
+      .by = group,
+      Pop = unique(Pop),
+      Loc = if (PopLevel) unique(Loc) else first(Loc),
+      count = n(),
+      across(where(is.numeric), ~ mean(., na.rm = TRUE))
+    )}
   
   
   if(long==T&ClimateLong==T){Combined_data1<-Combined_data1 %>%
@@ -87,15 +79,14 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
       .default = name))}
   
   
-  Combined_data1<-Combined_data1 %>% ungroup() %>% 
+  Combined_data1<-Combined_data1 %>% 
     mutate(
       Conc_t=log(Conc),
-      date_num=as.numeric(Date),
       SLA_t=log(SLA),
       Trichomes_t=log(Trichomes),
       herb_p_t=logit(herb_p),
-      across(any_of(c("herb_p_t","Trichomes_t","NPP_g","NPP_g_10y","SLA_t","Conc_t","date_num")), 
-             ~as.numeric(scale(.,center = T)), .names = "{.col}_sc"),
+      across(any_of(c("herb_p_t","Trichomes_t","NPP_g","NPP_g_10y","SLA_t","Conc_t")), 
+             ~as.numeric(scale(.,center = T),na.rm=T), .names = "{.col}_sc"),
       Plant=c(1:length(Conc))
     )  %>% filter(SLA_t_sc>-3&SLA_t_sc<3)
   
@@ -128,7 +119,7 @@ SEM_results <- function(Loc = "Field", lat=NULL,Prod = "NPP_g", lat_prod="Latitu
   }
   
   formula_strings <- c(
-    lm1 = paste0('herb_p_t_sc ~',build_formula(c(main,  Prod, main_ran, year_ran))), 
+    lm1 = paste0('herb_p_t_sc ~',build_formula(c(lat_main, main, Prod, main_ran, year_ran))), 
     lm2 = paste0('Conc_t_sc ~ ',build_formula(c(lat_traits,  Prod, random, year_ran))),           
     lm3 = paste0('SLA_t_sc ~ ',build_formula(c(lat_traits, Prod, random, year_ran))),
     lm4 = paste0('Trichomes_t_sc ~ ',build_formula(c(lat_traits, Prod, random))),  
@@ -139,9 +130,9 @@ SEM_results <- function(Loc = "Field", lat=NULL,Prod = "NPP_g", lat_prod="Latitu
   DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,
                                 start_date = start_date, 
                                 end_date = end_date,group=group) %>% 
-    select(c(Date,unique(unlist(lapply(formula_strings, function(fstr) {
+    select(all_of(c("Date",unique(unlist(lapply(formula_strings, function(fstr) {
       all.vars(as.formula(fstr))
-    }))))) %>% drop_na()
+    })))))) %>% drop_na()
   
   
   
@@ -190,7 +181,7 @@ make_plots <- function(data, x_var, y_vars, ncol = 2, extra_plots = NULL) {
     
     p <- ggplot(data, aes(x = .data[[x_var]], y = .data[[y]])) +
       geom_point() +
-      C_theme(size = 15) +
+      C_theme(size = 12) +
       labs(y = y_lab)
     
     # Show x-axis only for bottom-most plot in each column
@@ -233,12 +224,12 @@ make_plots <- function(data, x_var, y_vars, ncol = 2, extra_plots = NULL) {
   wrap_plots(plots, ncol = ncol)
 }
 
-## Plots with trend linds ----
+## Plots with trend lines ----
 Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1',deg=2,random="+(1|Pop:Time)",family="poisson",Trend=T){
   Data<-Data_prep(loc=loc,byDate = T,group = "Plant_ID") %>% 
     mutate(Pop=as.factor(Pop))
   
-  Data_pop<-Data_prep(loc=loc,PopLevel = T,byDate = T) 
+  Data_pop<-Data_prep(loc=loc,PopLevel = T,byDate = T, group = "Pop") 
   
   max_l<-max(Data[,predictor],na.rm=T)
   
@@ -266,12 +257,16 @@ Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1
 }
 
 ## SEM graphing function ----
-semGraph<-function(fit=fit) {
+semGraph<-function(fit=fit,node_locs=list(),
+                   edge_locs = list(),
+                   curve_locs = list(),
+                   H = F, marg_y = 12) {
   library(qgraph)
   library(rsvg)
   library(svglite)
   library(grid)
-  edges<-summary(fit, fit=T,rsquare=T,conserve=T,standardize="scale")$coefficients[,c("Response","Predictor","Std.Estimate","P.Value")] %>% 
+  
+  edges<-summary(fit,rsquare=T,conserve=T)$coefficients[,c("Response","Predictor","Std.Estimate","P.Value","Std.Error")] %>% 
     filter(!grepl("~",Response)&!grepl("Loc",Predictor)) %>% 
     mutate(
       across(where(is.character), ~ sub("_sc_sq", " (sq)", .)),
@@ -295,65 +290,110 @@ semGraph<-function(fit=fit) {
   # Change the response and predictor labels
   
   # Define edge colors: Blue for positive, Red for negative
-  edge_colors <- ifelse(weights > 0, "black", "darkred")
+  
+  if (H) {edge_colors <- "black"
+  } else {edge_colors <- ifelse(weights > 0, "black", "darkred")}
   
   # Define line types: Solid for significant (p < 0.05), Dashed for non-significant
-  edge_lty <- ifelse(p_values < 0.1, 1, 2)  # 1 = solid, 2 = dashed
+  if (H) {edge_lty <- 1
+  } else { edge_lty <- ifelse(p_values < 0.05, 1, 2)}  # 1 = solid, 2 = dashed
+ 
   
   # Define edge widths based on effect size
-  edge_widths <- ifelse(p_values < 0.1,abs(weights)*20,1)
+  if (H) {edge_widths <- 2
+  } else { edge_widths <- ifelse(p_values < 0.05,abs(weights)*20,2)}
+  
   
   # Define estimates as edge labels (rounded to 2 decimals)
-  edge_labels <- ifelse(p_values < 0.1,round(weights, 3),NA)  
+  if (H) {edge_labels <- NULL
+  } else {  edge_labels <- paste0(round(weights, 3), " \u00B1 ", round(as.numeric(edges$Std.Error), 3))} 
+
+  
+  
   
   # Define node order (top to bottom)
-  node_names <- c("Herbivory", "Glycoalkaloids", "SLA", "Trichomes", as.vector(edge_list[10,1]), as.vector(edge_list[11,1]))
+  node_names <- c(unique(c(edge_list[,1],edge_list[,2])))
   
   # Define edge label locations
-  edge_label_locations<-c(0.5,0.5,0.5,0.5,0.5,0.5,0.7,0.4,0.4,0.7,0.5)
+  pdf(NULL)
+  graph<-qgraph(edge_list)
+  dev.off()
   
+  edge_label_locations<-graph$graphAttributes$Edges$edge.label.position
   
-  # Define custom layout positions with increased spacing
-  layout_matrix <- matrix(c(
-    0,  1,  # herb_p_t (higher top)
-    -0.7,  0,  # Conc (middle left)
-    0,  0,  # SLA (middle center)
-    0.7,  0,  # Trichomes (middle right)
-    -0.5, -1,  # Clim_ave_PC1 (bottom left)
-    0.5, -1   # Clim_PC1_sq (bottom right)
-  ), byrow = TRUE, ncol = 2)
+  get_path_num<-function(pred="NPP",resp="Herbivory"){
+  which(edge_list[,1] %in% as.vector(pred) & edge_list[,2] == resp)
+  }
   
+    edge_loc = c(list(c("Latitude","Glycoalkaloids",0.3),
+                    c("Glycoalkaloids","Herbivory",0.3),
+                    c("NPP","Herbivory",0.6),
+                    c("NPP","Trichomes",0.3),
+                    c("SLA","Herbivory",0.6),
+                    c("Trichomes","Herbivory",0.3)),edge_locs)
+    
+
+    
+  for(i in seq_along(edge_loc)) {
+    
+    num<-get_path_num(edge_loc[[i]][1],edge_loc[[i]][2])
+
+    if(length(num) != 0){
+    edge_label_locations[num]<-as.numeric(edge_loc[[i]][3])
+    }
+  }
+  
+  #Define custom layout positions with increased spacing
+  layout_matrix <- graph$layout
+  
+  rownames(layout_matrix)<-node_names
+  
+  node_loc=c(list('Herbivory'=c(0,1),
+                 "Glycoalkaloids"=c(-0.7,0),
+                 "SLA"=c(0,0),
+                 "Trichomes"=c(0.7,0),
+                 "NPP"=c(-0.7,-1),
+                 "Latitude"=c(0.7,-1)),node_locs)
+  
+  for(i in seq_along(node_loc)) {
+    node_name<-names(node_loc[i])
+    layout_matrix[node_name, ] <- node_loc[[i]]
+  }
+
+  print(layout_matrix)
   # Assign default straight edges
-  curves <- rep(0, nrow(edge_list))  
+  curves <- graph$graphAttributes$Edges$curve  
   
   # Identify only the climate → herbivory paths and set outward curves
+  curve_loc = c(list(c("Latitude","Herbivory",-5),
+                    c("NPP","Herbivory",5)),curve_locs)
   
-  climate1_to_herbivory <- which(edge_list[,1] %in% as.vector(edge_list[10,1]) & edge_list[,2] == "Herbivory")
-  climate_to_herbivory <- which(edge_list[,1] %in% as.vector(edge_list[11,1]) & edge_list[,2] == "Herbivory")
-  
-  
-  curves[climate1_to_herbivory] <- 5.6
-  curves[climate_to_herbivory] <- -5.6
+
+  for(i in seq_along(curve_loc)) {
+    num<-get_path_num(curve_loc[[i]][1],curve_loc[[i]][2])
+    
+    if(length(num) != 0){
+      curves[num]<-as.numeric(curve_loc[[i]][3])
+    }
+  }
   
   
   # Enlarged labels with background
   
   temp_file<-tempfile(fileext = ".svg")
   
-  svglite(temp_file, width = 60, height = 60)
+  svglite(temp_file, width = 20, height = 20)
   
   # Plot with qgraph
-  qgraph(edge_list, layout = layout_matrix, labels = node_names, directed = TRUE,
+  qgraph(edge_list, labels = node_names, directed = TRUE,
          edge.labels = edge_labels, edge.color = edge_colors, edge.width = edge_widths,
-         edge.label.cex = 1.8,
-         lty = edge_lty, curve = curves, edge.label.position = edge_label_locations,
+         edge.label.cex = 1.4,
+         lty = edge_lty, curve = curves, 
+         edge.label.position = edge_label_locations, layout = layout_matrix,
          edge.label.bg = "white",curveShape = -1.5,
-         mar = c(3,7,3,7),
-         #filetype="jpg",
-         #filename = filename,
-         #height = 9, width = 9,
-         label.cex = 14, 
-         shape="rectangle",vsize2=8,vsize=27,label.scale=F,border.width=2.1)
+         mar = c(3,marg_y,3,marg_y),
+         label.cex = 4, 
+         shape="ellipse",node.width=3.2,label.scale=F,border.width=1)
   
   dev.off()
   
@@ -421,8 +461,9 @@ Extract_var_with_const_date <- function(loc,path,subpath,select,
                                         end=7,
                                         unit="month",
                                         buffer=1500,
-                                        scale=500) {
+                                        scale=300) {
   batch_size=round(sqrt(6000/(3.14*(buffer/scale)^2)))
+  print(batch_size)
   
   if(select!=T){
     terra<-ee$Image(as.character(path))
@@ -486,11 +527,7 @@ Extract_var_with_const_date <- function(loc,path,subpath,select,
           })
         )
       })
-    )$flatten() %>% ee_as_sf() %>% sf::st_drop_geometry() %>% 
-      group_by(Pop,image_date) %>%
-      mutate(pixel_num = row_number()) %>%
-      ungroup()
-
+     )$flatten() %>% ee_as_sf() %>% sf::st_drop_geometry()
     results[[paste(i,j)]]<-row
     }
    
