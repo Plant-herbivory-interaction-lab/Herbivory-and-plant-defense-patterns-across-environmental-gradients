@@ -57,6 +57,7 @@ PP_yearly_sum<-PP_yearly %>%
   group_by(Pop) %>%
   summarise(NPP_y=sqrt(mean(Npp)/1e4))
 
+#write.csv(PP_8day_sum_pix,"Data/PP_8day_sum_pix.csv")
 
 PP_8day_sum_pix<-PP_8day %>%
   mutate(Year=year(image_date),
