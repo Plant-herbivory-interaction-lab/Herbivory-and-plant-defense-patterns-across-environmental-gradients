@@ -50,28 +50,30 @@ coords<-rbind(read.csv("Data/Field_2023_pop_info.csv") %>%
 #    buffer = 3000)
 
 
-PP_yearly_sum<-PP_yearly %>%
-  filter(Npp_QC <= 30) %>%
-  mutate(Year=year(image_date))%>%
-  filter(Year>=2013) %>%
-  group_by(Pop) %>%
-  summarise(NPP_y=sqrt(mean(Npp)/1e4))
+# PP_yearly_sum<-PP_yearly %>%
+#   filter(Npp_QC <= 30) %>%
+#   mutate(Year=year(image_date))%>%
+#   filter(Year>=2013) %>%
+#   group_by(Pop) %>%
+#   summarise(NPP_y=sqrt(mean(Npp)/1e4))
+
+#write.csv(PP_yearly_sum,"Data/PP_10y_sum_pix.csv")
+
+# PP_8day_sum_pix<-PP_8day %>%
+#   mutate(Year=year(image_date),
+#          month=month(image_date)) %>%
+#   filter(Year>=2013&month<8) %>%
+#   filter(
+#     bitwAnd(Psn_QC, 1) == 0 &                    # good quality
+#       bitwAnd(bitwShiftR(Psn_QC, 2), 1) == 0 &     # detectors OK
+#       bitwAnd(bitwShiftR(Psn_QC, 3), 3) == 0 &     # clear sky
+#       bitwAnd(bitwShiftR(Psn_QC, 5), 7) == 0       # best confidence
+#   ) %>%
+#   summarise(.by=c(Pop,Year,image_date), NPP_g=mean(PsnNet)/1e4)
 
 #write.csv(PP_8day_sum_pix,"Data/PP_8day_sum_pix.csv")
 
-PP_8day_sum_pix<-PP_8day %>%
-  mutate(Year=year(image_date),
-         month=month(image_date)) %>%
-  filter(Year>=2013&month<8) %>%
-  filter(
-    bitwAnd(Psn_QC, 1) == 0 &                    # good quality
-      bitwAnd(bitwShiftR(Psn_QC, 2), 1) == 0 &     # detectors OK
-      bitwAnd(bitwShiftR(Psn_QC, 3), 3) == 0 &     # clear sky
-      bitwAnd(bitwShiftR(Psn_QC, 5), 7) == 0       # best confidence
-  ) %>%
-  summarise(.by=c(Pop,Year,image_date), NPP_g=mean(PsnNet)/1e4)
-
-#write.csv(PP_8day_sum_pix,"Data/PP_8day_sum_pix.csv")
+PP_yearly_sum<-read.csv("Data/PP_10y_sum_pix.csv")
 
 PP_8day_sum_pix<-read.csv("Data/PP_8day_sum_pix.csv")
 
@@ -112,46 +114,42 @@ right_join(PP_8day_sum_season,join_by(Pop)) %>%
 ggpairs(PCs %>% select(Latitude,NPP_g,NPP_g_10y,NPP_y))
 
 # SEM results ----
-### Model 1 -- Lat indirect ----
-Field_sem_lat_indirect<-SEM_results(lat = "",Prod = "NPP_g_sc",lat_prod="Latitude_sc",
-                           model = c("lm1", "lm2", "lm3", "lm4","lm6"),
-                           random = "+ (1|Pop:Year)",year_ran=" + (1|Year)")
-summary(Field_sem_lat_indirect)
-AIC_psem(Field_sem_lat_indirect, AIC.type="dsep")
+### Model 1 -- Latitude only ----
+Field_sem_lat_lin_only<-SEM_results(Prod = "",
+                                    lat_traits = "Latitude_sc", lat_main = "Latitude_sc",
+                           model = c("lm1", "lm2", "lm3", "lm4"),
+                           random = "(1|Pop:Year)",year_ran="(1|Year)")
+summary(Field_sem_lat_lin_only)
+AIC_psem(Field_sem_lat_lin_only, AIC.type="dsep")
 
-### Model 2 -- Lat direct on traits ----
-#### Best Model ----
-Field_sem_lat_direct<-SEM_results(lat_main = "",Prod = "NPP_g_sc",lat_prod="Latitude_sc",
-                                    lat_traits="Latitude_sc",
-                                    model = c("lm1", "lm2", "lm3", "lm4","lm6"), 
+### Model 2 -- Latitude squared only ----
+Field_sem_lat_sq_only<-SEM_results(Prod = "",
+                                    lat_traits = "Latitude_sc + Latitude_sc_sq", 
+                                   lat_main = "Latitude_sc + Latitude_sc_sq",
+                                    model = c("lm1", "lm2", "lm3", "lm4"),
                                     random = "(1|Pop:Year)",year_ran="(1|Year)")
-summary(Field_sem_lat_direct)
-AIC_psem(Field_sem_lat_direct, AIC.type="dsep")
+summary(Field_sem_lat_sq_only)
+AIC_psem(Field_sem_lat_sq_only, AIC.type="dsep")
 
-### Model 3 -- Lat direct on herby ----
-Field_sem_lat_direct_herb<-SEM_results(lat_main = "Latitude_sc",Prod = "NPP_g_sc",lat_prod="Latitude_sc",
-                                  lat_traits="",
-                                  model = c("lm1", "lm2", "lm3", "lm4","lm6"), 
-                                  random = "(1|Pop:Year)",year_ran=" (1|Year)")
-summary(Field_sem_lat_direct_herb)
-AIC_psem(Field_sem_lat_direct_herb, AIC.type="dsep")
 
-### Model 4 -- Lat direct  ----
-Field_sem_lat_direct_all<-SEM_results(lat_main = "Latitude_sc",Prod = "NPP_g_sc",lat_prod="Latitude_sc",
-                                       lat_traits="Latitude_sc",
-                                       model = c("lm1", "lm2", "lm3", "lm4","lm6"), 
-                                       random = "(1|Pop:Year)",year_ran=" + (1|Year)")
-summary(Field_sem_lat_direct_all)
-AIC_psem(Field_sem_lat_direct_all, AIC.type="dsep")
+### Model 3 -- Latitude linear with productivity ----
+Field_sem_lat_lin_npp<-SEM_results(Prod = "NPP_g_sc",
+                                   lat_traits = "Latitude_sc", 
+                                   lat_main = "Latitude_sc",
+                                   model = c("lm1", "lm2", "lm3", "lm4"),
+                                   random = "(1|Pop:Year)",year_ran="(1|Year)")
+summary(Field_sem_lat_lin_npp)
+AIC_psem(Field_sem_lat_lin_npp, AIC.type="dsep")
 
-### Model 5 -- Lat direct w quad  ----
+### Model 4 -- Latitude squared with productivity ----
+Field_sem_lat_sq_npp<-SEM_results(Prod = "NPP_g_sc",
+                                   lat_traits = "Latitude_sc + Latitude_sc_sq", 
+                                   lat_main = "Latitude_sc + Latitude_sc_sq",
+                                   model = c("lm1", "lm2", "lm3", "lm4"),
+                                   random = "(1|Pop:Year)",year_ran="(1|Year)")
+summary(Field_sem_lat_sq_npp)
+AIC_psem(Field_sem_lat_sq_npp, AIC.type="dsep")
 
-Field_sem_lat2<-SEM_results(lat_main = "Latitude_sc + Latitude_sc_sq",Prod = "NPP_g_sc",lat_prod="Latitude_sc",
-                                      lat_traits="Latitude_sc + Latitude_sc_sq",
-                                      model = c("lm1", "lm2", "lm3", "lm4","lm6"), 
-                                      random = "+ (1|Pop:Year)",year_ran=" + (1|Year)")
-summary(Field_sem_lat2)
-AIC_psem(Field_sem_lat2, AIC.type="dsep")
 
 
 ## Garden ----
@@ -159,53 +157,40 @@ AIC_psem(Field_sem_lat2, AIC.type="dsep")
 #### dsep Reference ----
 # https://esajournals.onlinelibrary.wiley.com/doi/10.1890/12-0976.1
 
-Garden_sem_lat_indirect<-SEM_results(Loc="Garden",lat = NULL,Prod = "NPP_g_10y_sc",lat_prod="Latitude_sc",
-                                    lat_main = NULL,model = c("lm1", "lm2", "lm3", "lm4","lm5"), 
-                                    random = "(1|Pop)",year_ran="", group = c("Plant_ID"),
-                                    main_ran="(1|Pop)",corError = list())
-summary(Garden_sem_lat_indirect)
-AIC_psem(Garden_sem_lat_indirect, AIC.type="dsep")
+Garden_sem_lat_lin_only<-SEM_results(Prod = "", Loc = "Garden",
+                                    lat_traits = "Latitude_sc", lat_main = "Latitude_sc",
+                                    model = c("lm1", "lm2", "lm3", "lm4"),
+                                    random = "(1|Pop)",year_ran="")
+summary(Garden_sem_lat_lin_only)
+AIC_psem(Garden_sem_lat_lin_only, AIC.type="dsep")
 
-#### Most parsimonious out of the best models ----
+### Model 2 -- Latitude squared only ----
+Garden_sem_lat_sq_only<-SEM_results(Prod = "", Loc = "Garden",
+                                   lat_traits = "Latitude_sc + Latitude_sc_sq", 
+                                   lat_main = "Latitude_sc + Latitude_sc_sq",
+                                   model = c("lm1", "lm2", "lm3", "lm4"),
+                                   random = "(1|Pop)",year_ran="")
+summary(Garden_sem_lat_sq_only)
+AIC_psem(Garden_sem_lat_sq_only, AIC.type="dsep")
 
-ggpairs(Garden_sem_lat_indirect$data %>% select(-c(Pop,dummy)))
-check_collinearity(glmmTMB(herb_p_t_sc~Latitude_sc+NPP_g_10y_sc,data = Garden_sem_lat_indirect$data))
 
-### Model 2 -- Lat direct on traits ----
-Garden_sem_lat_direct<-SEM_results(Loc="Garden",lat_main = "",Prod = "NPP_g_10y_sc",lat_prod="Latitude_sc",
-                                  lat_traits="Latitude_sc",
-                                  model = c("lm1", "lm2", "lm3", "lm4","lm5"), 
-                                  random = "(1|Pop)",year_ran="", group = c("Plant_ID"),
-                                  main_ran="(1|Pop)",corError = list())
-summary(Garden_sem_lat_direct)
-AIC_psem(Garden_sem_lat_direct, AIC.type="dsep")
+### Model 3 -- Latitude linear with productivity ----
+Garden_sem_lat_lin_npp<-SEM_results(Prod = "NPP_g_sc", Loc = "Garden",
+                                   lat_traits = "Latitude_sc", 
+                                   lat_main = "Latitude_sc",
+                                   model = c("lm1", "lm2", "lm3", "lm4"),
+                                   random = "(1|Pop)",year_ran="")
+summary(Garden_sem_lat_lin_npp)
+AIC_psem(Garden_sem_lat_lin_npp, AIC.type="dsep")
 
-### Model 3 -- Lat direct on herby ----
-Garden_sem_lat_direct_herb<-SEM_results(Loc="Garden",lat_main = "Latitude_sc",Prod = "NPP_g_10y_sc",lat_prod="Latitude_sc",
-                                       lat_traits="",
-                                       model = c("lm1", "lm2", "lm3", "lm4","lm5"), 
-                                       random = "+ (1|Pop)",year_ran="", group = c("Plant_ID"),
-                                       main_ran="(1|Pop)", corError = list())
-summary(Garden_sem_lat_direct_herb)
-AIC_psem(Garden_sem_lat_direct_herb, AIC.type="dsep")
-
-### Model 4 -- Lat direct  ----
-Garden_sem_lat_direct_all<-SEM_results(Loc="Garden",lat_main = "Latitude_sc",Prod = "NPP_g_10y_sc",lat_prod="Latitude_sc",
-                                      lat_traits="Latitude_sc",
-                                      model = c("lm1", "lm2", "lm3", "lm4","lm5"), 
-                                      random = "+ (1|Pop)",year_ran="", group = c("Plant_ID"),
-                                      main_ran="(1|Pop)", corError = list())
-summary(Garden_sem_lat_direct_all)
-AIC_psem(Garden_sem_lat_direct_all, AIC.type="dsep")
-
-### Model 5 -- Lat direct w quad  ----
-Garden_sem_lat2<-SEM_results(Loc="Garden",lat_main = "Latitude_sc + Latitude_sc_sq",Prod = "NPP_g_10y_sc",lat_prod="Latitude_sc",
-                            lat_traits="Latitude_sc + Latitude_sc_sq",
-                            model = c("lm1", "lm2", "lm3", "lm4","lm5"), 
-                            random = "+ (1|Pop)",year_ran="", group = c("Plant_ID"),
-                            main_ran="(1|Pop)", corError = list(NPP_g_10y_sc %~~% Latitude_sc_sq))
-summary(Garden_sem_lat2)
-AIC_psem(Garden_sem_lat2, AIC.type="dsep")
+### Model 4 -- Latitude squared with productivity ----
+Garden_sem_lat_sq_npp<-SEM_results(Prod = "NPP_g_sc", Loc = "Garden",
+                                  lat_traits = "Latitude_sc + Latitude_sc_sq", 
+                                  lat_main = "Latitude_sc + Latitude_sc_sq",
+                                  model = c("lm1", "lm2", "lm3", "lm4"),
+                                  random = "(1|Pop)",year_ran="")
+summary(Garden_sem_lat_sq_npp)
+AIC_psem(Garden_sem_lat_sq_npp, AIC.type="dsep")
 
 
 ## Figure 1: Maps ----

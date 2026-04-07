@@ -100,7 +100,7 @@ C_theme<-function(size=18){theme_bw(base_size = size)+
 
 
 ## SEM function ----
-SEM_results <- function(Loc = "Field", lat=NULL,Prod = "NPP_g", lat_prod="Latitude_sc",
+SEM_results <- function(Loc = "Field", Prod = "NPP_g", lat_prod="Latitude_sc",
                         lat_main=NULL, lat_traits=NULL, main="Trichomes_t_sc + Conc_t_sc + SLA_t_sc",
                         mod_fun='glmmTMB',
                         model = c("lm1", "lm2", "lm3", "lm4"), 
