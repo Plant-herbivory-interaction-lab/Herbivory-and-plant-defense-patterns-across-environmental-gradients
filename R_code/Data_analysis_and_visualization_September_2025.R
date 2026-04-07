@@ -175,7 +175,7 @@ AIC_psem(Garden_sem_lat_sq_only, AIC.type="dsep")
 
 
 ### Model 3 -- Latitude linear with productivity ----
-Garden_sem_lat_lin_npp<-SEM_results(Prod = "NPP_g_sc", Loc = "Garden",
+Garden_sem_lat_lin_npp<-SEM_results(Prod = "NPP_g_10y_sc", Loc = "Garden",
                                    lat_traits = "Latitude_sc", 
                                    lat_main = "Latitude_sc",
                                    model = c("lm1", "lm2", "lm3", "lm4"),
@@ -184,7 +184,7 @@ summary(Garden_sem_lat_lin_npp)
 AIC_psem(Garden_sem_lat_lin_npp, AIC.type="dsep")
 
 ### Model 4 -- Latitude squared with productivity ----
-Garden_sem_lat_sq_npp<-SEM_results(Prod = "NPP_g_sc", Loc = "Garden",
+Garden_sem_lat_sq_npp<-SEM_results(Prod = "NPP_g_10y_sc", Loc = "Garden",
                                   lat_traits = "Latitude_sc + Latitude_sc_sq", 
                                   lat_main = "Latitude_sc + Latitude_sc_sq",
                                   model = c("lm1", "lm2", "lm3", "lm4"),
