@@ -16,7 +16,7 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
                     Treatment=F,Time.var='Mid',start_date="2023-06-15",
                     end_date="2023-07-29",byDate=F,group=NULL,...){
   
-  Combined_data1<- Trait_data%>% 
+  Combined_data1<- Trait_data  %>% 
     left_join(PCs)
   
   if(loc=="Field"|loc=="Garden"){Combined_data1<-Combined_data1 %>% 
@@ -38,7 +38,7 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
           .by = group,
           Pop = unique(Pop),
           Loc = if (PopLevel) unique(Loc) else first(Loc),
-          Time = if (PopLevel) unique(Time) else first(Time),
+          Time =  first(Time),
           Plant_N= if (PopLevel) length(Pop) else NULL,
           Date = sample(c(min(Date, na.rm = TRUE), max(Date, na.rm = TRUE)), size = 1),
           count = n(),
@@ -49,7 +49,7 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
         )}
   }
   
-  if (!is.null(group)& PopLevel==T) {
+  if (!is.null(group)& PopLevel==T & loc != "Garden") {
     Combined_data1 <- Combined_data1 %>% summarise(
       .by = group,
       Pop = unique(Pop),
@@ -85,8 +85,11 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
       SLA_t=log(SLA),
       Trichomes_t=log(Trichomes),
       herb_p_t=logit(herb_p),
-      across(any_of(c("herb_p_t","Trichomes_t","NPP_g","NPP_g_10y","SLA_t","Conc_t")), 
-             ~as.numeric(scale(.,center = T),na.rm=T), .names = "{.col}_sc"),
+      Climate_PC1=-Clim_PC1,
+      across(any_of(c("herb_p_t","Trichomes_t","SLA_t","Conc_t","Climate_PC1","Productivity","WeightedCD")), 
+             ~as.numeric(scale(.,center = T)), .names = "{.col}_sc"),
+      across(any_of(c("Latitude_sc","Climate_PC1_sc","WeightedCD_sc")), 
+             ~as.numeric(.^2), .names = "{.col}_sq"),
       Plant=c(1:length(Conc))
     )  %>% filter(SLA_t_sc>-3&SLA_t_sc<3)
   
@@ -122,9 +125,9 @@ SEM_results <- function(Loc = "Field", Prod = "NPP_g", lat_prod="Latitude_sc",
     lm1 = paste0('herb_p_t_sc ~',build_formula(c(lat_main, main, Prod, main_ran, year_ran))), 
     lm2 = paste0('Conc_t_sc ~ ',build_formula(c(lat_traits,  Prod, random, year_ran))),           
     lm3 = paste0('SLA_t_sc ~ ',build_formula(c(lat_traits, Prod, random, year_ran))),
-    lm4 = paste0('Trichomes_t_sc ~ ',build_formula(c(lat_traits, Prod, random))),  
-    lm5 = paste0('NPP_g_10y_sc ~', build_formula(c(lat_prod, '(1|dummy)'))),
-    lm6 = paste0('NPP_g_sc ~', build_formula(c(lat_prod, '(1|dummy)')))
+    lm4 = paste0('Trichomes_t_sc ~ ',build_formula(c(lat_traits, Prod, random)))#,  
+    #lm5 = paste0('NPP_g_10y_sc ~', build_formula(c(lat_prod, '(1|dummy)'))),
+    #lm6 = paste0('NPP_g_sc ~', build_formula(c(lat_prod, '(1|dummy)')))
   )
   
   DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,
@@ -270,6 +273,7 @@ semGraph<-function(fit=fit,node_locs=list(),
     filter(!grepl("~",Response)&!grepl("Loc",Predictor)) %>% 
     mutate(
       across(where(is.character), ~ sub("_sc_sq", " (sq)", .)),
+      across(where(is.character), ~ sub("_", " ", .)),
       across(where(is.character), ~ sub("_.*", "", .)),
       Response=case_when(grepl("herb", Response) ~ 'Herbivory',
                          grepl("Conc", Response) ~ 'Glycoalkaloids',
@@ -357,10 +361,13 @@ semGraph<-function(fit=fit,node_locs=list(),
   
   for(i in seq_along(node_loc)) {
     node_name<-names(node_loc[i])
-    layout_matrix[node_name, ] <- node_loc[[i]]
+    if (node_name %in% rownames(layout_matrix)) {
+      layout_matrix[node_name, ] <- node_loc[[i]]
+    }
+    
   }
 
-  print(layout_matrix)
+
   # Assign default straight edges
   curves <- graph$graphAttributes$Edges$curve  
   
@@ -430,6 +437,28 @@ PCbiplot <- function(data1=data,rot_x=1,rot_y=1,font_size=14,ext=4) {
   plot
 }
 
+# Weighted climate distance ----
+
+weighted_cd <- function(data, origin_pc, pc_cols, weights) {
+  
+  # Ensure names match
+  stopifnot(all(pc_cols %in% names(data)))
+  stopifnot(all(pc_cols %in% names(origin_pc)))
+  stopifnot(all(pc_cols %in% names(weights)))
+  
+  # Compute weighted Euclidean distance row-wise
+  d <- sqrt(
+    rowSums(
+      sapply(pc_cols, function(pc) {
+        weights[pc] * (data[[pc]] - origin_pc[[pc]])^2
+      })
+    )
+  )
+  
+  return(d)
+}
+
+
 
 # Function to extract data from Google earth engine ----
 
@@ -460,6 +489,9 @@ Extract_var_with_const_date <- function(loc,path,subpath,select,
                                         begin = 5,
                                         end=7,
                                         unit="month",
+                                        begin1 = 5,
+                                        end1 =7,
+                                        unit1 = "",
                                         buffer=1500,
                                         scale=300) {
   batch_size=round(sqrt(6000/(3.14*(buffer/scale)^2)))
@@ -467,22 +499,36 @@ Extract_var_with_const_date <- function(loc,path,subpath,select,
   
   if(select!=T){
     terra<-ee$Image(as.character(path))
+    n_images <- 1
+    
+    
   } else if(select==T){
     terra<-ee$ImageCollection(as.character(path))$select(as.character(subpath))
-  }
   
-  if(nchar(unit)>1) {
-    terra<-terra$filter(
-      ee$Filter$calendarRange(
-        begin,
-        end,
-        unit
+  
+    if(nchar(unit)>1) {
+      terra<-terra$filter(
+        ee$Filter$calendarRange(
+          begin,
+          end,
+          unit
+        )
       )
-    )
-  }
+    }
+    
+    if(nchar(unit1)>1) {
+      terra<-terra$filter(
+        ee$Filter$calendarRange(
+          begin1,
+          end1,
+          unit1
+        )
+      )
+    }
   
   
   n_images <- terra$size()$getInfo()
+}
   
   num_iterations <- ceiling(nrow(loc) / batch_size)
   
@@ -498,10 +544,22 @@ Extract_var_with_const_date <- function(loc,path,subpath,select,
       pt$buffer(buffer)                  
     }) 
     
+    
     im_iter <- ceiling(n_images / batch_size)
     
 
-    
+    if(select!=T) {
+      row<-terra$sampleRegions(
+        collection = batch,
+        scale = scale,
+        geometries = FALSE
+      ) %>% 
+        ee_as_sf() %>% sf::st_drop_geometry()
+
+      results[[paste(i)]]<-row
+      
+      
+    } else {   
     for (j in 1:im_iter) {
       start_im <- (j - 1) * batch_size + 1
       end_im <- min(j * batch_size, n_images)
@@ -532,7 +590,12 @@ Extract_var_with_const_date <- function(loc,path,subpath,select,
     }
    
     }
+
+  }
+  
   results<-do.call(rbind, results)
+
+  
   results
 }
 

@@ -18,67 +18,8 @@ conflict_prefer("select", "dplyr")
 conflict_prefer("extract", "raster")
 conflict_prefer("filter", "dplyr")
 
-# Climate data ----
-Coords<-read.csv("Data/Field_2023_pop_info.csv") %>% 
-  select(Pop,Latitude,Longitude) %>% 
-  rbind(.,read.csv("Data/Field_2022_cords.csv") %>% 
-          select(Latitude:Pop)) %>% drop_na() %>% 
-  distinct(Pop, .keep_all = TRUE)
 
-## Download bioclim data ----
-vars <- c("prec", "tmax", "tmin")
-lats <- c(40, 20)
-
-results <- list()
-
-for (v in vars) {
-  for (i in seq_along(lats)) {
-    nm <- paste0(v, i)  # e.g. prec1, prec2, tmax1 …
-    results[[nm]] <- stack(
-      worldclim_tile(v, lon = -80, lat = lats[i], path = tempdir())
-    )
-  }
-}
-
-
-## Project coordinates and extract bioclim variables ----
-pp1<-st_as_sf(Coords,coords=c('Longitude','Latitude'),crs="+proj=longlat +datum=WGS84")
-
-biovari<-data.frame()
-
-for (i in 1:nrow(pp1)){
-  if(all(is.na(extract(results$tmax1,pp1[i,])[,-1]))){
-    reg<-2
-  }else{reg<-1}
-  
-  tmax<-as.vector(as.matrix(extract(results[[paste0('tmax',reg)]],pp1[i,])[,-1]))
-  tmin<-as.vector(as.matrix(extract(results[[paste0('tmin',reg)]],pp1[i,])[,-1]))
-  prec<-as.vector(as.matrix(extract(results[[paste0('prec',reg)]],pp1[i,])[,-1]))
-
-  vars<-data.frame(Pop=Coords[i,"Pop"],Latitude=Coords[i,"Latitude"],biovars(prec,tmin,tmax))
-
-  biovari<-rbind(biovari,vars)
-
-}
-
-Clim_ave<-biovari %>% 
-  select(Pop,Latitude,bio1,bio4,bio12,bio18) %>% 
-  mutate(
-    bio4=bio4/100,
-    bio12=bio12/10,
-    bio18=bio18/10,
-    Clim_PC1= prcomp(across(bio1:bio18), scale. = TRUE)$x[, c("PC1")],
-    Clim_PC2= prcomp(across(bio1:bio18), scale. = TRUE)$x[, c("PC2")],
-  ) %>% 
-  rename(
-    'MAT' = bio1,
-    'Tsd' = bio4,
-    'AP' = bio12,
-    'PWQ' = bio18
-  ) 
-
-write.csv(Clim_ave, "Data/Bioclims_1970_ave.csv",row.names = F)
-
+source("R_code/Functions.R")
 # Glycoalkaloid concentration calculations Field 2022----
 
 ## standard curve ----
@@ -280,4 +221,129 @@ Combined_data<-rbind(Field_2022,Field_2023,Garden_2023) %>%
   filter(Conc>0)
 
 write.csv(Combined_data,"Data/Combined_herbivory_and_trait_data.csv",row.names = F)
+
+
+# Climate data ----
+coords<-rbind(read.csv("Data/Field_2023_pop_info.csv") %>% 
+                select(Pop,Latitude,Longitude),
+              read.csv("Data/Field_2022_cords.csv") %>% 
+                select(Pop,Latitude,Longitude)) %>% 
+  filter(Pop %in% Combined_data$Pop) %>% 
+  distinct(.,Pop,.keep_all = TRUE)
+
+## NPP ----
+PP_yearly<-Extract_var_with_const_date(
+  sf::st_as_sf(coords,coords=c('Longitude','Latitude'),
+               crs="+proj=longlat +datum=WGS84"),
+  "MODIS/061/MOD17A3HGF",c("Npp","Npp_QC"),unit="Year",begin = 2013,
+  end=2026,
+  select = T,
+  buffer = 4000,scale = 500)
+
+PP_8day<-Extract_var_with_const_date(
+  sf::st_as_sf(coords,coords=c('Longitude','Latitude'),
+               crs="+proj=longlat +datum=WGS84"),
+  "MODIS/061/MOD17A2HGF",c("PsnNet","Psn_QC"),select = T,
+  unit1 = "Year", begin1 = 2013, end1 = 2024,
+  buffer = 4000,scale = 500)
+
+
+PP_yearly_sum<-PP_yearly %>%
+  filter(Npp_QC <= 30) %>%
+  group_by(Pop) %>%
+  summarise(NPP_y=sqrt(mean(Npp)/1e4))
+
+
+
+PP_8day_sum_pix<-PP_8day %>%
+  mutate(Year=year(image_date)) %>%
+  filter(
+    bitwAnd(Psn_QC, 1) == 0 &                    # good quality
+      bitwAnd(bitwShiftR(Psn_QC, 2), 1) == 0 &     # detectors OK
+      bitwAnd(bitwShiftR(Psn_QC, 3), 3) == 0 &     # clear sky
+      bitwAnd(bitwShiftR(Psn_QC, 5), 7) == 0       # best confidence
+  ) %>%
+  summarise(.by=c(Pop,Year,image_date), NPP_g=mean(PsnNet)/1e4)
+
+PP_g<-PP_8day_sum_pix %>% 
+  summarise(.by=c(Pop,Year), NPP_g=sum(NPP_g))
+
+PP_8day_sum_10y<- PP_g %>% 
+  summarise(.by=c(Pop), NPP_g_10y=mean(NPP_g))
+
+
+PP_8day_sum_season<- PP_g %>% 
+  filter(Year=="2023"|Year=="2022")
+
+
+## Download bioclim data ----
+clim_vars <- c("bio01","bio04","bio12","bio18")
+
+
+Bioclims<-Extract_var_with_const_date(
+  sf::st_as_sf(coords,coords=c('Longitude','Latitude'),
+               crs="+proj=longlat +datum=WGS84"),
+  "WORLDCLIM/V1/BIO",clim_vars,unit="",select = F,
+  buffer = 500,scale = 500) %>% 
+  select(clim_vars,"Pop") %>% 
+  summarise(
+    .by = "Pop",
+    across(
+      where(is.numeric),
+      ~ mean(., na.rm = TRUE)
+    )
+  ) %>% 
+  left_join(PP_8day_sum_10y,join_by(Pop)) %>% 
+  left_join(PP_8day_sum_season,join_by(Pop)) %>% 
+  left_join(PP_yearly_sum,join_by(Pop)) %>% 
+  mutate(NPP_y=log(NPP_y),
+         bio18=sqrt(bio18),
+         Year = as.character(Year),
+         across(where(is.numeric), 
+                ~as.numeric(scale(.,center = T)))
+  ) %>% right_join(coords)
+
+
+PCs <- Bioclims %>%  
+  {
+    df <- .
+    
+    # ONLY climate variables go into PCA
+    pca <- prcomp(
+      df %>% select(all_of(clim_vars)),
+    )
+    
+    weights <- summary(pca)$importance[2, c("PC1","PC2")]
+    
+    # origin population
+    origin_pc <- pca$x[df$Pop == "DUDU", c("PC1","PC2")][1, ]
+    
+    # compute weighted distance
+    WeightedCD <- weighted_cd(
+      data = as.data.frame(pca$x),
+      origin_pc = origin_pc,
+      pc_cols = c("PC1","PC2"),
+      weights = weights
+    )
+    
+    mutate(df,
+           Clim_PC1 = pca$x[, "PC1"],
+           Clim_PC2 = pca$x[, "PC2"],
+           WeightedCD = WeightedCD
+           
+           
+    ) %>% 
+      rename(
+        `MAT` = bio01,
+        `Tsd` = bio04,
+        `AP`  = bio12,
+        `PWQ` = bio18,
+        NPPg=NPP_g,
+        NPP = NPP_y
+        
+      )}
+
+
+
+write.csv(PCs, "Data/clim_data.csv",row.names = F)
 
