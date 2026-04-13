@@ -3,6 +3,12 @@
 ## Email: j.herschberger@ufl.edu
 ## Project: Culprits of plant defense variation across a latitudinal gradient.
 
+# Packages ----
+library(qgraph)
+library(rsvg)
+library(svglite)
+library(grid)
+
 # Functions ----
 ## Compress data function ----
 transform_perc <- function(percentage_vec) {
@@ -60,7 +66,6 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
   
   
   if(long==T&ClimateLong==T){Combined_data1<-Combined_data1 %>%
-    left_join(Pop_info %>% select(Pop,Latitude))%>% 
     pivot_longer(cols = c(Trichomes_t_sc,SLA_t_sc,Conc_t_sc,Clim_PC1_sq_sc,Clim_ave_PC1_sc)) 
   }
   
@@ -73,7 +78,7 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
     mutate(name=case_when(
       name=="Conc_t_sc"~"Glycoalkaloids (mg/g)",
       name=='Clim_ave_PC1_sc'~'Climate',
-      name=='Clim__PC1_sq_sc'~'Climate (sq)',
+      name=='Clim_PC1_sq_sc'~'Climate (sq)',
       name=="Trichomes_t_sc"~"Trichomes",
       name=='SLA_t_sc'~'SLA',
       .default = name))}
@@ -103,7 +108,7 @@ C_theme<-function(size=18){theme_bw(base_size = size)+
 
 
 ## SEM function ----
-SEM_results <- function(Loc = "Field", Prod = "NPP_g", lat_prod="Latitude_sc",
+SEM_results <- function(Loc = "Field", Prod = "", lat_prod="Latitude_sc",
                         lat_main=NULL, lat_traits=NULL, main="Trichomes_t_sc + Conc_t_sc + SLA_t_sc",
                         mod_fun='glmmTMB',
                         model = c("lm1", "lm2", "lm3", "lm4"), 
@@ -264,10 +269,6 @@ semGraph<-function(fit=fit,node_locs=list(),
                    edge_locs = list(),
                    curve_locs = list(),
                    H = F, marg_y = 12) {
-  library(qgraph)
-  library(rsvg)
-  library(svglite)
-  library(grid)
   
   edges<-summary(fit,rsquare=T,conserve=T)$coefficients[,c("Response","Predictor","Std.Estimate","P.Value","Std.Error")] %>% 
     filter(!grepl("~",Response)&!grepl("Loc",Predictor)) %>% 
@@ -409,7 +410,7 @@ semGraph<-function(fit=fit,node_locs=list(),
 }
 
 ## Custom biplot function ----
-require(ggrepel)
+library(ggrepel)
 PCbiplot <- function(data1=data,rot_x=1,rot_y=1,font_size=14,ext=4) {
   PC<-data1  %>% 
     drop_na() %>% 

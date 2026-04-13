@@ -15,7 +15,6 @@ library(tidyverse)
 library(patchwork)
 library(ggeffects)
 library(geodata)
-library(raster)
 library(tidyterra)
 library(DHARMa)
 library(emmeans)
@@ -24,7 +23,7 @@ library(ggplotify)
 library(grid)
 
 
-conflicts_prefer(dplyr::select(),
+conflicts_prefer(dplyr::select,
                  dplyr::filter)
 
 # Import and prep data ----
@@ -64,7 +63,7 @@ summary(Garden_sem)
 
 ## Figure 1: Maps ----
 Pop_info<-Data_prep(loc = "Field|Garden",group = c("Pop","Loc","Year")) %>% 
-               select(Pop,Year,Loc,NPP,NPP, herb_p,NPP,
+               select(Pop,Year,Loc,NPP, herb_p,
                       Climate_PC1,Longitude, Latitude,
                       Conc,SLA,Trichomes) %>% summarise(
     .by = c(Pop),
@@ -275,7 +274,7 @@ emmeans(gard_v_field_herb,"Loc",
         type="response", infer = T)
 
 # Height versus defense traits ----
-Data_prep(loc="Graden|Field") %>% 
+Data_prep(loc="Garden|Field") %>% 
   select(Loc,Height,Trichomes_t_sc,SLA_t_sc,Conc_t_sc) %>% 
   mutate(Height=scale(Height)) %>% 
   pivot_longer(.,cols=c(Trichomes_t_sc,SLA_t_sc,Conc_t_sc)) %>% 
@@ -290,7 +289,7 @@ Pop_level<-Data_prep(loc = "Garden",byDate = T,
                      group = c('Pop','Date')) %>% 
   mutate(Flowering_p=flowers/count) 
 
-Leaves_time<-ggplot(Pop_level,aes(Date,Leaves,,col=Pop)) +
+Leaves_time<-ggplot(Pop_level,aes(Date,Leaves,col=Pop)) +
   geom_point(show.legend=F)+
   geom_smooth(method="glm",show.legend=F,formula = y~poly(x,2),se=F)+
   labs(y="Leaves")+
@@ -316,7 +315,7 @@ ggsave("Appendix_S2.jpg",
        path = "Figures",dpi = 400,width = 12, 
        height = 11,limitsize = F)
 
-# Herbivory in response to plant traits and climete at different times of the year ----
+# Herbivory in response to plant traits and climate at different times of the year ----
 # Herbivory graphing function
 Herb_by_time<-function(herb='herb_p_t_sc',family.var='poisson',time="Early",ad_form=""){
   Data<-Data_prep(loc = "Garden",byDate = F,Time.var = time,group = c('Plant_ID','Time'))
@@ -327,7 +326,7 @@ Herb_by_time<-function(herb='herb_p_t_sc',family.var='poisson',time="Early",ad_f
   
   Data<- rbind(Data,Data1)
   
-  model<-glmmTMB(as.formula(paste0(herb, '~ Latitude_sc + Latitude_sc_sq + (Trichomes_t_sc + Conc_t_sc + SLA_t_sc)',ad_form)),
+  model<-glmmTMB(as.formula(paste0(herb, '~ Climate_PC1_sc + Climate_PC1_sc_sq + (Trichomes_t_sc + Conc_t_sc + SLA_t_sc)',ad_form)),
                  family=family.var,data=Data)
   list(Data,model)
 }
@@ -338,16 +337,16 @@ AIC(all_herb_mod_quant[[2]])
 emtrends(all_herb_mod_quant[[2]],~Time,var="SLA_t_sc",infer=T)
 emtrends(all_herb_mod_quant[[2]],~Time,var="Conc_t_sc",infer=T)
 emtrends(all_herb_mod_quant[[2]],~Time,var="Trichomes_t_sc",infer=T)
-emtrends(all_herb_mod_quant[[2]],~Time,var="Latitude_sc",infer=T)
-emtrends(all_herb_mod_quant[[2]],~Time,var="Latitude_sc_sq",infer=T)
+emtrends(all_herb_mod_quant[[2]],~Time,var="Climate_PC1_sc",infer=T)
+emtrends(all_herb_mod_quant[[2]],~Time,var="Climate_PC1_sc_sq",infer=T)
 
 all_herb_mod_mean<-Herb_by_time(herb='herb_p',family=beta_family(),time='Early|Mid|Late',ad_form='*Time')
 AIC(all_herb_mod_mean[[2]])
 emtrends(all_herb_mod_mean[[2]],~Time,var="SLA_t_sc",infer=T)
 emtrends(all_herb_mod_mean[[2]],~Time,var="Conc_t_sc",infer=T)
 emtrends(all_herb_mod_mean[[2]],~Time,var="Trichomes_t_sc",infer=T)
-emtrends(all_herb_mod_mean[[2]],~Time,var="Latitude_sc",infer=T)
-emtrends(all_herb_mod_mean[[2]],~Time,var="Latitude_sc_sq",infer=T)
+emtrends(all_herb_mod_mean[[2]],~Time,var="Climate_PC1_sc",infer=T)
+emtrends(all_herb_mod_mean[[2]],~Time,var="Climate_PC1_sc_sq",infer=T)
 
 all_herb_mod_max<-Herb_by_time(herb='max_herb',family=beta_family(),time='Early|Mid|Late',ad_form='*Time')
 AIC(all_herb_mod_max[[2]])
@@ -357,32 +356,47 @@ emtrends(all_herb_mod_max[[2]],~Time,var="Trichomes_t_sc",infer=T)
 
 # Appendix: AICs at different herbivory observations -----
 # Herbviory data from early in the year
-early_sem<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
-                       corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
+early_sem<-SEM_results(Loc="Garden",model = c("lm1", "lm2", "lm3", "lm4"),
+                       main_ran = "(1|Pop)",
+                       lat_traits = "Climate_PC1_sc + Climate_PC1_sc_sq", 
+                       lat_main = "Climate_PC1_sc + Climate_PC1_sc_sq",
+                       corError = list(), byDate = F,
                        Time='Early',group = "Plant_ID",ICC=F)
 AIC(early_sem,aicc=T)
 summary(early_sem)
 
 # Herbviory data from the middle of the year
-mid_sem<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
-                     corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
+mid_sem<-SEM_results(Loc="Garden",model = c("lm1", "lm2", "lm3", "lm4"),
+                     main_ran = "(1|Pop)",
+                     lat_traits = "Climate_PC1_sc + Climate_PC1_sc_sq", 
+                     lat_main = "Climate_PC1_sc + Climate_PC1_sc_sq",
+                     corError = list(), byDate = F,
                      Time='Mid',group = "Plant_ID",ICC=F)
 
 AIC(mid_sem,aicc = T)
 summary(mid_sem)
 
 # Herbviory data from the end of the year
-end_sem<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
-                     corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc)),
+end_sem<-SEM_results(Loc="Garden",model = c("lm1", "lm2", "lm3", "lm4"),
+                     main_ran = "(1|Pop)",
+                     lat_traits = "Climate_PC1_sc + Climate_PC1_sc_sq", 
+                     lat_main = "Climate_PC1_sc + Climate_PC1_sc_sq",
+                     corError = list(), byDate = F,
                      Time='Late',group = "Plant_ID",ICC=F)
 
 AIC(end_sem,aicc = T)
 summary(end_sem)
 
 # Herbivory from all time points of the experiment
-all_sem<-SEM_results(Loc="Garden",model = c("lm1.1", "lm2", "lm3", "lm4"),random = "",mod_fun='lm',
-                     corError = list(quote(Conc_t_sc %~~% Trichomes_t_sc),quote(SLA_t_sc %~~% Trichomes_t_sc)),
-                     byDate = T, start_date = "2023-05-15",end_date = "2023-10-15",group = "Plant_ID",ICC=F)
+all_sem<-SEM_results(Loc="Garden",model = c("lm1", "lm2", "lm3", "lm4"),
+                     main_ran = "(1|Pop)",
+                     lat_traits = "Climate_PC1_sc + Climate_PC1_sc_sq", 
+                     lat_main = "Climate_PC1_sc + Climate_PC1_sc_sq",
+                     corError = list(), byDate = T,
+                     Time='Early',group = "Plant_ID",ICC=F,
+                    start_date = "2023-05-15",end_date = "2023-10-15")
+  
+
 
 AIC(all_sem,aicc = T)
 summary(all_sem)
@@ -404,12 +418,12 @@ trait_x_herb_plot<-function(response,y_lab){
     labs(x="Trait value",y=y_lab)}
 
 
-trait_x_herb_ave<-trait_x_herb_plot("herb_p","Average herbviory")+
+trait_x_herb_ave<-trait_x_herb_plot("herb_p","Average herbivory")+
   scale_y_continuous(labels = function(x) paste0(x * 100))
 
-trait_x_herb_plot("max_herb","Max herbviory")
+trait_x_herb_plot("max_herb","Max herbivory")
 
-trait_x_herb_plot("quant_herb_0.75","Herbviory (75th quantile)")
+trait_x_herb_plot("quant_herb_0.75","Herbivory (75th quantile)")
 
 ggsave("Appendix_S3.jpg",
        device = "jpg",plot = trait_x_herb_ave,

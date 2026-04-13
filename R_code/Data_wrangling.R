@@ -105,7 +105,7 @@ Stand %>%
 ## Total glycoalkaloid ----
 Samples<-read.csv("Data/Glycoalk_fall_2023_Samples.csv") %>% 
   left_join(Plate) %>% 
-  filter(Sample!="Blank1",Abs!="NA") %>% 
+  filter(Sample!="Blank1",Abs!="NA",!is.na(Abs)) %>% 
   mutate(Abs=(as.numeric(Abs)-Blank_ABS)) %>% 
   mutate(Sample=as.numeric(Sample)) %>% 
   left_join(
