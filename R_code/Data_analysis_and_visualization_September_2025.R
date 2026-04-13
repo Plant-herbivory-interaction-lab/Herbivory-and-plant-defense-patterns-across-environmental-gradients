@@ -30,179 +30,43 @@ conflicts_prefer(dplyr::select(),
 # Import and prep data ----
 source("R_code/Functions.R")
 
-coords<-rbind(read.csv("Data/Field_2023_pop_info.csv") %>% 
-                select(Pop,Latitude,Longitude),
-              read.csv("Data/Field_2022_cords.csv") %>% 
-                select(Pop,Latitude,Longitude)) %>% 
-  filter(Pop!="") %>% 
-  distinct(.,Pop,.keep_all = TRUE)
-
-# PP_yearly<-Extract_var_with_const_date(
-#   sf::st_as_sf(coords,coords=c('Longitude','Latitude'),
-#                crs="+proj=longlat +datum=WGS84"),
-#   "MODIS/061/MOD17A3HGF",c("Npp","Npp_QC"),unit="",select = T,
-#   buffer = 1500,scale = 100)
-# 
-#  PP_8day<-Extract_var_with_const_date(
-#    sf::st_as_sf(coords,coords=c('Longitude','Latitude'),
-#                 crs="+proj=longlat +datum=WGS84"),
-#    "MODIS/061/MOD17A2HGF",c("PsnNet","Psn_QC"),select = T,
-#    buffer = 3000)
-
-
-# PP_yearly_sum<-PP_yearly %>%
-#   filter(Npp_QC <= 30) %>%
-#   mutate(Year=year(image_date))%>%
-#   filter(Year>=2013) %>%
-#   group_by(Pop) %>%
-#   summarise(NPP_y=sqrt(mean(Npp)/1e4))
-
-#write.csv(PP_yearly_sum,"Data/PP_10y_sum_pix.csv")
-
-# PP_8day_sum_pix<-PP_8day %>%
-#   mutate(Year=year(image_date),
-#          month=month(image_date)) %>%
-#   filter(Year>=2013&month<8) %>%
-#   filter(
-#     bitwAnd(Psn_QC, 1) == 0 &                    # good quality
-#       bitwAnd(bitwShiftR(Psn_QC, 2), 1) == 0 &     # detectors OK
-#       bitwAnd(bitwShiftR(Psn_QC, 3), 3) == 0 &     # clear sky
-#       bitwAnd(bitwShiftR(Psn_QC, 5), 7) == 0       # best confidence
-#   ) %>%
-#   summarise(.by=c(Pop,Year,image_date), NPP_g=mean(PsnNet)/1e4)
-
-#write.csv(PP_8day_sum_pix,"Data/PP_8day_sum_pix.csv")
-
-PP_yearly_sum<-read.csv("Data/PP_10y_sum_pix.csv")
-
-PP_8day_sum_pix<-read.csv("Data/PP_8day_sum_pix.csv")
-
-PP_g<-PP_8day_sum_pix %>% 
-  summarise(.by=c(Pop,Year), NPP_g=sum(NPP_g))
-
-PP_8day_sum_10y<- PP_g %>% 
-  summarise(.by=c(Pop), NPP_g_10y=mean(NPP_g))
-
-
-PP_8day_sum_season<- PP_g %>% 
-  filter(Year=="2023"|Year=="2022")
-
 Trait_data<-read.csv("Data/Combined_herbivory_and_trait_data.csv") %>% 
   mutate(
     herb_p=(transform_perc(herb_p)),
     Date=as.Date(Date,origin = "1970-01-01"))
+  
 
-Trait_data$dummy <- 1
+PCs<-read.csv("Data/clim_data.csv")
 
-PCs<-read.csv(
-                 "Data/Bioclims_1970_ave.csv") %>% mutate(Latitude_sc=scale(Latitude),
-                                                 Latitude_sc_sq=Latitude_sc^2,
-                                                 `Climate PC1`=-Clim_PC1,
-                                                 `Productivity PC`=`Climate PC1`,
-                                                 'Productivity_sc'= scale(`Climate PC1`,center = T),
-                                                 'Productivity_sc_sq' =  Productivity_sc^2) %>% 
-  mutate(
-    'MAT (°C)' = MAT,
-    'Tsd (°C)' = Tsd,
-    'AP (cm)' = AP,
-    'PWQ (cm)' = PWQ
-  ) %>% 
-  right_join(PP_8day_sum_10y,join_by(Pop)) %>% 
-right_join(PP_8day_sum_season,join_by(Pop)) %>% 
-  right_join(PP_yearly_sum,join_by(Pop))
+ggpairs(PCs %>% select(Latitude,NPP,Clim_PC1,WeightedCD))
 
-ggpairs(PCs %>% select(Latitude,NPP_g,NPP_g_10y,NPP_y))
+PCbiplot(data1 = PCs %>% select(.,"MAT" ,"Tsd" ,"AP" ,"PWQ"))
 
 # SEM results ----
-### Model 1 -- Latitude only ----
-Field_sem_lat_lin_only<-SEM_results(Prod = "",
-                                    lat_traits = "Latitude_sc", lat_main = "Latitude_sc",
+### Field ----
+Field_sem<-SEM_results(Prod = "",
+                       lat_traits = "Climate_PC1_sc + Climate_PC1_sc_sq", 
+                       lat_main = "Climate_PC1_sc + Climate_PC1_sc_sq",
                            model = c("lm1", "lm2", "lm3", "lm4"),
                            random = "(1|Pop:Year)",year_ran="(1|Year)")
-summary(Field_sem_lat_lin_only)
-AIC_psem(Field_sem_lat_lin_only, AIC.type="dsep")
+summary(Field_sem)
 
-### Model 2 -- Latitude squared only ----
-Field_sem_lat_sq_only<-SEM_results(Prod = "",
-                                    lat_traits = "Latitude_sc + Latitude_sc_sq", 
-                                   lat_main = "Latitude_sc + Latitude_sc_sq",
-                                    model = c("lm1", "lm2", "lm3", "lm4"),
-                                    random = "(1|Pop:Year)",year_ran="(1|Year)")
-summary(Field_sem_lat_sq_only)
-AIC_psem(Field_sem_lat_sq_only, AIC.type="dsep")
+### Garden ----
+Garden_sem<-SEM_results(Prod = "", Loc = "Garden", main_ran = "(1|Pop)",
+                       lat_traits = "Climate_PC1_sc + Climate_PC1_sc_sq", 
+                       lat_main = "Climate_PC1_sc + Climate_PC1_sc_sq",
+                       model = c("lm1", "lm2", "lm3", "lm4"),
+                       random = "(1|Pop)",year_ran="", corError = list())
+summary(Garden_sem)
 
 
-### Model 3 -- Latitude linear with productivity ----
-Field_sem_lat_lin_npp<-SEM_results(Prod = "NPP_g_sc",
-                                   lat_traits = "Latitude_sc", 
-                                   lat_main = "Latitude_sc",
-                                   model = c("lm1", "lm2", "lm3", "lm4"),
-                                   random = "(1|Pop:Year)",year_ran="(1|Year)")
-summary(Field_sem_lat_lin_npp)
-AIC_psem(Field_sem_lat_lin_npp, AIC.type="dsep")
-
-### Model 4 -- Latitude squared with productivity ----
-Field_sem_lat_sq_npp<-SEM_results(Prod = "NPP_g_sc",
-                                   lat_traits = "Latitude_sc + Latitude_sc_sq", 
-                                   lat_main = "Latitude_sc + Latitude_sc_sq",
-                                   model = c("lm1", "lm2", "lm3", "lm4"),
-                                   random = "(1|Pop:Year)",year_ran="(1|Year)")
-summary(Field_sem_lat_sq_npp)
-AIC_psem(Field_sem_lat_sq_npp, AIC.type="dsep")
-
-
-
-## Garden ----
-### Model 1 -- Lat indirect ----
-#### dsep Reference ----
-# https://esajournals.onlinelibrary.wiley.com/doi/10.1890/12-0976.1
-
-Garden_sem_lat_lin_only<-SEM_results(Prod = "", Loc = "Garden",
-                                    lat_traits = "Latitude_sc", lat_main = "Latitude_sc",
-                                    model = c("lm1", "lm2", "lm3", "lm4"),
-                                    random = "(1|Pop)",year_ran="")
-summary(Garden_sem_lat_lin_only)
-AIC_psem(Garden_sem_lat_lin_only, AIC.type="dsep")
-
-### Model 2 -- Latitude squared only ----
-Garden_sem_lat_sq_only<-SEM_results(Prod = "", Loc = "Garden",
-                                   lat_traits = "Latitude_sc + Latitude_sc_sq", 
-                                   lat_main = "Latitude_sc + Latitude_sc_sq",
-                                   model = c("lm1", "lm2", "lm3", "lm4"),
-                                   random = "(1|Pop)",year_ran="")
-summary(Garden_sem_lat_sq_only)
-AIC_psem(Garden_sem_lat_sq_only, AIC.type="dsep")
-
-
-### Model 3 -- Latitude linear with productivity ----
-Garden_sem_lat_lin_npp<-SEM_results(Prod = "NPP_g_10y_sc", Loc = "Garden",
-                                   lat_traits = "Latitude_sc", 
-                                   lat_main = "Latitude_sc",
-                                   model = c("lm1", "lm2", "lm3", "lm4"),
-                                   random = "(1|Pop)",year_ran="")
-summary(Garden_sem_lat_lin_npp)
-AIC_psem(Garden_sem_lat_lin_npp, AIC.type="dsep")
-
-### Model 4 -- Latitude squared with productivity ----
-Garden_sem_lat_sq_npp<-SEM_results(Prod = "NPP_g_10y_sc", Loc = "Garden",
-                                  lat_traits = "Latitude_sc + Latitude_sc_sq", 
-                                  lat_main = "Latitude_sc + Latitude_sc_sq",
-                                  model = c("lm1", "lm2", "lm3", "lm4"),
-                                  random = "(1|Pop)",year_ran="")
-summary(Garden_sem_lat_sq_npp)
-AIC_psem(Garden_sem_lat_sq_npp, AIC.type="dsep")
 
 
 ## Figure 1: Maps ----
-Pop_info<-read.csv("Data/Field_2022_cords.csv") %>% 
-  select(Pop,Latitude,Longitude) %>% 
-  rbind(.,read.csv("Data/Field_2023_pop_info.csv") %>% 
-          select(Pop,Latitude,Longitude)) %>% 
-  filter(Pop!="") %>% distinct(.,Pop,.keep_all = TRUE) %>% 
-  right_join(Data_prep(loc = "Field|Garden",group = c(Pop,Loc,Year)) %>% 
-               select(Pop,Year,Loc,NPP_g,NPP_g_10y, herb_p,
-                      Conc,SLA,Trichomes)%>% drop_na(),
-             by=join_by(Pop) ) %>% summarise(
+Pop_info<-Data_prep(loc = "Field|Garden",group = c("Pop","Loc","Year")) %>% 
+               select(Pop,Year,Loc,NPP,NPP, herb_p,NPP,
+                      Climate_PC1,Longitude, Latitude,
+                      Conc,SLA,Trichomes) %>% summarise(
     .by = c(Pop),
 
     Year = case_when(
@@ -248,17 +112,21 @@ map_clim<-ggplot() +
     legend.box.background = element_rect(fill = scales::alpha("white", 0.7), color = "black")
     );map_clim
 
-npp_10Y_p<-ggplot(data=Pop_info %>% filter(grepl("Garden",Loc)), aes(x = Latitude, y = NPP_g_10y)) +
-  geom_point() + geom_smooth(method = "glm") +
-  ylab(expression("Ten year NPP"[g]*" (kg*C/m"^"2"*")")) +
-  C_theme(size=13);npp_10Y_p
+pca<-PCbiplot(data1 = PCs %>% select(., all_of(c('MAT',
+                                               'AP','PWQ',"Tsd"))),
+              font_size = 4,rot_x = -1) + C_theme(size=13);pca
 
-npp_1Y_p<-ggplot(data=Pop_info %>% filter(grepl("Field",Loc)), aes(x = Latitude, y = NPP_g)) +
+npp<-ggplot(data=Pop_info %>% filter(grepl("Field",Loc)), aes(x = Latitude, y = NPP)) +
   geom_point() + geom_smooth(method = "glm") + 
-  ylab(expression("One year NPP"[g]*" (kg*C/m"^"2"*")")) +
-  C_theme(size=13);npp_1Y_p
+  ylab(expression("Ten year NPP"[g]*" (kg*C/m"^"2"*")")) +
+  C_theme(size=13);npp
 
-clim_vars<-(map_clim|(npp_1Y_p/npp_10Y_p)) + 
+pc1_lat<-ggplot(data=Pop_info %>% filter(grepl("Field",Loc)), aes(x = Latitude, y = Climate_PC1)) +
+  geom_point() + geom_smooth(method = "glm") + 
+  ylab(expression("Climate PC1")) +
+  C_theme(size=13);pc1_lat
+
+clim_vars<-(map_clim|(pca/pc1_lat)) + 
   plot_annotation(tag_levels = "A") +
   plot_layout(widths = c(1.25,0.65))
 
@@ -270,79 +138,41 @@ ggsave("fig_1.jpg",
 # Hypotheses Figure ----
 ### Model 1 -- Lat indirect ----
 
-sem_lat_indirect<-semGraph(Garden_sem_lat_indirect, H=T,marg_y = 5,
-         node_locs = list("NPP"=c(0,-0.5),
-                          "Latitude"=c(0,-1),
-                          "Glycoalkaloids"=c(-1,.25),
-                          "SLA"=c(0,.25),
-                          "Trichomes"=c(1,.25)),
-         curve_locs = list(c("NPP","Herbivory",10.5)));sem_lat_indirect
+sem_lat_indirect<-semGraph(Field_sem, H=T,marg_y = 5,
+                           node_locs = list("Climate PC1"=c(-0.5,-1),
+                                            "Climate PC1 (sq)"=c(0.5,-1)),
+                           curve_locs = list(c("Climate PC1","Herbivory",5.7),
+                                             c("Climate PC1 (sq)","Herbivory",-5.7)));sem_lat_indirect
 
 
-### Model 2 -- Lat direct on traits ----
 
-sem_lat_direct<-semGraph(Garden_sem_lat_direct, H=T,marg_y = 5,
-         curve_locs = list(c("NPP","Herbivory",4.6)));sem_lat_direct
-
-### Model 3 -- Lat direct on herby ----
-
-sem_lat_direct_herb<-semGraph(Garden_sem_lat_direct_herb, H=T,marg_y = 5,
-         node_locs = list("NPP"=c(0,-0.5),
-                          "Latitude"=c(0,-1),
-                          "Glycoalkaloids"=c(-1,.25),
-                          "SLA"=c(0,.25),
-                          "Trichomes"=c(1,.25)),
-         curve_locs = list(c("NPP","Herbivory",10.5),
-                           c("Latitude","Herbivory",-8.02)));sem_lat_direct_herb
-
-### Model 4 -- Lat direct  ----
-
-sem_lat_direct_all<-semGraph(Garden_sem_lat_direct_all, H=T,marg_y = 5,
-         curve_locs = list(c("NPP","Herbivory",4.6),
-                           c("Latitude","Herbivory",-4.7)));sem_lat_direct_all
-### Model 5 -- Lat direct w quad  ----
-
-sem_lat2<-semGraph(Garden_sem_lat2, H=T, marg_y = 4,
-         node_locs = list("Latitude (sq)"=c(1.3,1),
-                          "Glycoalkaloids"=c(-1.2,0),
-                          "Trichomes"=c(1.2,0)),
-         curve_locs = list(c("NPP","Herbivory",5.45),
-                           c("Latitude","Herbivory",-5.5)));sem_lat2
-
-hypotheses<-((sem_lat_indirect|sem_lat_direct_herb)/(sem_lat_direct|sem_lat_direct_all)/sem_lat2) +
-  plot_annotation(tag_levels = "A")
-
-
-ggsave("SEM_H.jpg",
-       device = "jpg",plot = hypotheses,
-       path = "Figures",dpi = 400,width = 10, 
-       height = 15,limitsize = F)
 
 # Figure 2: SEMs ----
-Field_sem<-semGraph(Field_sem_lat_direct, marg_y = 5,
-                    curve_locs = list(c("NPP","Herbivory",4.4)),
-                    node_locs = list("Glycoalkaloids"=c(-0.68,0),
-                                     "Trichomes"=c(0.68,0)),
-                    edge_locs = list(c("NPP","Glycoalkaloids",0.7),
-                                     c("Latitude","Trichomes",0.7),
-                                     c("NPP","Herbivory",0.6),
-                                     c("NPP","Trichomes",0.2),
-                                     c("Latitude","Glycoalkaloids",0.2)));Field_sem
+Field_semgraph<-semGraph(Field_sem, marg_y = 5,
+                         node_locs = list("Climate PC1"=c(-0.5,-1),
+                                          "Climate PC1 (sq)"=c(0.5,-1)),
+                         edge_locs = list(c("Climate PC1","Herbivory",0.65),
+                                          c("Climate PC1 (sq)","Herbivory",0.65),
+                                          c("Climate PC1 (sq)","Trichomes",0.3),
+                                          c("Climate PC1","Glycoalkaloids",0.3),
+                                          c("Climate PC1","Trichomes",0.8),
+                                          c("Climate PC1 (sq)","Glycoalkaloids",0.8)),
+                         curve_locs = list(c("Climate PC1","Herbivory",5.7),
+                                      c("Climate PC1 (sq)","Herbivory",-5.7)));Field_semgraph
 
-Garden_sem<-semGraph(Garden_sem_lat_indirect,marg_y = 5,
-                     node_locs = list("NPP"=c(0,-0.4),
-                                      "Latitude"=c(0,-1),
-                                      "Glycoalkaloids"=c(-0.1,0.25),
-                                      "SLA"=c(0,.25),
-                                      "Trichomes"=c(0.1,0.25)),
-                     curve_locs = list(c("NPP","Herbivory",11.4)),
-                     edge_locs = list(c("NPP","Glycoalkaloids",0.6),
-                                      c("NPP","Trichomes",0.6),
-                                      c("NPP","SLA",0.3),
-                                      c("NPP","Herbivory",0.65),
-                                      c("SLA","Herbivory",0.66)));Garden_sem
+Garden_semgraph<-semGraph(Garden_sem, marg_y = 5,
+                         node_locs = list("Climate PC1"=c(-0.5,-1),
+                                          "Climate PC1 (sq)"=c(0.5,-1)),
+                         edge_locs = list(c("Climate PC1","Herbivory",0.65),
+                                          c("Climate PC1 (sq)","Herbivory",0.65),
+                                          c("Climate PC1 (sq)","Trichomes",0.3),
+                                          c("Climate PC1","Glycoalkaloids",0.3),
+                                          c("Climate PC1","Trichomes",0.8),
+                                          c("Climate PC1 (sq)","Glycoalkaloids",0.8)),
+                         curve_locs = list(c("Climate PC1","Herbivory",5.7),
+                                           c("Climate PC1 (sq)","Herbivory",-5.7)));Garden_semgraph
 
-SEM_fig<-(Field_sem | Garden_sem)+plot_annotation(tag_levels = "A");SEM_fig
+SEM_fig<-(Field_semgraph | Garden_semgraph)+plot_annotation(tag_levels = "A");SEM_fig
 
 ggsave("SEM_R.jpg",
        device = "jpg",plot = SEM_fig,
@@ -355,17 +185,17 @@ ggsave("SEM_R.jpg",
 
 
 # Field climate versus trichomes
-ClimXtrich<-Custom_ggplot(predictor = "NPP_g",Trend = F)+
-  labs(y="Trichomes",x="NPP") +
+ClimXtrich<-Custom_ggplot(predictor = "Climate_PC1",Trend = T)+
+  labs(y="Trichomes",x="Climate PC1") +
   C_theme();ClimXtrich
 
-ClimXglyc<-Custom_ggplot(predictor = "NPP_g",response = "Conc", family = "gaussian",deg=1)+
-  labs(x="Productivity PC",y="Glycoalkaloids (mg/mg)") +
+ClimXglyc<-Custom_ggplot(predictor = "Climate_PC1",response = "Conc", family = "gaussian",deg=1)+
+  labs(x="Climate PC1",y="Glycoalkaloids (mg/mg)") +
   C_theme();ClimXglyc
 
 # Field climate versus Herbivores
-ClimsqXherb<-Custom_ggplot(predictor = "Productivity_sc",response = "herb_p", family = beta_family(),deg=2)+
-  labs(x="Productivity PC",y="Herbivory (%)") +
+ClimsqXherb<-Custom_ggplot(predictor = "Climate_PC1",response = "herb_p", family = beta_family(),deg=2)+
+  labs(x="Climate PC1",y="Herbivory (%)") +
   scale_y_continuous(labels = function(x) paste0(x * 100))+
   C_theme();ClimsqXherb
 
@@ -385,19 +215,19 @@ ggsave("Field_pan.jpg",
 ## Garden figure ----
 
 # Garden climate versus glycoalkaloids
-climXglyc<-Custom_ggplot(loc = "Garden",predictor = "Productivity_sc",response = "Conc", family = gaussian(link = "log"),deg=1,random = "+(1|Pop)")+
-  labs(x="Productivity PC",y="Glycoalkaloids (mg/mg)") +
+climXglyc<-Custom_ggplot(loc = "Garden",predictor = "Climate_PC1",response = "Conc", family = gaussian(link = "log"),deg=1,random = "+(1|Pop)")+
+  labs(x="Climate PC1",y="Glycoalkaloids (mg/mg)") +
   C_theme();climXglyc
 
 # Garden climate versus trichomes
-climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Productivity_sc",response = "Trichomes", family = gaussian(link = "log"),deg=2,random = "+(1|Pop)")+
-  labs(x="Productivity PC",y="Trichomes") +
+climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Climate_PC1",response = "Trichomes", family = gaussian(link = "log"),deg=2,random = "+(1|Pop)")+
+  labs(x="Climate PC1",y="Trichomes") +
   C_theme();climsqXtri_gard
 
-climsqXherb_gard<-Custom_ggplot(loc = "Garden",predictor = "Productivity_sc",response = "herb_p", 
+climsqXherb_gard<-Custom_ggplot(loc = "Garden",predictor = "Climate_PC1",response = "herb_p", 
                                 family = gaussian(link = "log"),deg=2,random = "+(1|Pop)",
                                 Trend = F)+
-  labs(x="Productivity PC",y="Herbivory (%)") +
+  labs(x="Climate PC1",y="Herbivory (%)") +
   scale_y_continuous(labels = function(x) paste0(x * 100))+
   C_theme();climsqXherb_gard
 
