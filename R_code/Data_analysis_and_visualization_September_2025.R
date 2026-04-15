@@ -43,27 +43,36 @@ PCbiplot(data1 = PCs %>% select(.,"MAT" ,"Tsd" ,"AP" ,"PWQ"))
 
 # SEM results ----
 ### Field ----
+### Model with nested pop within year ----
+summary(glmmTMB(Trichomes_t_sc ~ Climate_PC1_sc + Climate_PC1_sc_sq + 
+                  (1|Year/Pop), data = Data_prep()))
+
 Field_sem<-SEM_results(Prod = "",
                        lat_traits = "Climate_PC1_sc + Climate_PC1_sc_sq", 
                        lat_main = "Climate_PC1_sc + Climate_PC1_sc_sq",
                            model = c("lm1", "lm2", "lm3", "lm4"),
-                           random = "(1|Pop:Year)",year_ran="(1|Year)")
+                           main_ran = "(1|Year:Pop)",
+                           random = "(1|Year:Pop)",year_ran="(1|Year)")
 summary(Field_sem)
 
+AIC_psem(Field_sem,AIC.type = "dsep")
+
 ### Garden ----
-Garden_sem<-SEM_results(Prod = "", Loc = "Garden", main_ran = "(1|Pop)",
-                       lat_traits = "Climate_PC1_sc + Climate_PC1_sc_sq", 
-                       lat_main = "Climate_PC1_sc + Climate_PC1_sc_sq",
+Garden_sem<-SEM_results(Prod = "", Loc = "Garden", main_ran = "(1|Pop)", clim_t = T,
+                       lat_traits = "WeightedCD_sc + WeightedCD_sc_sq", 
+                       lat_main = "WeightedCD_sc + WeightedCD_sc_sq",
                        model = c("lm1", "lm2", "lm3", "lm4"),
                        random = "(1|Pop)",year_ran="", corError = list())
 summary(Garden_sem)
+
+AIC_psem(Garden_sem,AIC.type = "dsep")
 
 
 
 
 ## Figure 1: Maps ----
-Pop_info<-Data_prep(loc = "Field|Garden",group = c("Pop","Loc","Year")) %>% 
-               select(Pop,Year,Loc,NPP, herb_p,
+Pop_info<-Data_prep(loc = "Field|Garden",group = c("Pop","Loc","Year"), PopLevel = T) %>% 
+               select(Pop,Year,Loc,NPP, herb_p,NPP_y,
                       Climate_PC1,Longitude, Latitude,
                       Conc,SLA,Trichomes) %>% summarise(
     .by = c(Pop),
@@ -76,8 +85,18 @@ Pop_info<-Data_prep(loc = "Field|Garden",group = c("Pop","Loc","Year")) %>%
       n_distinct(Loc) == 2 ~ "Field & Garden",
       .default = first(Loc)
     ),
-    across(where(is.numeric), first)
+    across(where(is.numeric), first),
     )
+
+#### Plants per population summary ----
+Data_prep(loc = "Field|Garden",group = c("Pop","Loc","Year","Plant_ID"),
+                PopLevel = T) %>%
+  summarise(.by = c(Pop,Loc),
+            Plants = n()) %>% 
+  summarise(.by = Loc,
+                        Plants_mean=mean(Plants),
+                        Plants_sd=sd(Plants))
+
 
 tempdir<-tempdir()
 
@@ -113,7 +132,7 @@ map_clim<-ggplot() +
 
 pca<-PCbiplot(data1 = PCs %>% select(., all_of(c('MAT',
                                                'AP','PWQ',"Tsd"))),
-              font_size = 4,rot_x = -1) + C_theme(size=13);pca
+              font_size = 4,rot_x = -1,ext = 2) + C_theme(size=13);pca
 
 npp<-ggplot(data=Pop_info %>% filter(grepl("Field",Loc)), aes(x = Latitude, y = NPP)) +
   geom_point() + geom_smooth(method = "glm") + 
@@ -152,24 +171,24 @@ Field_semgraph<-semGraph(Field_sem, marg_y = 5,
                                           "Climate PC1 (sq)"=c(0.5,-1)),
                          edge_locs = list(c("Climate PC1","Herbivory",0.65),
                                           c("Climate PC1 (sq)","Herbivory",0.65),
-                                          c("Climate PC1 (sq)","Trichomes",0.3),
-                                          c("Climate PC1","Glycoalkaloids",0.3),
+                                          c("Climate PC1 (sq)","Trichomes",0.2),
+                                          c("Climate PC1","Glycoalkaloids",0.2),
                                           c("Climate PC1","Trichomes",0.8),
                                           c("Climate PC1 (sq)","Glycoalkaloids",0.8)),
                          curve_locs = list(c("Climate PC1","Herbivory",5.7),
                                       c("Climate PC1 (sq)","Herbivory",-5.7)));Field_semgraph
 
 Garden_semgraph<-semGraph(Garden_sem, marg_y = 5,
-                         node_locs = list("Climate PC1"=c(-0.5,-1),
-                                          "Climate PC1 (sq)"=c(0.5,-1)),
-                         edge_locs = list(c("Climate PC1","Herbivory",0.65),
-                                          c("Climate PC1 (sq)","Herbivory",0.65),
-                                          c("Climate PC1 (sq)","Trichomes",0.3),
-                                          c("Climate PC1","Glycoalkaloids",0.3),
-                                          c("Climate PC1","Trichomes",0.8),
-                                          c("Climate PC1 (sq)","Glycoalkaloids",0.8)),
-                         curve_locs = list(c("Climate PC1","Herbivory",5.7),
-                                           c("Climate PC1 (sq)","Herbivory",-5.7)));Garden_semgraph
+                          node_locs = list("Climate PC1"=c(-0.5,-1),
+                                           "Climate PC1 (sq)"=c(0.5,-1)),
+                          edge_locs = list(c("Climate PC1","Herbivory",0.65),
+                                           c("Climate PC1 (sq)","Herbivory",0.65),
+                                           c("Climate PC1 (sq)","Trichomes",0.2),
+                                           c("Climate PC1","Glycoalkaloids",0.2),
+                                           c("Climate PC1","Trichomes",0.8),
+                                           c("Climate PC1 (sq)","Glycoalkaloids",0.8)),
+                          curve_locs = list(c("Climate PC1","Herbivory",5.7),
+                                            c("Climate PC1 (sq)","Herbivory",-5.7)));Garden_semgraph
 
 SEM_fig<-(Field_semgraph | Garden_semgraph)+plot_annotation(tag_levels = "A");SEM_fig
 
@@ -185,7 +204,7 @@ ggsave("SEM_R.jpg",
 
 # Field climate versus trichomes
 ClimXtrich<-Custom_ggplot(predictor = "Climate_PC1",Trend = T)+
-  labs(y="Trichomes",x="Climate PC1") +
+  labs(y=expression("Trichomes (n/cm"^"2"*")"),x="Climate PC1") +
   C_theme();ClimXtrich
 
 ClimXglyc<-Custom_ggplot(predictor = "Climate_PC1",response = "Conc", family = "gaussian",deg=1)+
@@ -220,7 +239,7 @@ climXglyc<-Custom_ggplot(loc = "Garden",predictor = "Climate_PC1",response = "Co
 
 # Garden climate versus trichomes
 climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Climate_PC1",response = "Trichomes", family = gaussian(link = "log"),deg=2,random = "+(1|Pop)")+
-  labs(x="Climate PC1",y="Trichomes") +
+  labs(x="Climate PC1",y=expression("Trichomes (n/cm"^"2"*")")) +
   C_theme();climsqXtri_gard
 
 climsqXherb_gard<-Custom_ggplot(loc = "Garden",predictor = "Climate_PC1",response = "herb_p", 
@@ -281,6 +300,10 @@ Data_prep(loc="Garden|Field") %>%
   lm(value~Height*name*Loc,.,) %>% 
   emtrends(.,~name*Loc,var="Height",infer=T)
 
+
+# Figure S1: Correlation of NPP and the climate variables that we used ----
+ggplot(Pop_info, aes(x=Climate_PC1, y=NPP)) + 
+  geom_point()
   
   
 # Figure S2: Herbivory and phenology through time in the garden----
@@ -289,21 +312,22 @@ Pop_level<-Data_prep(loc = "Garden",byDate = T,
                      group = c('Pop','Date')) %>% 
   mutate(Flowering_p=flowers/count) 
 
-Leaves_time<-ggplot(Pop_level,aes(Date,Leaves,col=Pop)) +
-  geom_point(show.legend=F)+
-  geom_smooth(method="glm",show.legend=F,formula = y~poly(x,2),se=F)+
+Leaves_time<-ggplot(Pop_level %>% drop_na(Leaves),aes(Date,Leaves,group = Date)) +
+  geom_boxplot(outliers = F)+
+  geom_point(show.legend=F, position = position_jitter(width=1))+
   labs(y="Leaves")+
   C_theme(14);Leaves_time
 
-Flowers_time<-ggplot(Pop_level,aes(Date,Flowering_p,col=Pop)) +
-  geom_point(show.legend=F)+
-  geom_smooth(show.legend=F,se=F)+
+Flowers_time<-ggplot(Pop_level %>% drop_na(Flowering_p),
+                     aes(Date,Flowering_p,group = Date)) +
+  geom_boxplot(outliers = F)+
+  geom_point(show.legend=F, position = position_jitter(width=1))+
   labs(y='Proportion flowering')+
   C_theme(14);Flowers_time
 
-Herbivory_time<-ggplot(Pop_level,aes(Date,max_herb,col=Pop)) +
-  geom_point()+
-  geom_smooth(method="glm",se=F,formula = y~poly(x,2))+
+Herbivory_time<-ggplot(Pop_level,aes(Date,max_herb,group=Date)) +
+  geom_boxplot(outliers = F)+
+  geom_point(show.legend=F, position = position_jitter(width=1))+
   labs(y="Herbivory (%)")+
   scale_y_continuous(labels = function(x) paste0(x * 100))+
   C_theme(14);Herbivory_time
@@ -326,7 +350,7 @@ Herb_by_time<-function(herb='herb_p_t_sc',family.var='poisson',time="Early",ad_f
   
   Data<- rbind(Data,Data1)
   
-  model<-glmmTMB(as.formula(paste0(herb, '~ Climate_PC1_sc + Climate_PC1_sc_sq + (Trichomes_t_sc + Conc_t_sc + SLA_t_sc)',ad_form)),
+  model<-glmmTMB(as.formula(paste0(herb, '~ Climate_PC1_sc + Climate_PC1_sc_sq + (Trichomes_t_sc + Conc_t_sc + SLA_t_sc)',ad_form, " + (1|Pop)")),
                  family=family.var,data=Data)
   list(Data,model)
 }

@@ -18,7 +18,7 @@ transform_perc <- function(percentage_vec) {
 
 
 ## Data prep function ----
-Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
+Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,clim_t = T,
                     Treatment=F,Time.var='Mid',start_date="2023-06-15",
                     end_date="2023-07-29",byDate=F,group=NULL,...){
   
@@ -90,7 +90,7 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,
       SLA_t=log(SLA),
       Trichomes_t=log(Trichomes),
       herb_p_t=logit(herb_p),
-      Climate_PC1=-Clim_PC1,
+      Climate_PC1=if(clim_t == F) Clim_PC1 else -Clim_PC1,
       across(any_of(c("herb_p_t","Trichomes_t","SLA_t","Conc_t","Climate_PC1","Productivity","WeightedCD")), 
              ~as.numeric(scale(.,center = T)), .names = "{.col}_sc"),
       across(any_of(c("Latitude_sc","Climate_PC1_sc","WeightedCD_sc")), 
@@ -108,11 +108,11 @@ C_theme<-function(size=18){theme_bw(base_size = size)+
 
 
 ## SEM function ----
-SEM_results <- function(Loc = "Field", Prod = "", lat_prod="Latitude_sc",
+SEM_results <- function(Loc = "Field", Prod = "", lat_prod="Latitude_sc", clim_t = T,
                         lat_main=NULL, lat_traits=NULL, main="Trichomes_t_sc + Conc_t_sc + SLA_t_sc",
                         mod_fun='glmmTMB',
                         model = c("lm1", "lm2", "lm3", "lm4"), 
-                        random = "(1|Year/Pop)", year_ran = "", main_ran = "(1|Pop:Year)",
+                        random = "(1|Year:Pop)", year_ran = "", main_ran = "(1|Year:Pop)",
                         Time="mid", group="Plant_ID",
                         byDate=T,start_date="2023-06-15",end_date="2023-07-29",ICC=T,corError = list(
                           quote(SLA_t_sc %~~% Trichomes_t_sc),
@@ -136,7 +136,7 @@ SEM_results <- function(Loc = "Field", Prod = "", lat_prod="Latitude_sc",
   )
   
   DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,
-                                start_date = start_date, 
+                                start_date = start_date, clim_t = clim_t,
                                 end_date = end_date,group=group) %>% 
     select(all_of(c("Date",unique(unlist(lapply(formula_strings, function(fstr) {
       all.vars(as.formula(fstr))
@@ -290,7 +290,7 @@ semGraph<-function(fit=fit,node_locs=list(),
   # Convert to edgelist format (include all paths)
   edge_list <- as.matrix(edges[, c("Predictor", "Response")])
   weights <- edges$Std.Estimate  # Path coefficients as weights
-  p_values <- edges$P.Value  # P-values
+  p_values <- round(edges$P.Value,2)  # P-values
   
   # Change the response and predictor labels
   
@@ -311,7 +311,12 @@ semGraph<-function(fit=fit,node_locs=list(),
   
   # Define estimates as edge labels (rounded to 2 decimals)
   if (H) {edge_labels <- NULL
-  } else {  edge_labels <- paste0(round(weights, 3), " \u00B1 ", round(as.numeric(edges$Std.Error), 3))} 
+  } else {  edge_labels <- mapply(function(w, se, p) {
+    bquote(
+      atop(.(round(w, 2)) %+-% .(round(as.numeric(se), 2)),
+           italic(p) == .(p))
+    )
+  }, weights, edges$Std.Error, p_values)} 
 
   
   
@@ -395,7 +400,7 @@ semGraph<-function(fit=fit,node_locs=list(),
   # Plot with qgraph
   qgraph(edge_list, labels = node_names, directed = TRUE,
          edge.labels = edge_labels, edge.color = edge_colors, edge.width = edge_widths,
-         edge.label.cex = 1.4,
+         edge.label.cex = 1.2,
          lty = edge_lty, curve = curves, 
          edge.label.position = edge_label_locations, layout = layout_matrix,
          edge.label.bg = "white",curveShape = -1.5,
