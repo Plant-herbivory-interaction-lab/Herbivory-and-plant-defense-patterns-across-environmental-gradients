@@ -128,12 +128,8 @@ glyc_2023<-Samples %>%
 
 # Import field -----
 ## Field 2022 ----
-Field_2022<-read.csv("Data/Field_2022_traits.csv")%>% 
-  select(Date,Height,Herbivory,L_area,L_weight,Trichomes,
-         Latitude,Longitude,Collect_Label,Fl_herm,Fl_male,Height) %>% 
+Field_2022<-read.csv("Data/Field_2022_traits.csv") %>% 
   mutate(
-    fl_m=Fl_male,
-    fl_h=Fl_herm,
     Loc='Field',
     Leaves=NA,
     herb_p=Herbivory/100,
@@ -148,8 +144,7 @@ Field_2022<-read.csv("Data/Field_2022_traits.csv")%>%
     max_dist = 0.01, # tolerance in degrees (~11 m)
     distance_col = NULL
   ) %>% 
-  select(Pop,Date,Plant_ID,Loc,Time,Year,L_area,L_weight,Trichomes,
-         Conc,herb_p,fl_m,fl_h,Leaves,Height) %>% 
+  mutate(Pop=Pop.y) %>% 
   # Filtered data from the field collected late in the year.
   # This data does not change the outcome of the results, but the data isn't consistent with other herbivory data.
   # This data was collected when we collected the roots to be grown in the common garden.
@@ -158,18 +153,15 @@ Field_2022<-read.csv("Data/Field_2022_traits.csv")%>%
 ## Field 2023 ----
 Field_2023<-read.csv("Data/Field_2023_traits.csv") %>% 
   mutate(
-    fl_m=Fl_male,
-    fl_h=Fl_herm,
     Loc="Field",
     Time="2023",
     Year="2023",
+    Plant_ID=Plant_abr,
     herb_p=(Epitrix_herb+Chew_herb)/100,
     L_area=Leaf_Area,
     L_weight=Leaf_Weight,
     Date=as.Date(Date, format = "%m/%d/%y")
-  ) %>% left_join(glyc_2023) %>% 
-  select(Pop,Date,Plant_ID,Loc,Time,Year,L_area,L_weight,Trichomes,
-         Conc,herb_p,fl_m,fl_h,Leaves,Height)
+  ) %>% left_join(glyc_2023) 
 
 # Garden data ----
 Garden_2023<-glyc_2023 %>% 
@@ -210,18 +202,54 @@ Garden_2023<-glyc_2023 %>%
             include.lowest = TRUE, 
             right = FALSE)
   ) %>% 
-  drop_na(Date) %>% 
-  select(Pop,Date,Time,Plant_ID,Loc,Year,L_area,L_weight,Trichomes,
-         Conc,herb_p,fl_m,fl_h,Leaves,Height)
+  drop_na(Date) 
 
 # Combine data ----
-Combined_data<-rbind(Field_2022,Field_2023,Garden_2023) %>% 
+Combined_data<-rbind(Field_2022 %>% 
+                       select(Pop,Date,Time,Plant_ID,Loc,Year,L_area,L_weight,Trichomes,
+                              Conc,herb_p,Leaves,Height),
+                     Field_2023 %>% 
+                       select(Pop,Date,Time,Plant_ID,Loc,Year,L_area,L_weight,Trichomes,
+                              Conc,herb_p,Leaves,Height),
+                     Garden_2023 %>% 
+                       select(Pop,Date,Time,Plant_ID,Loc,Year,L_area,L_weight,Trichomes,
+                              Conc,herb_p,Leaves,Height)) %>% 
   drop_na(Trichomes,Conc,herb_p) %>% 
   mutate(SLA=L_area/L_weight) %>% 
   filter(Conc>0)
 
 write.csv(Combined_data,"Data/Combined_herbivory_and_trait_data.csv",row.names = F)
 
+# Herbivory data ----
+herbs<-rbind(Field_2022 %>% 
+  pivot_longer(cols = c("Leptinotarsa_juncta","Epitrix_fuscula"),
+               values_to = "Amount", names_to = "Species") %>% 
+  select(Pop,Loc,Date,Year,Plant_ID,Species,Amount),
+  
+  Field_2023 %>% 
+    pivot_longer(cols = c(Epitrix:Black_weevils,Spodoptera:Mealybug),
+                 values_to = "Amount", names_to = "Species") %>% 
+    select(Pop,Loc,Date,Year,Plant_ID,Species,Amount),
+  
+  Garden_2023 %>% 
+    mutate(across(starts_with("herb.n"), as.numeric)) %>%
+    pivot_longer(
+      cols = starts_with("herb."),
+      names_to = c(".value", "id"),
+      names_pattern = "herb\\.(sp|n)(\\d+)"
+    ) %>%
+    rename("Species" = sp,
+           "Amount" = n) %>% 
+    select(Pop,Loc,Date,Year,Plant_ID,Species,Amount)
+  
+) %>% drop_na(Amount) %>% filter(Amount>0) %>% 
+  mutate(Species=case_when(grepl("Epit",Species) ~ "Epitrix fuscula",
+                           grepl("Lepti",Species) ~ "Leptinotarsa juncta",
+                           grepl("Sped",Species) ~ "Spodoptera",
+                           grepl("Aphid",Species) ~ "Aphid",
+                           grepl("Spider",Species) ~ "Spider mite",
+                           .default = Species))
+write.csv(herbs,"Data/Combined_herbivores_data.csv",row.names = F)
 
 # Climate data ----
 coords<-rbind(read.csv("Data/Field_2023_pop_info.csv") %>% 

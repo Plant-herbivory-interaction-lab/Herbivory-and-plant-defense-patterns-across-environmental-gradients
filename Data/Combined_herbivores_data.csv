@@ -1,0 +1,728 @@
+"Pop","Loc","Date","Year","Plant_ID","Species","Amount"
+"I2","Field",2022-06-15,"2022","I2 - Plant 12","Leptinotarsa juncta",1
+"I3","Field",2022-06-15,"2022","I3 - Plant 5","Leptinotarsa juncta",1
+"I3","Field",2022-06-15,"2022","I3 - Plant 6","Leptinotarsa juncta",5
+"I3","Field",2022-06-15,"2022","I3 - Plant 15","Leptinotarsa juncta",1
+"N5","Field",2022-06-17,"2022","N5 - Plant 8","Epitrix fuscula",8
+"ARB","Field",2022-06-17,"2022","Plant-4-Arb","Epitrix fuscula",1
+"ARB","Field",2022-06-17,"2022","Plant-6-Arb","Epitrix fuscula",1
+"ARB","Field",2022-06-17,"2022","Plant-7-Arb","Epitrix fuscula",4
+"CAH","Field",2022-06-21,"2022","Plant-5-CAH","Epitrix fuscula",3
+"FLAT","Field",2022-06-23,"2022","Flat6","Epitrix fuscula",2
+"BR","Field",2022-06-21,"2022","BlackRiver1","Leptinotarsa juncta",1
+"BR","Field",2022-06-21,"2022","BlackRiver1","Epitrix fuscula",1
+"QUI","Field",2020-06-07,"2023","QUI-3","Leptinotarsa juncta",1
+"QUI","Field",2020-06-07,"2023","QUI-6","Black_weevils",1
+"QUI","Field",2020-06-07,"2023","QUI-8","Leptinotarsa juncta",21
+"QUI","Field",2020-06-07,"2023","QUI-14","Leptinotarsa juncta",4
+"QUI","Field",2020-06-07,"2023","QUI-16","Leptinotarsa juncta",4
+"QUI","Field",2020-06-07,"2023","QUI-17","Black_weevils",1
+"QUI","Field",2020-06-07,"2023","QUI-18","Leptinotarsa juncta",3
+"QUI","Field",2020-06-07,"2023","QUI-21","Leptinotarsa juncta",1
+"QUI","Field",2020-06-07,"2023","QUI-22","Leptinotarsa juncta",1
+"QUI","Field",2020-06-07,"2023","QUI-24","Leptinotarsa juncta",7
+"QUI","Field",2020-06-07,"2023","QUI-27","Leptinotarsa juncta",2
+"QUI","Field",2020-06-07,"2023","QUI-30","Leptinotarsa juncta",2
+"COO","Field",2020-06-08,"2023","COO-1","Epitrix fuscula",4
+"COO","Field",2020-06-08,"2023","COO-3","Epitrix fuscula",1
+"COO","Field",2020-06-08,"2023","COO-4","Epitrix fuscula",2
+"COO","Field",2020-06-08,"2023","COO-6","Epitrix fuscula",2
+"COO","Field",2020-06-08,"2023","COO-6","Torti_Beetle",1
+"COO","Field",2020-06-08,"2023","COO-9","Epitrix fuscula",2
+"COO","Field",2020-06-08,"2023","COO-11","Epitrix fuscula",1
+"COO","Field",2020-06-08,"2023","COO-12","Epitrix fuscula",2
+"COO","Field",2020-06-08,"2023","COO-13","Torti_Beetle",1
+"COO","Field",2020-06-08,"2023","COO-14","Epitrix fuscula",3
+"COO","Field",2020-06-08,"2023","COO-14","Torti_Beetle",1
+"COO","Field",2020-06-08,"2023","COO-15","Epitrix fuscula",2
+"COO","Field",2020-06-08,"2023","COO-16","Epitrix fuscula",1
+"COO","Field",2020-06-08,"2023","COO-17","Epitrix fuscula",1
+"COO","Field",2020-06-08,"2023","COO-19","Epitrix fuscula",1
+"COO","Field",2020-06-08,"2023","COO-22","Epitrix fuscula",2
+"COO","Field",2020-06-08,"2023","COO-22","Torti_Beetle",1
+"COO","Field",2020-06-08,"2023","COO-22","Black_weevils",2
+"COO","Field",2020-06-08,"2023","COO-24","Epitrix fuscula",2
+"COO","Field",2020-06-08,"2023","COO-24","Torti_Beetle",1
+"COO","Field",2020-06-08,"2023","COO-24","Black_weevils",1
+"COO","Field",2020-06-08,"2023","COO-25","Epitrix fuscula",1
+"COO","Field",2020-06-08,"2023","COO-26","Epitrix fuscula",2
+"COO","Field",2020-06-08,"2023","COO-27","Epitrix fuscula",3
+"COO","Field",2020-06-08,"2023","COO-28","Epitrix fuscula",3
+"COO","Field",2020-06-08,"2023","COO-30","Epitrix fuscula",4
+"DUDU","Field",2020-06-12,"2023","DUDU-13","Spider mite",2
+"DUDU","Field",2020-06-12,"2023","DUDU-21","Spider mite",2
+"DUDU","Field",2020-06-12,"2023","DUDU-22","Spider mite",1
+"SUW","Field",2020-06-14,"2023","SUW-1","Black_weevils",3
+"SUW","Field",2020-06-14,"2023","SUW-11","Black_weevils",3
+"SHE","Field",2020-06-29,"2023","SHE-3","Black_weevils",1
+"SHE","Field",2020-06-29,"2023","SHE-5","Epitrix fuscula",1
+"SHE","Field",2020-06-29,"2023","SHE-6","Torti_Beetle",1
+"SHE","Field",2020-06-29,"2023","SHE-6","Black_weevils",2
+"SHE","Field",2020-06-29,"2023","SHE-8","Epitrix fuscula",2
+"SHE","Field",2020-06-29,"2023","SHE-10","Epitrix fuscula",1
+"SHE","Field",2020-06-29,"2023","SHE-11","Epitrix fuscula",4
+"SHE","Field",2020-06-29,"2023","SHE-12","Torti_Beetle",1
+"SHE","Field",2020-06-29,"2023","SHE-13","Torti_Beetle",1
+"SHE","Field",2020-06-29,"2023","SHE-17","Epitrix fuscula",2
+"SHE","Field",2020-06-29,"2023","SHE-19","Black_weevils",5
+"SHE","Field",2020-06-29,"2023","SHE-23","Epitrix fuscula",1
+"SHE","Field",2020-06-29,"2023","SHE-25","Epitrix fuscula",1
+"SHE","Field",2020-06-29,"2023","SHE-29","Epitrix fuscula",1
+"KAN","Field",2020-06-27,"2023","KAN-7","Torti_Beetle",1
+"TAL","Field",2020-07-06,"2023","TAL-2","Black_weevils",2
+"TAL","Field",2020-07-06,"2023","TAL-4","Black_weevils",1
+"TAL","Field",2020-07-06,"2023","TAL-5","Black_weevils",1
+"TAL","Field",2020-07-06,"2023","TAL-9","Black_weevils",1
+"TAL","Field",2020-07-06,"2023","TAL-11","Black_weevils",1
+"TAL","Field",2020-07-06,"2023","TAL-12","Black_weevils",1
+"TAL","Field",2020-07-06,"2023","TAL-13","Spodoptera",1
+"TAL","Field",2020-07-06,"2023","TAL-14","Black_weevils",1
+"TAL","Field",2020-07-06,"2023","TAL-15","Black_weevils",1
+"TAL","Field",2020-07-06,"2023","TAL-16","Black_weevils",5
+"TAL","Field",2020-07-06,"2023","TAL-21","Leptinotarsa juncta",1
+"TAL","Field",2020-07-06,"2023","TAL-22","Leptinotarsa juncta",1
+"TAL","Field",2020-07-06,"2023","TAL-23","Black_weevils",2
+"OAK","Field",2020-06-27,"2023","OAK-6","Leafhopper",1
+"OAK","Field",2020-06-27,"2023","OAK-18","Epitrix fuscula",1
+"OAK","Field",2020-06-27,"2023","OAK-23","Epitrix fuscula",1
+"OAK","Field",2020-06-27,"2023","OAK-26","Epitrix fuscula",1
+"PLA","Field",2020-06-26,"2023","PLA-3","Black_weevils",1
+"PLA","Field",2020-06-26,"2023","PLA-4","Black_weevils",1
+"PLA","Field",2020-06-26,"2023","PLA-5","Epitrix fuscula",1
+"PLA","Field",2020-06-26,"2023","PLA-6","Epitrix fuscula",2
+"PLA","Field",2020-06-26,"2023","PLA-13","Black_weevils",1
+"PLA","Field",2020-06-26,"2023","PLA-15","Epitrix fuscula",1
+"PLA","Field",2020-06-26,"2023","PLA-15","Black_weevils",1
+"PLA","Field",2020-06-26,"2023","PLA-23","Black_weevils",1
+"PLA","Field",2020-06-26,"2023","PLA-29","Leafhopper",1
+"BEC","Field",2020-06-25,"2023","BEC-2","Epitrix fuscula",1
+"BEC","Field",2020-06-25,"2023","BEC-4","Epitrix fuscula",1
+"BEC","Field",2020-06-25,"2023","BEC-6","Black_weevils",1
+"BEC","Field",2020-06-25,"2023","BEC-9","Epitrix fuscula",1
+"BEC","Field",2020-06-25,"2023","BEC-11","Epitrix fuscula",4
+"BEC","Field",2020-06-25,"2023","BEC-12","Black_weevils",2
+"BEC","Field",2020-06-25,"2023","BEC-13","Black_weevils",1
+"BEC","Field",2020-06-25,"2023","BEC-16","Black_weevils",1
+"BEC","Field",2020-06-25,"2023","BEC-21","Epitrix fuscula",1
+"BEC","Field",2020-06-25,"2023","BEC-23","Epitrix fuscula",1
+"BEC","Field",2020-06-25,"2023","BEC-28","Epitrix fuscula",2
+"BEC","Field",2020-06-25,"2023","BEC-30","Epitrix fuscula",4
+"REF","Field",2020-06-23,"2023","REF-1","Mealybug",3
+"REF","Field",2020-06-23,"2023","REF-4","Mealybug",1
+"REF","Field",2020-06-23,"2023","REF-11","Mealybug",1
+"REF","Field",2020-06-23,"2023","REF-18","Mealybug",1
+"REF","Field",2020-06-23,"2023","REF-20","Mealybug",1
+"REF","Field",2020-06-23,"2023","REF-26","Mealybug",1
+"REF","Field",2020-06-23,"2023","REF-28","Black_weevils",1
+"GRE","Field",2020-06-22,"2023","GRE-2","Epitrix fuscula",1
+"GRE","Field",2020-06-22,"2023","GRE-4","Black_weevils",2
+"GRE","Field",2020-06-22,"2023","GRE-5","Epitrix fuscula",3
+"GRE","Field",2020-06-22,"2023","GRE-5","Leptinotarsa juncta",2
+"GRE","Field",2020-06-22,"2023","GRE-6","Epitrix fuscula",4
+"GRE","Field",2020-06-22,"2023","GRE-7","Epitrix fuscula",1
+"GRE","Field",2020-06-22,"2023","GRE-8","Epitrix fuscula",3
+"GRE","Field",2020-06-22,"2023","GRE-8","Black_weevils",1
+"GRE","Field",2020-06-22,"2023","GRE-9","Epitrix fuscula",1
+"GRE","Field",2020-06-22,"2023","GRE-11","Epitrix fuscula",2
+"GRE","Field",2020-06-22,"2023","GRE-13","Epitrix fuscula",1
+"GRE","Field",2020-06-22,"2023","GRE-15","Epitrix fuscula",4
+"GRE","Field",2020-06-22,"2023","GRE-20","Epitrix fuscula",3
+"GRE","Field",2020-06-22,"2023","GRE-21","Epitrix fuscula",1
+"GRE","Field",2020-06-22,"2023","GRE-23","Epitrix fuscula",4
+"GRE","Field",2020-06-22,"2023","GRE-24","Epitrix fuscula",2
+"GRE","Field",2020-06-22,"2023","GRE-26","Epitrix fuscula",1
+"GRE","Field",2020-06-22,"2023","GRE-27","Epitrix fuscula",1
+"ARB","Garden",2023-07-03,"2023","ARB-12A","White Fly",2
+"ARB","Garden",2023-07-10,"2023","ARB-12A","White Fly",2
+"ARB","Garden",2023-07-28,"2023","ARB-12A","Spodoptera",4
+"ARB","Garden",2023-08-03,"2023","ARB-12A","Mealybug",10
+"ARB","Garden",2023-08-07,"2023","ARB-12A","Mealybug",20
+"ARB","Garden",2023-08-07,"2023","ARB-12A","Spodoptera",2
+"ARB","Garden",2023-08-15,"2023","ARB-12A","Aphid",150
+"ARB","Garden",2023-08-15,"2023","ARB-12A","Mealybug",10
+"ARB","Garden",2023-05-31,"2023","ARB-7C","Meallybug",1
+"ARB","Garden",2023-06-05,"2023","ARB-7C","Caterpillar",1
+"ARB","Garden",2023-06-12,"2023","ARB-7C","Grasshopper",1
+"ARB","Garden",2023-06-20,"2023","ARB-7C","Egg",1
+"ARB","Garden",2023-07-03,"2023","ARB-7C","White Fly",1
+"ARB","Garden",2023-07-03,"2023","ARB-7C","Mealybug",5
+"ARB","Garden",2023-07-10,"2023","ARB-7C","Green caterpillar",1
+"ARB","Garden",2023-07-28,"2023","ARB-7C","Mealybug",100
+"ARB","Garden",2023-08-03,"2023","ARB-7C","Mealybug",150
+"ARB","Garden",2023-08-07,"2023","ARB-7C","Mealybug",150
+"ARB","Garden",2023-08-15,"2023","ARB-7C","Mealybug",100
+"ARB","Garden",2023-06-12,"2023","ARB-7D","Scales",3
+"ARB","Garden",2023-07-03,"2023","ARB-7D","White Fly",2
+"ARB","Garden",2023-07-03,"2023","ARB-7D","Scales",50
+"ARB","Garden",2023-07-28,"2023","ARB-7D","Stink bug",1
+"ARB","Garden",2023-08-03,"2023","ARB-7D","Grasshopper",1
+"ARB","Garden",2023-08-07,"2023","ARB-7D","Mealybug",30
+"ARB","Garden",2023-08-07,"2023","ARB-7D","White Fly",10
+"ARB","Garden",2023-08-15,"2023","ARB-7D","Mealybug",10
+"ARB","Garden",2023-08-15,"2023","ARB-7D","White fly",5
+"ARB","Garden",2023-06-05,"2023","ARB-7E","Caterpillar",2
+"ARB","Garden",2023-06-05,"2023","ARB-7E","Grasshopper",1
+"ARB","Garden",2023-07-03,"2023","ARB-7E","Grasshopper",1
+"ARB","Garden",2023-07-28,"2023","ARB-7E","Mealybug",1
+"ARB","Garden",2023-07-28,"2023","ARB-7E","Cicadellidae",1
+"ARB","Garden",2023-08-03,"2023","ARB-7E","Mealybug",15
+"ARB","Garden",2023-08-07,"2023","ARB-7E","Mealybug",20
+"ARB","Garden",2023-08-15,"2023","ARB-7E","Mealybug",40
+"ARB","Garden",2023-06-05,"2023","ARB-7F","Grasshopper",1
+"ARB","Garden",2023-06-05,"2023","ARB-7F","Spider mite",1
+"ARB","Garden",2023-06-05,"2023","ARB-7F","White Fly",1
+"ARB","Garden",2023-06-12,"2023","ARB-7F","Spider mite",10
+"ARB","Garden",2023-06-12,"2023","ARB-7F","White Fly",1
+"ARB","Garden",2023-07-03,"2023","ARB-7F","Mealybug",1
+"ARB","Garden",2023-07-10,"2023","ARB-7F","Grasshopper",1
+"ARB","Garden",2023-07-10,"2023","ARB-7F","Mealybug",5
+"ARB","Garden",2023-07-17,"2023","ARB-7F","Grasshopper",1
+"ARB","Garden",2023-07-28,"2023","ARB-7F","Mealybug",50
+"ARB","Garden",2023-08-03,"2023","ARB-7F","Mealybug",100
+"ARB","Garden",2023-08-07,"2023","ARB-7F","Mealybug",70
+"ARB","Garden",2023-08-15,"2023","ARB-7F","Mealybug",200
+"ARB","Garden",2023-07-03,"2023","ARB-8A","White Fly",1
+"ARB","Garden",2023-07-03,"2023","ARB-8A","Scales",5
+"ARB","Garden",2023-07-17,"2023","ARB-8A","Spodoptera",3
+"ARB","Garden",2023-07-28,"2023","ARB-8A","Mealybug",10
+"ARB","Garden",2023-07-28,"2023","ARB-8A","White Fly",1
+"ARB","Garden",2023-08-03,"2023","ARB-8A","Mealybug",10
+"ARB","Garden",2023-08-07,"2023","ARB-8A","Mealybug",20
+"ARB","Garden",2023-08-15,"2023","ARB-8A","Mealybug",80
+"ARB","Garden",2023-08-15,"2023","ARB-8A","White fly",3
+"BR","Garden",2023-07-28,"2023","BR-1E","Mealybug",70
+"BR","Garden",2023-08-03,"2023","BR-1E","Mealybug",20
+"BR","Garden",2023-08-07,"2023","BR-1E","Mealybug",30
+"BR","Garden",2023-08-07,"2023","BR-1E","White Fly",5
+"BR","Garden",2023-08-15,"2023","BR-1E","Mealybug",20
+"BR","Garden",2023-07-03,"2023","BR-1H","Mealybug",1
+"BR","Garden",2023-07-10,"2023","BR-1H","Mealybug",1
+"BR","Garden",2023-07-17,"2023","BR-1H","Mealybug",3
+"BR","Garden",2023-07-28,"2023","BR-1H","Mealybug",20
+"BR","Garden",2023-08-03,"2023","BR-1H","Mealybug",10
+"BR","Garden",2023-08-07,"2023","BR-1H","Mealybug",8
+"BR","Garden",2023-08-15,"2023","BR-1H","Mealybug",50
+"CAH","Garden",2023-06-29,"2023","CAH-14A","Spodoptera",1
+"CAH","Garden",2023-07-03,"2023","CAH-14A","White Fly",3
+"CAH","Garden",2023-07-28,"2023","CAH-14A","Mealybug",20
+"CAH","Garden",2023-08-07,"2023","CAH-14A","Mealybug",40
+"CAH","Garden",2023-08-15,"2023","CAH-14A","Mealybug",50
+"CAH","Garden",2023-07-03,"2023","CAH-14B","White Fly",1
+"CAH","Garden",2023-07-28,"2023","CAH-14B","Mealybug",30
+"CAH","Garden",2023-08-03,"2023","CAH-14B","Stink bug",1
+"CAH","Garden",2023-08-03,"2023","CAH-14B","White Fly",5
+"CAH","Garden",2023-08-07,"2023","CAH-14B","Mealybug",25
+"CAH","Garden",2023-08-15,"2023","CAH-14B","Mealybug",20
+"CAH","Garden",2023-08-15,"2023","CAH-14B","White fly",10
+"CAH","Garden",2023-06-05,"2023","CAH-5C","Cidadelldae",1
+"CAH","Garden",2023-07-10,"2023","CAH-5C","White Fly",1
+"CAH","Garden",2023-07-28,"2023","CAH-5C","Spodoptera",2
+"CAH","Garden",2023-07-28,"2023","CAH-5C","Mealybug",10
+"CAH","Garden",2023-08-03,"2023","CAH-5C","Caterpillar",2
+"CAH","Garden",2023-08-07,"2023","CAH-5C","Mealybug",3
+"CAH","Garden",2023-08-07,"2023","CAH-5C","Spodoptera",1
+"CAH","Garden",2023-08-07,"2023","CAH-5C","Stink bug",1
+"CAH","Garden",2023-08-15,"2023","CAH-5C","Mealybug",7
+"CAH","Garden",2023-08-15,"2023","CAH-5C","White fly",5
+"CAH","Garden",2023-06-12,"2023","CAH-8A","Caterpillar",1
+"CAH","Garden",2023-07-03,"2023","CAH-8A","White Fly",1
+"CAH","Garden",2023-07-03,"2023","CAH-8A","Mealybug",1
+"CAH","Garden",2023-07-10,"2023","CAH-8A","Mealybug",3
+"CAH","Garden",2023-07-28,"2023","CAH-8A","Mealybug",30
+"CAH","Garden",2023-08-03,"2023","CAH-8A","Caterpillar",1
+"CAH","Garden",2023-08-03,"2023","CAH-8A","Mealybug",5
+"CAH","Garden",2023-08-07,"2023","CAH-8A","Mealybug",100
+"CAH","Garden",2023-08-15,"2023","CAH-8A","Mealybug",200
+"CAH","Garden",2023-08-15,"2023","CAH-8A","White fly",7
+"CAH","Garden",2023-06-05,"2023","CAH-8C","Caterpillar",2
+"CAH","Garden",2023-06-12,"2023","CAH-8C","Caterpillar",2
+"CAH","Garden",2023-07-10,"2023","CAH-8C","White Fly",1
+"CAH","Garden",2023-08-03,"2023","CAH-8C","White Fly",3
+"CAH","Garden",2023-08-07,"2023","CAH-8C","Mealybug",20
+"CAH","Garden",2023-08-15,"2023","CAH-8C","Mealybug",30
+"CAH","Garden",2023-08-15,"2023","CAH-8C","White fly",5
+"CAH","Garden",2023-06-05,"2023","CAH-8E","Caterpillar",2
+"CAH","Garden",2023-06-05,"2023","CAH-8E","White Fly",1
+"CAH","Garden",2023-06-12,"2023","CAH-8E","Caterpillar",2
+"CAH","Garden",2023-07-28,"2023","CAH-8E","Mealybug",10
+"CAH","Garden",2023-07-28,"2023","CAH-8E","Stink bug",1
+"CAH","Garden",2023-08-03,"2023","CAH-8E","Caterpillar",1
+"CAH","Garden",2023-08-07,"2023","CAH-8E","Mealybug",15
+"CAH","Garden",2023-08-07,"2023","CAH-8E","Grasshopper",1
+"CAH","Garden",2023-08-15,"2023","CAH-8E","Cicadelidae",1
+"CAH","Garden",2023-08-15,"2023","CAH-8E","Mealybug",70
+"CAH","Garden",2023-08-15,"2023","CAH-8E","White fly",2
+"DUDU","Garden",2023-05-31,"2023","DUDU-1A","Caterpillar",1
+"DUDU","Garden",2023-07-28,"2023","DUDU-1A","Mealybug",3
+"DUDU","Garden",2023-08-03,"2023","DUDU-1A","White Fly",8
+"DUDU","Garden",2023-08-07,"2023","DUDU-1A","Mealybug",4
+"DUDU","Garden",2023-08-07,"2023","DUDU-1A","White Fly",3
+"DUDU","Garden",2023-08-15,"2023","DUDU-1A","White fly",5
+"DUDU","Garden",2023-08-15,"2023","DUDU-1A","Mealybug",2
+"DUDU","Garden",2023-07-28,"2023","DUDU-1C","Mealybug",20
+"DUDU","Garden",2023-08-03,"2023","DUDU-1C","Mealybug",3
+"DUDU","Garden",2023-08-03,"2023","DUDU-1C","White Fly",1
+"DUDU","Garden",2023-08-07,"2023","DUDU-1C","Mealybug",50
+"DUDU","Garden",2023-08-15,"2023","DUDU-1C","White fly",3
+"DUDU","Garden",2023-08-15,"2023","DUDU-1C","Mealybug",80
+"DUDU","Garden",2023-07-28,"2023","DUDU-3D","Mealybug",5
+"DUDU","Garden",2023-08-03,"2023","DUDU-3D","White Fly",3
+"DUDU","Garden",2023-08-07,"2023","DUDU-3D","Mealybug",30
+"DUDU","Garden",2023-08-07,"2023","DUDU-3D","Stink bug",1
+"DUDU","Garden",2023-08-15,"2023","DUDU-3D","Spodoptera",4
+"DUDU","Garden",2023-08-15,"2023","DUDU-3D","Mealybug",20
+"DUDU","Garden",2023-06-12,"2023","DUDU-7A","White Fly",1
+"DUDU","Garden",2023-07-03,"2023","DUDU-7A","White Fly",2
+"DUDU","Garden",2023-07-28,"2023","DUDU-7A","Mealybug",15
+"DUDU","Garden",2023-08-07,"2023","DUDU-7A","Mealybug",30
+"DUDU","Garden",2023-08-15,"2023","DUDU-7A","White fly",2
+"DUDU","Garden",2023-08-15,"2023","DUDU-7A","Mealybug",30
+"DUDU","Garden",2023-06-05,"2023","DUDU-7C","Mealybug",2
+"DUDU","Garden",2023-06-05,"2023","DUDU-7C","Caterpillar",1
+"DUDU","Garden",2023-06-12,"2023","DUDU-7C","Mealybug",1
+"DUDU","Garden",2023-07-03,"2023","DUDU-7C","Mealybug",20
+"DUDU","Garden",2023-07-10,"2023","DUDU-7C","Mealybug",15
+"DUDU","Garden",2023-07-28,"2023","DUDU-7C","Mealybug",500
+"DUDU","Garden",2023-08-03,"2023","DUDU-7C","Mealybug",500
+"DUDU","Garden",2023-08-07,"2023","DUDU-7C","Mealybug",150
+"DUDU","Garden",2023-08-15,"2023","DUDU-7C","White fly",3
+"DUDU","Garden",2023-08-15,"2023","DUDU-7C","Mealybug",100
+"DUDU","Garden",2023-07-03,"2023","DUDU-7E","Mealybug",40
+"DUDU","Garden",2023-07-10,"2023","DUDU-7E","Mealybug",50
+"DUDU","Garden",2023-07-17,"2023","DUDU-7E","Mealybug",50
+"DUDU","Garden",2023-07-28,"2023","DUDU-7E","Mealybug",200
+"DUDU","Garden",2023-08-03,"2023","DUDU-7E","Mealybug",500
+"DUDU","Garden",2023-08-07,"2023","DUDU-7E","Mealybug",200
+"DUDU","Garden",2023-08-15,"2023","DUDU-7E","White fly",3
+"DUDU","Garden",2023-08-15,"2023","DUDU-7E","Mealybug",300
+"FLAT","Garden",2023-05-31,"2023","FLAT-1A","Spodoptera",1
+"FLAT","Garden",2023-06-05,"2023","FLAT-1A","Caterpillar",3
+"FLAT","Garden",2023-06-29,"2023","FLAT-1A","Meallybug",7
+"FLAT","Garden",2023-07-03,"2023","FLAT-1A","Mormidea lugens",1
+"FLAT","Garden",2023-07-03,"2023","FLAT-1A","Scales",5
+"FLAT","Garden",2023-07-10,"2023","FLAT-1A","White Fly",2
+"FLAT","Garden",2023-07-17,"2023","FLAT-1A","Mealybug",5
+"FLAT","Garden",2023-07-17,"2023","FLAT-1A","Spodoptera",1
+"FLAT","Garden",2023-07-28,"2023","FLAT-1A","Mealybug",30
+"FLAT","Garden",2023-07-28,"2023","FLAT-1A","Spodoptera",1
+"FLAT","Garden",2023-08-03,"2023","FLAT-1A","Caterpillar",1
+"FLAT","Garden",2023-08-03,"2023","FLAT-1A","Mealybug",50
+"FLAT","Garden",2023-08-07,"2023","FLAT-1A","Mealybug",30
+"FLAT","Garden",2023-08-15,"2023","FLAT-1A","Mealybug",30
+"FLAT","Garden",2023-08-15,"2023","FLAT-1A","White fly",5
+"FLAT","Garden",2023-05-31,"2023","FLAT-1B","Caterpillar",1
+"FLAT","Garden",2023-07-03,"2023","FLAT-1B","Mealybug",2
+"FLAT","Garden",2023-07-10,"2023","FLAT-1B","Mealybug",1
+"FLAT","Garden",2023-07-17,"2023","FLAT-1B","Mealybug",3
+"FLAT","Garden",2023-07-28,"2023","FLAT-1B","Mealybug",30
+"FLAT","Garden",2023-07-28,"2023","FLAT-1B","Spodoptera",1
+"FLAT","Garden",2023-08-03,"2023","FLAT-1B","Mealybug",200
+"FLAT","Garden",2023-08-07,"2023","FLAT-1B","Mealybug",20
+"FLAT","Garden",2023-08-15,"2023","FLAT-1B","White fly",3
+"FLAT","Garden",2023-06-29,"2023","FLAT-3A","Meallybug",7
+"FLAT","Garden",2023-07-10,"2023","FLAT-3A","Green caterpillar",1
+"FLAT","Garden",2023-07-17,"2023","FLAT-3A","Mealybug",10
+"FLAT","Garden",2023-07-28,"2023","FLAT-3A","Mealybug",40
+"FLAT","Garden",2023-08-03,"2023","FLAT-3A","Mealybug",10
+"FLAT","Garden",2023-08-07,"2023","FLAT-3A","Mealybug",20
+"FLAT","Garden",2023-08-15,"2023","FLAT-3A","White fly",3
+"FLAT","Garden",2023-08-15,"2023","FLAT-3A","Mealybug",20
+"FLAT","Garden",2023-07-03,"2023","FLAT-5A","White Fly",1
+"FLAT","Garden",2023-07-10,"2023","FLAT-5A","Mealybug",5
+"FLAT","Garden",2023-07-17,"2023","FLAT-5A","Spodoptera",4
+"FLAT","Garden",2023-07-17,"2023","FLAT-5A","Mealybug",2
+"FLAT","Garden",2023-07-28,"2023","FLAT-5A","Mealybug",20
+"FLAT","Garden",2023-08-03,"2023","FLAT-5A","Mealybug",15
+"FLAT","Garden",2023-08-07,"2023","FLAT-5A","Mealybug",40
+"FLAT","Garden",2023-08-15,"2023","FLAT-5A","White fly",3
+"FLAT","Garden",2023-08-15,"2023","FLAT-5A","Mealybug",10
+"HIX","Garden",2023-06-12,"2023","HIX-1D","Scales",10
+"HIX","Garden",2023-07-03,"2023","HIX-1D","Mealybug",3
+"HIX","Garden",2023-07-03,"2023","HIX-1D","Scales",20
+"HIX","Garden",2023-07-28,"2023","HIX-1D","Mealybug",20
+"HIX","Garden",2023-08-07,"2023","HIX-1D","Mealybug",3
+"HIX","Garden",2023-08-15,"2023","HIX-1D","Mealybug",7
+"HIX","Garden",2023-08-15,"2023","HIX-1D","White fly",3
+"HIX","Garden",2023-08-15,"2023","HIX-1D","Pentitanidae",1
+"HIX","Garden",2023-06-05,"2023","HIX-1E","Scales",3
+"HIX","Garden",2023-07-03,"2023","HIX-1E","White Fly",1
+"HIX","Garden",2023-07-03,"2023","HIX-1E","Leafhopper",1
+"HIX","Garden",2023-07-10,"2023","HIX-1E","White Fly",1
+"HIX","Garden",2023-07-17,"2023","HIX-1E","Mealybug",4
+"HIX","Garden",2023-07-28,"2023","HIX-1E","Stinkbug",4
+"HIX","Garden",2023-08-03,"2023","HIX-1E","Mealybug",10
+"HIX","Garden",2023-08-07,"2023","HIX-1E","Mealybug",50
+"HIX","Garden",2023-08-15,"2023","HIX-1E","Spodoptera",1
+"HIX","Garden",2023-08-15,"2023","HIX-1E","White fly",5
+"HIX","Garden",2023-08-15,"2023","HIX-1E","Mealybug",7
+"HIX","Garden",2023-05-31,"2023","HIX-1G","Mealybug",1
+"HIX","Garden",2023-06-05,"2023","HIX-1G","Caterpillar",1
+"HIX","Garden",2023-06-12,"2023","HIX-1G","Caterpillar",2
+"HIX","Garden",2023-07-03,"2023","HIX-1G","White Fly",1
+"HIX","Garden",2023-07-17,"2023","HIX-1G","Mealybug",5
+"HIX","Garden",2023-07-28,"2023","HIX-1G","Mealybug",5
+"HIX","Garden",2023-08-03,"2023","HIX-1G","Mealybug",10
+"HIX","Garden",2023-08-03,"2023","HIX-1G","White Fly",2
+"HIX","Garden",2023-08-07,"2023","HIX-1G","Mealybug",20
+"HIX","Garden",2023-08-07,"2023","HIX-1G","White Fly",3
+"HIX","Garden",2023-08-15,"2023","HIX-1G","White fly",3
+"HIX","Garden",2023-08-15,"2023","HIX-1G","Mealybug",60
+"HIX","Garden",2023-06-05,"2023","HIX-3E","Mealybug",1
+"HIX","Garden",2023-06-12,"2023","HIX-3E","Mealybug",1
+"HIX","Garden",2023-07-10,"2023","HIX-3E","Green caterpillar",1
+"HIX","Garden",2023-07-28,"2023","HIX-3E","Mealybug",5
+"HIX","Garden",2023-07-28,"2023","HIX-3E","Spodoptera",1
+"HIX","Garden",2023-08-03,"2023","HIX-3E","Mealybug",5
+"HIX","Garden",2023-08-07,"2023","HIX-3E","Mealybug",2
+"HIX","Garden",2023-08-15,"2023","HIX-3E","White fly",3
+"HIX","Garden",2023-08-15,"2023","HIX-3E","Mealybug",10
+"I1","Garden",2023-06-05,"2023","I1-3B","Caterpillar",6
+"I1","Garden",2023-07-10,"2023","I1-3B","White Fly",1
+"I1","Garden",2023-07-28,"2023","I1-3B","Mealybug",15
+"I1","Garden",2023-08-07,"2023","I1-3B","Mealybug",7
+"I1","Garden",2023-08-07,"2023","I1-3B","Spodoptera",2
+"I1","Garden",2023-08-15,"2023","I1-3B","Mealybug",150
+"I1","Garden",2023-08-15,"2023","I1-3B","White fly",3
+"I1","Garden",2023-07-03,"2023","I1-5B","Mealybug",2
+"I1","Garden",2023-07-10,"2023","I1-5B","Mealybug",1
+"I1","Garden",2023-07-28,"2023","I1-5B","Mealybug",15
+"I1","Garden",2023-08-07,"2023","I1-5B","Mealybug",25
+"I1","Garden",2023-08-15,"2023","I1-5B","Mealybug",25
+"I1","Garden",2023-08-15,"2023","I1-5B","White fly",4
+"I1","Garden",2023-05-31,"2023","I1-6A","Caterpillar",1
+"I1","Garden",2023-06-29,"2023","I1-6A","Spodoptera",1
+"I1","Garden",2023-06-29,"2023","I1-6A","Caterpillar",1
+"I1","Garden",2023-07-03,"2023","I1-6A","Mealybug",2
+"I1","Garden",2023-07-10,"2023","I1-6A","White Fly",1
+"I1","Garden",2023-07-17,"2023","I1-6A","White Fly",1
+"I1","Garden",2023-07-28,"2023","I1-6A","Mealybug",10
+"I1","Garden",2023-08-07,"2023","I1-6A","Mealybug",15
+"I1","Garden",2023-08-15,"2023","I1-6A","Mealybug",30
+"I2","Garden",2023-05-31,"2023","I2-1A","Caterpillar",1
+"I2","Garden",2023-06-05,"2023","I2-1A","Caterpillar",2
+"I2","Garden",2023-06-29,"2023","I2-1A","Mealybug",35
+"I2","Garden",2023-07-03,"2023","I2-1A","Mealybug",10
+"I2","Garden",2023-07-10,"2023","I2-1A","Mealybug",8
+"I2","Garden",2023-07-17,"2023","I2-1A","Mealybug",20
+"I2","Garden",2023-08-03,"2023","I2-1A","Mealybug",25
+"I2","Garden",2023-08-07,"2023","I2-1A","Mealybug",150
+"I2","Garden",2023-08-15,"2023","I2-1A","Mealybug",10
+"I2","Garden",2023-08-15,"2023","I2-1A","White fly",2
+"I2","Garden",2023-08-15,"2023","I2-1A","Spodoptera",1
+"I2","Garden",2023-05-31,"2023","I2-1B","Mealybug",2
+"I2","Garden",2023-06-12,"2023","I2-1B","Mealybug",4
+"I2","Garden",2023-06-20,"2023","I2-1B","Meallybug",80
+"I2","Garden",2023-07-03,"2023","I2-1B","Mealybug",50
+"I2","Garden",2023-07-10,"2023","I2-1B","Caterpillar",1
+"I2","Garden",2023-07-10,"2023","I2-1B","Mealybug",50
+"I2","Garden",2023-07-17,"2023","I2-1B","Mealybug",100
+"I2","Garden",2023-07-28,"2023","I2-1B","Mealybug",150
+"I2","Garden",2023-08-03,"2023","I2-1B","Mealybug",300
+"I2","Garden",2023-08-07,"2023","I2-1B","Mealybug",300
+"I2","Garden",2023-08-15,"2023","I2-1B","White fly",2
+"I2","Garden",2023-07-03,"2023","I2-7B","Mealybug",15
+"I2","Garden",2023-07-10,"2023","I2-7B","Caterpillar",1
+"I2","Garden",2023-07-10,"2023","I2-7B","Mealybug",20
+"I2","Garden",2023-07-17,"2023","I2-7B","Mealybug",100
+"I2","Garden",2023-07-28,"2023","I2-7B","Mealybug",200
+"I2","Garden",2023-08-03,"2023","I2-7B","Mealybug",20
+"I2","Garden",2023-08-07,"2023","I2-7B","Mealybug",20
+"I2","Garden",2023-08-15,"2023","I2-7B","White fly",5
+"I3","Garden",2023-06-05,"2023","I3-3C","Caterpillar",4
+"I3","Garden",2023-06-29,"2023","I3-3C","Mealybug",1
+"I3","Garden",2023-07-03,"2023","I3-3C","Mealybug",1
+"I3","Garden",2023-07-28,"2023","I3-3C","Mealybug",10
+"I3","Garden",2023-08-03,"2023","I3-3C","Mealybug",5
+"I3","Garden",2023-08-07,"2023","I3-3C","Mealybug",15
+"I3","Garden",2023-08-07,"2023","I3-3C","White Fly",5
+"I3","Garden",2023-08-15,"2023","I3-3C","Mealybug",20
+"I3","Garden",2023-06-05,"2023","I3-5C","Scales",3
+"I3","Garden",2023-07-17,"2023","I3-5C","Spodoptera",1
+"I3","Garden",2023-07-28,"2023","I3-5C","Mealybug",4
+"I3","Garden",2023-07-28,"2023","I3-5C","Stink bug",2
+"I3","Garden",2023-08-03,"2023","I3-5C","Mealybug",10
+"I3","Garden",2023-08-07,"2023","I3-5C","Mealybug",8
+"I3","Garden",2023-08-07,"2023","I3-5C","Cicadellidae",2
+"I3","Garden",2023-08-15,"2023","I3-5C","Mealybug",120
+"I3","Garden",2023-06-05,"2023","I3-6C","Scales",6
+"I3","Garden",2023-06-05,"2023","I3-6C","White Fly",1
+"I3","Garden",2023-07-03,"2023","I3-6C","Mealybug",1
+"I3","Garden",2023-07-10,"2023","I3-6C","Mealybug",2
+"I3","Garden",2023-07-17,"2023","I3-6C","Mealybug",2
+"I3","Garden",2023-07-28,"2023","I3-6C","Mealybug",15
+"I3","Garden",2023-08-03,"2023","I3-6C","Mealybug",10
+"I3","Garden",2023-08-03,"2023","I3-6C","White Fly",5
+"I3","Garden",2023-08-07,"2023","I3-6C","Mealybug",10
+"I3","Garden",2023-08-15,"2023","I3-6C","Mealybug",20
+"I3","Garden",2023-08-15,"2023","I3-6C","Aphid",50
+"I3","Garden",2023-05-31,"2023","I3-6D","Spodoptera",1
+"I3","Garden",2023-06-05,"2023","I3-6D","Mealybug",5
+"I3","Garden",2023-06-12,"2023","I3-6D","Mealybug",2
+"I3","Garden",2023-07-28,"2023","I3-6D","Mealybug",2
+"I3","Garden",2023-08-03,"2023","I3-6D","Mealybug",10
+"I3","Garden",2023-08-07,"2023","I3-6D","Mealybug",7
+"I3","Garden",2023-08-15,"2023","I3-6D","Mealybug",150
+"I3","Garden",2023-08-15,"2023","I3-6D","Aphid",50
+"I3","Garden",2023-08-15,"2023","I3-6D","Spodoptera",1
+"ICH","Garden",2023-06-12,"2023","ICH-3A","White Fly",1
+"ICH","Garden",2023-07-10,"2023","ICH-3A","White Fly",2
+"ICH","Garden",2023-07-28,"2023","ICH-3A","Mealybug",5
+"ICH","Garden",2023-08-15,"2023","ICH-3A","Mealybug",10
+"ICH","Garden",2023-07-28,"2023","ICH-5A","Mealybug",30
+"ICH","Garden",2023-08-03,"2023","ICH-5A","Caterpillar",1
+"ICH","Garden",2023-08-07,"2023","ICH-5A","Mealybug",10
+"ICH","Garden",2023-08-07,"2023","ICH-5A","Spodoptera",1
+"ICH","Garden",2023-08-15,"2023","ICH-5A","Mealybug",30
+"ICH","Garden",2023-07-03,"2023","ICH-6A","White Fly",1
+"ICH","Garden",2023-07-28,"2023","ICH-6A","Mealybug",5
+"ICH","Garden",2023-07-28,"2023","ICH-6A","Spodoptera",1
+"ICH","Garden",2023-08-07,"2023","ICH-6A","Mealybug",15
+"ICH","Garden",2023-08-15,"2023","ICH-6A","Mealybug",15
+"ICH","Garden",2023-08-15,"2023","ICH-6A","White fly",10
+"MOR","Garden",2023-06-05,"2023","MOR-1D","White Fly",1
+"MOR","Garden",2023-06-29,"2023","MOR-1D","Meallybug",7
+"MOR","Garden",2023-07-03,"2023","MOR-1D","Mealybug",3
+"MOR","Garden",2023-07-10,"2023","MOR-1D","Green caterpillar",1
+"MOR","Garden",2023-07-10,"2023","MOR-1D","Mealybug",5
+"MOR","Garden",2023-07-17,"2023","MOR-1D","Mealybug",10
+"MOR","Garden",2023-07-17,"2023","MOR-1D","Spodoptera",1
+"MOR","Garden",2023-07-28,"2023","MOR-1D","Mealybug",50
+"MOR","Garden",2023-08-03,"2023","MOR-1D","Mealybug",75
+"MOR","Garden",2023-08-07,"2023","MOR-1D","Mealybug",50
+"MOR","Garden",2023-08-07,"2023","MOR-1D","Spodoptera",2
+"MOR","Garden",2023-08-15,"2023","MOR-1D","Mealybug",10
+"MOR","Garden",2023-08-15,"2023","MOR-1D","White fly",3
+"MOR","Garden",2023-07-03,"2023","MOR-4E","Mealybug",5
+"MOR","Garden",2023-07-10,"2023","MOR-4E","Mealybug",1
+"MOR","Garden",2023-07-17,"2023","MOR-4E","Mealybug",20
+"MOR","Garden",2023-07-28,"2023","MOR-4E","Mealybug",60
+"MOR","Garden",2023-08-03,"2023","MOR-4E","Mealybug",50
+"MOR","Garden",2023-08-07,"2023","MOR-4E","Mealybug",200
+"MOR","Garden",2023-08-15,"2023","MOR-4E","White fly",5
+"MOR","Garden",2023-08-15,"2023","MOR-4E","Mealybug",20
+"MOR","Garden",2023-05-31,"2023","MOR-4F","Myridae",1
+"MOR","Garden",2023-07-03,"2023","MOR-4F","Mealybug",5
+"MOR","Garden",2023-07-10,"2023","MOR-4F","Green caterpillar",1
+"MOR","Garden",2023-07-17,"2023","MOR-4F","Mealybug",10
+"MOR","Garden",2023-07-17,"2023","MOR-4F","Spodoptera",2
+"MOR","Garden",2023-07-28,"2023","MOR-4F","Mealybug",80
+"MOR","Garden",2023-08-03,"2023","MOR-4F","Mealybug",50
+"MOR","Garden",2023-08-07,"2023","MOR-4F","Mealybug",50
+"MOR","Garden",2023-08-07,"2023","MOR-4F","Spodoptera",1
+"MOR","Garden",2023-08-15,"2023","MOR-4F","White fly",2
+"MOR","Garden",2023-08-15,"2023","MOR-4F","Mealybug",10
+"MOR","Garden",2023-06-12,"2023","MOR-6A","Caterpillar",1
+"MOR","Garden",2023-07-03,"2023","MOR-6A","Mealybug",1
+"MOR","Garden",2023-07-10,"2023","MOR-6A","green caterpillar",1
+"MOR","Garden",2023-07-10,"2023","MOR-6A","Mealybug",5
+"MOR","Garden",2023-07-17,"2023","MOR-6A","Mealybug",10
+"MOR","Garden",2023-07-17,"2023","MOR-6A","Spodoptera",1
+"MOR","Garden",2023-07-28,"2023","MOR-6A","Mealybug",100
+"MOR","Garden",2023-08-03,"2023","MOR-6A","Mealybug",50
+"MOR","Garden",2023-08-07,"2023","MOR-6A","Spodoptera",1
+"MOR","Garden",2023-08-15,"2023","MOR-6A","White fly",3
+"MOR","Garden",2023-08-15,"2023","MOR-6A","Mealybug",10
+"MOR","Garden",2023-07-03,"2023","MOR-6C","Mealybug",5
+"MOR","Garden",2023-07-03,"2023","MOR-6C","Scales",4
+"MOR","Garden",2023-07-17,"2023","MOR-6C","Mealybug",3
+"MOR","Garden",2023-07-28,"2023","MOR-6C","Mealybug",80
+"MOR","Garden",2023-08-03,"2023","MOR-6C","Mealybug",200
+"MOR","Garden",2023-08-03,"2023","MOR-6C","Caterpillar",1
+"MOR","Garden",2023-08-07,"2023","MOR-6C","Mealybug",200
+"MOR","Garden",2023-08-15,"2023","MOR-6C","White fly",3
+"MOR","Garden",2023-08-15,"2023","MOR-6C","Mealybug",50
+"MOR","Garden",2023-06-05,"2023","MOR-6D","Caterpillar",3
+"MOR","Garden",2023-06-12,"2023","MOR-6D","Caterpillar",1
+"MOR","Garden",2023-07-03,"2023","MOR-6D","Mealybug",5
+"MOR","Garden",2023-07-17,"2023","MOR-6D","Mealybug",20
+"MOR","Garden",2023-07-28,"2023","MOR-6D","Mealybug",100
+"MOR","Garden",2023-08-03,"2023","MOR-6D","Mealybug",20
+"MOR","Garden",2023-08-07,"2023","MOR-6D","Mealybug",300
+"MOR","Garden",2023-08-15,"2023","MOR-6D","White fly",3
+"MOR","Garden",2023-08-15,"2023","MOR-6D","Mealybug",5
+"N2","Garden",2023-06-29,"2023","N2-5A","Spodoptera",1
+"N2","Garden",2023-07-28,"2023","N2-5A","Mealybug",15
+"N2","Garden",2023-08-07,"2023","N2-5A","Mealybug",10
+"N2","Garden",2023-08-07,"2023","N2-5A","Aphid",40
+"N2","Garden",2023-08-15,"2023","N2-5A","Spodoptera",5
+"N2","Garden",2023-08-15,"2023","N2-5A","Aphid",100
+"N2","Garden",2023-08-15,"2023","N2-5A","Mealybug",200
+"N2","Garden",2023-07-10,"2023","N2-5B","Green caterpillar",1
+"N2","Garden",2023-07-10,"2023","N2-5B","Mealybug",1
+"N2","Garden",2023-07-17,"2023","N2-5B","Mealybug",2
+"N2","Garden",2023-07-28,"2023","N2-5B","Mealybug",50
+"N2","Garden",2023-08-03,"2023","N2-5B","Mealybug",100
+"N2","Garden",2023-08-07,"2023","N2-5B","Mealybug",150
+"N2","Garden",2023-08-07,"2023","N2-5B","Aphid",150
+"N2","Garden",2023-08-15,"2023","N2-5B","Mealybug",150
+"N2","Garden",2023-07-03,"2023","N2-6A","Scales",10
+"N2","Garden",2023-07-28,"2023","N2-6A","Mealybug",15
+"N2","Garden",2023-08-07,"2023","N2-6A","Mealybug",20
+"N2","Garden",2023-08-15,"2023","N2-6A","Mealybug",15
+"N2","Garden",2023-05-31,"2023","N2-6B","Green Caterpillar",1
+"N2","Garden",2023-07-03,"2023","N2-6B","White Fly",1
+"N2","Garden",2023-07-17,"2023","N2-6B","Spodoptera",1
+"N2","Garden",2023-07-28,"2023","N2-6B","Mealybug",30
+"N2","Garden",2023-08-07,"2023","N2-6B","Mealybug",60
+"N2","Garden",2023-08-15,"2023","N2-6B","Mealybug",150
+"N5","Garden",2023-06-12,"2023","N5-3F","Mealybug",15
+"N5","Garden",2023-06-12,"2023","N5-3F","White Fly",2
+"N5","Garden",2023-06-20,"2023","N5-3F","Meallybug",80
+"N5","Garden",2023-07-03,"2023","N5-3F","Mealybug",10
+"N5","Garden",2023-07-10,"2023","N5-3F","Mealybug",50
+"N5","Garden",2023-07-17,"2023","N5-3F","Mealybug",200
+"N5","Garden",2023-07-28,"2023","N5-3F","Mealybug",300
+"N5","Garden",2023-08-03,"2023","N5-3F","Mealybug",50
+"N5","Garden",2023-08-03,"2023","N5-3F","White Fly",10
+"N5","Garden",2023-08-07,"2023","N5-3F","Mealybug",100
+"N5","Garden",2023-08-15,"2023","N5-3F","White fly",3
+"N5","Garden",2023-05-31,"2023","N5-3G","Cicadelladae",1
+"N5","Garden",2023-06-29,"2023","N5-3G","Meallybug",7
+"N5","Garden",2023-07-03,"2023","N5-3G","Mealybug",15
+"N5","Garden",2023-07-10,"2023","N5-3G","Green caterpillar",1
+"N5","Garden",2023-07-10,"2023","N5-3G","Mealybug",20
+"N5","Garden",2023-07-17,"2023","N5-3G","Mealybug",1
+"N5","Garden",2023-07-17,"2023","N5-3G","Spodoptera",1
+"N5","Garden",2023-08-07,"2023","N5-3G","Mealybug",40
+"N5","Garden",2023-08-15,"2023","N5-3G","Mealybug",5
+"N5","Garden",2023-05-31,"2023","N5-4D","Caterpillar",4
+"N5","Garden",2023-06-20,"2023","N5-4D","Beetle",1
+"N5","Garden",2023-06-29,"2023","N5-4D","Meallybug",12
+"N5","Garden",2023-07-03,"2023","N5-4D","Mealybug",7
+"N5","Garden",2023-07-10,"2023","N5-4D","Green caterpillar",3
+"N5","Garden",2023-07-17,"2023","N5-4D","Mealybug",50
+"N5","Garden",2023-07-17,"2023","N5-4D","Spodoptera",2
+"N5","Garden",2023-07-28,"2023","N5-4D","Mealybug",100
+"N5","Garden",2023-08-07,"2023","N5-4D","Mealybug",100
+"N5","Garden",2023-08-15,"2023","N5-4D","White fly",7
+"N5","Garden",2023-08-15,"2023","N5-4D","Mealybug",10
+"N5","Garden",2023-07-03,"2023","N5-4G","Mealybug",14
+"N5","Garden",2023-07-10,"2023","N5-4G","Mealybug",10
+"N5","Garden",2023-07-17,"2023","N5-4G","Mealybug",50
+"N5","Garden",2023-07-28,"2023","N5-4G","Mealybug",200
+"N5","Garden",2023-08-07,"2023","N5-4G","Mealybug",100
+"N5","Garden",2023-08-15,"2023","N5-4G","White fly",3
+"N5","Garden",2023-08-15,"2023","N5-4G","Mealybug",10
+"N5","Garden",2023-06-29,"2023","N5-5F","Meallybug",5
+"N5","Garden",2023-07-03,"2023","N5-5F","Mealybug",5
+"N5","Garden",2023-07-10,"2023","N5-5F","Green caterpillar",3
+"N5","Garden",2023-07-17,"2023","N5-5F","Mealybug",20
+"N5","Garden",2023-07-17,"2023","N5-5F","Spodoptera",1
+"N5","Garden",2023-07-28,"2023","N5-5F","Mealybug",20
+"N5","Garden",2023-07-28,"2023","N5-5F","Spodoptera",1
+"N5","Garden",2023-08-07,"2023","N5-5F","Mealybug",75
+"N5","Garden",2023-08-15,"2023","N5-5F","White fly",4
+"N5","Garden",2023-08-15,"2023","N5-5F","Mealybug",20
+"N5","Garden",2023-06-12,"2023","N5-6A","Scale",1
+"N5","Garden",2023-06-29,"2023","N5-6A","Meallybug",5
+"N5","Garden",2023-07-03,"2023","N5-6A","Mealybug",3
+"N5","Garden",2023-07-10,"2023","N5-6A","Green caterpillar",2
+"N5","Garden",2023-07-10,"2023","N5-6A","Mealybug",10
+"N5","Garden",2023-07-17,"2023","N5-6A","Mealybug",20
+"N5","Garden",2023-07-28,"2023","N5-6A","Mealybug",100
+"N5","Garden",2023-08-07,"2023","N5-6A","Mealybug",120
+"N5","Garden",2023-08-15,"2023","N5-6A","White fly",10
+"N5","Garden",2023-08-15,"2023","N5-6A","Mealybug",2
+"PS","Garden",2023-06-20,"2023","PS-1B","egg",1
+"PS","Garden",2023-07-28,"2023","PS-1B","Mealybug",1
+"PS","Garden",2023-08-03,"2023","PS-1B","Mealybug",5
+"PS","Garden",2023-08-07,"2023","PS-1B","Mealybug",25
+"PS","Garden",2023-08-15,"2023","PS-1B","Spodoptera",1
+"PS","Garden",2023-08-15,"2023","PS-1B","Mealybug",30
+"PS","Garden",2023-07-28,"2023","PS-2F","Mealybug",2
+"PS","Garden",2023-07-28,"2023","PS-2F","Cicadellidae",2
+"PS","Garden",2023-08-03,"2023","PS-2F","Mealybug",10
+"PS","Garden",2023-08-07,"2023","PS-2F","Mealybug",20
+"PS","Garden",2023-08-07,"2023","PS-2F","White Fly",5
+"PS","Garden",2023-08-15,"2023","PS-2F","Grasshopper",1
+"PS","Garden",2023-08-15,"2023","PS-2F","Mealybug",5
+"PS","Garden",2023-05-31,"2023","PS-4D","Mealybug",4
+"PS","Garden",2023-06-12,"2023","PS-4D","Mealybug",1
+"PS","Garden",2023-06-29,"2023","PS-4D","Mealybug",1
+"PS","Garden",2023-07-03,"2023","PS-4D","Mealybug",20
+"PS","Garden",2023-07-10,"2023","PS-4D","Mealybug",25
+"PS","Garden",2023-07-17,"2023","PS-4D","Mealybug",15
+"PS","Garden",2023-07-28,"2023","PS-4D","Mealybug",15
+"PS","Garden",2023-08-03,"2023","PS-4D","Mealybug",50
+"PS","Garden",2023-08-07,"2023","PS-4D","Mealybug",100
+"PS","Garden",2023-08-15,"2023","PS-4D","Mealybug",80
+"PS","Garden",2023-06-12,"2023","PS-4E","White Fly",1
+"PS","Garden",2023-07-03,"2023","PS-4E","Mealybug",1
+"PS","Garden",2023-07-03,"2023","PS-4E","White Fly",1
+"PS","Garden",2023-07-10,"2023","PS-4E","Mealybug",3
+"PS","Garden",2023-07-17,"2023","PS-4E","Spodoptera",1
+"PS","Garden",2023-07-28,"2023","PS-4E","Mealybug",1
+"PS","Garden",2023-08-03,"2023","PS-4E","Mealybug",2
+"PS","Garden",2023-08-07,"2023","PS-4E","Mealybug",20
+"PS","Garden",2023-08-07,"2023","PS-4E","Stink bug",1
+"PS","Garden",2023-08-15,"2023","PS-4E","Spodoptera",1
+"PS","Garden",2023-08-15,"2023","PS-4E","Mealybug",10
+"PS","Garden",2023-05-31,"2023","PS-5B","Grasshopper",2
+"PS","Garden",2023-05-31,"2023","PS-5B","Spodoptera",1
+"PS","Garden",2023-06-20,"2023","PS-5B","Hemipteran",1
+"PS","Garden",2023-07-10,"2023","PS-5B","Mealybug",1
+"PS","Garden",2023-07-28,"2023","PS-5B","Mealybug",20
+"PS","Garden",2023-07-28,"2023","PS-5B","Stink bug",1
+"PS","Garden",2023-08-03,"2023","PS-5B","Mealybug",30
+"PS","Garden",2023-08-07,"2023","PS-5B","Mealybug",100
+"PS","Garden",2023-08-15,"2023","PS-5B","Mealybug",200
+"PS","Garden",2023-06-29,"2023","PS-5E","Mealybug",1
+"PS","Garden",2023-07-03,"2023","PS-5E","White Fly",1
+"PS","Garden",2023-07-17,"2023","PS-5E","Spodoptera",1
+"PS","Garden",2023-07-28,"2023","PS-5E","Grasshopper",1
+"PS","Garden",2023-08-03,"2023","PS-5E","Mealybug",3
+"PS","Garden",2023-08-07,"2023","PS-5E","Mealybug",50
+"PS","Garden",2023-08-15,"2023","PS-5E","Spodoptera",1
+"PS","Garden",2023-08-15,"2023","PS-5E","Mealybug",40
+"REF","Garden",2023-07-03,"2023","REF-1G","White Fly",1
+"REF","Garden",2023-07-03,"2023","REF-1G","Mealybug",1
+"REF","Garden",2023-07-10,"2023","REF-1G","White Fly",1
+"REF","Garden",2023-07-10,"2023","REF-1G","Mealybug",1
+"REF","Garden",2023-07-28,"2023","REF-1G","Mealybug",8
+"REF","Garden",2023-08-03,"2023","REF-1G","Mealybug",5
+"REF","Garden",2023-08-07,"2023","REF-1G","Mealybug",25
+"REF","Garden",2023-08-15,"2023","REF-1G","Mealybug",100
+"REF","Garden",2023-07-03,"2023","REF-5A","White Fly",1
+"REF","Garden",2023-07-17,"2023","REF-5A","Aphid",50
+"REF","Garden",2023-07-28,"2023","REF-5A","Mealybug",10
+"REF","Garden",2023-07-28,"2023","REF-5A","Aphid",200
+"REF","Garden",2023-07-28,"2023","REF-5A","Spodoptera",1
+"REF","Garden",2023-08-03,"2023","REF-5A","Mealybug",5
+"REF","Garden",2023-08-03,"2023","REF-5A","Spodoptera",3
+"REF","Garden",2023-08-07,"2023","REF-5A","Mealybug",30
+"REF","Garden",2023-08-07,"2023","REF-5A","Spodoptera",1
+"REF","Garden",2023-08-15,"2023","REF-5A","Mealybug",30
+"REF","Garden",2023-08-15,"2023","REF-5A","White fly",5
+"REF","Garden",2023-08-15,"2023","REF-5A","Aphid",50
+"REF","Garden",2023-06-05,"2023","REF-5B","White Fly",1
+"REF","Garden",2023-06-29,"2023","REF-5B","Meallybug",3
+"REF","Garden",2023-07-03,"2023","REF-5B","Mealybug",1
+"REF","Garden",2023-07-17,"2023","REF-5B","Mealybug",2
+"REF","Garden",2023-07-28,"2023","REF-5B","Mealybug",10
+"REF","Garden",2023-08-03,"2023","REF-5B","Mealybug",15
+"REF","Garden",2023-08-07,"2023","REF-5B","Mealybug",10
+"REF","Garden",2023-08-15,"2023","REF-5B","Mealybug",100
+"REF","Garden",2023-07-03,"2023","REF-5F","White Fly",1
+"REF","Garden",2023-07-03,"2023","REF-5F","Spodoptera",1
+"REF","Garden",2023-07-28,"2023","REF-5F","Aphid",30
+"REF","Garden",2023-08-03,"2023","REF-5F","Mealybug",10
+"REF","Garden",2023-08-07,"2023","REF-5F","Mealybug",20
+"REF","Garden",2023-08-15,"2023","REF-5F","Mealybug",60
+"REF","Garden",2023-08-15,"2023","REF-5F","Aphid",100
+"REF","Garden",2023-07-03,"2023","REF-6A","Mealybug",1
+"REF","Garden",2023-07-10,"2023","REF-6A","Mealybug",2
+"REF","Garden",2023-07-28,"2023","REF-6A","Mealybug",4
+"REF","Garden",2023-08-03,"2023","REF-6A","Stink bug",1
+"REF","Garden",2023-08-07,"2023","REF-6A","Mealybug",15
+"REF","Garden",2023-08-15,"2023","REF-6A","Mealybug",30
+"REF","Garden",2023-07-03,"2023","REF-7B","White Fly",3
+"REF","Garden",2023-07-17,"2023","REF-7B","White Fly",5
+"REF","Garden",2023-07-17,"2023","REF-7B","Mealybug",1
+"REF","Garden",2023-07-28,"2023","REF-7B","Mealybug",10
+"REF","Garden",2023-08-03,"2023","REF-7B","Mealybug",10
+"REF","Garden",2023-08-07,"2023","REF-7B","Mealybug",10
+"REF","Garden",2023-08-15,"2023","REF-7B","Mealybug",10
+"ECO","Garden",2023-06-05,"2023","ECO-1B","Caterpillar",2
+"ECO","Garden",2023-06-29,"2023","ECO-1B","Grasshopper",1
+"ECO","Garden",2023-06-05,"2023","ECO-3A","Caterpillar",1
+"ECO","Garden",2023-06-29,"2023","ECO-3B","Spodoptera",1

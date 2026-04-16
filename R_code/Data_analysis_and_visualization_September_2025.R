@@ -37,6 +37,11 @@ Trait_data<-read.csv("Data/Combined_herbivory_and_trait_data.csv") %>%
 
 PCs<-read.csv("Data/clim_data.csv")
 
+<<<<<<< Updated upstream
+=======
+ggpairs(PCs %>% select(Latitude,NPP,Clim_PC1,WeightedCD,MAT,Tsd,AP,PWQ))
+
+>>>>>>> Stashed changes
 PCbiplot(data1 = PCs %>% select(.,"MAT" ,"Tsd" ,"AP" ,"PWQ"))
 
 # SEM results ----
@@ -127,6 +132,8 @@ map_clim<-ggplot() +
     legend.margin = margin(5, 5, 5, 5),
     legend.box.background = element_rect(fill = scales::alpha("white", 0.7), color = "black")
     );map_clim
+
+
 
 pca<-PCbiplot(data1 = PCs %>% select(., all_of(c('MAT',
                                                'AP','PWQ',"Tsd"))),
@@ -260,11 +267,12 @@ ggsave("gard_pan.jpg",
 # Population level correlation of defense traits ----
 
 Pop_cor<-full_join(
-Data_prep(loc="Field",PopLevel = T) %>% 
+Data_prep(loc="Field",PopLevel = T,group = "Pop") %>% 
   select(Pop,Trichomes,SLA,Conc,herb_p) %>% 
   pivot_longer(.,cols=c(Trichomes,SLA,Conc,herb_p),
                values_to = "Field"), 
-Data_prep(loc="Garden",PopLevel = T,byDate = F,Time.var = "Mid|Early|Late")%>% 
+Data_prep(loc="Garden",PopLevel = T,byDate = F,
+          Time.var = "Mid|Early|Late",group = "Pop")%>% 
   select(Pop,Trichomes,SLA,Conc,herb_p) %>% 
   pivot_longer(.,cols=c(Trichomes,SLA,Conc,herb_p),
                values_to = "Garden"),
@@ -301,10 +309,41 @@ Data_prep(loc="Garden|Field") %>%
 
 # Figure S1: Correlation of NPP and the climate variables that we used ----
 ggplot(Pop_info, aes(x=Climate_PC1, y=NPP)) + 
+<<<<<<< Updated upstream
   geom_point() +
   geom_smooth(method = "glm")+
   labs(x="Climate PC1",y=expression("Ten year NPP"[g]*" (kg*C/m"^"2"*")"))+
   C_theme()
+=======
+  geom_point()
+
+ggplot(Data_prep(loc="Field") %>% summarise(
+  .by = c(Pop),
+  Height=mean(Height,na.rm=T),
+  Latitude=first(Latitude)),
+  aes(x=Latitude, y=Height)) + 
+  geom_smooth(method="glm") +
+  geom_point()
+
+herbs<-read.csv("Data/Combined_herbivores_data.csv") %>% 
+  filter(Loc=="Field") %>% 
+  summarise(.by = c(Pop,Year),
+            abundance=sum(Amount),
+            richness=length(unique(Species))) %>% 
+  right_join(PCs %>% select(Pop,Latitude)) %>% 
+  drop_na() %>% 
+  ggplot(.,aes(x=Latitude,y=richness)) +
+  geom_point()
+  
+
+ggplot(Data_prep(loc="Field") %>% summarise(
+  .by = c(Pop),
+  Height=mean(Height,na.rm=T),
+  Latitude=first(Latitude)),
+  aes(x=Latitude, y=Height)) + 
+  geom_smooth(method="glm") +
+  geom_point()
+>>>>>>> Stashed changes
   
   
 # Figure S2: Herbivory and phenology through time in the garden----
