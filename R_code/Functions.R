@@ -22,6 +22,7 @@ Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,clim_t = T,
                     Treatment=F,Time.var='Mid',start_date="2023-06-15",
                     end_date="2023-07-29",byDate=F,group=NULL,...){
   
+  
   Combined_data1<- Trait_data  %>% 
     left_join(PCs)
   

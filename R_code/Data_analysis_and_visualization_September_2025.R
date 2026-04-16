@@ -37,8 +37,6 @@ Trait_data<-read.csv("Data/Combined_herbivory_and_trait_data.csv") %>%
 
 PCs<-read.csv("Data/clim_data.csv")
 
-ggpairs(PCs %>% select(Latitude,NPP,Clim_PC1,WeightedCD))
-
 PCbiplot(data1 = PCs %>% select(.,"MAT" ,"Tsd" ,"AP" ,"PWQ"))
 
 # SEM results ----
@@ -59,8 +57,8 @@ AIC_psem(Field_sem,AIC.type = "dsep")
 
 ### Garden ----
 Garden_sem<-SEM_results(Prod = "", Loc = "Garden", main_ran = "(1|Pop)", clim_t = T,
-                       lat_traits = "WeightedCD_sc + WeightedCD_sc_sq", 
-                       lat_main = "WeightedCD_sc + WeightedCD_sc_sq",
+                       lat_traits = "Climate_PC1_sc + Climate_PC1_sc_sq", 
+                       lat_main = "Climate_PC1_sc + Climate_PC1_sc_sq",
                        model = c("lm1", "lm2", "lm3", "lm4"),
                        random = "(1|Pop)",year_ran="", corError = list())
 summary(Garden_sem)
@@ -72,7 +70,7 @@ AIC_psem(Garden_sem,AIC.type = "dsep")
 
 ## Figure 1: Maps ----
 Pop_info<-Data_prep(loc = "Field|Garden",group = c("Pop","Loc","Year"), PopLevel = T) %>% 
-               select(Pop,Year,Loc,NPP, herb_p,NPP_y,
+               select(Pop,Year,Loc,NPP, herb_p,
                       Climate_PC1,Longitude, Latitude,
                       Conc,SLA,Trichomes) %>% summarise(
     .by = c(Pop),
@@ -303,7 +301,10 @@ Data_prep(loc="Garden|Field") %>%
 
 # Figure S1: Correlation of NPP and the climate variables that we used ----
 ggplot(Pop_info, aes(x=Climate_PC1, y=NPP)) + 
-  geom_point()
+  geom_point() +
+  geom_smooth(method = "glm")+
+  labs(x="Climate PC1",y=expression("Ten year NPP"[g]*" (kg*C/m"^"2"*")"))+
+  C_theme()
   
   
 # Figure S2: Herbivory and phenology through time in the garden----

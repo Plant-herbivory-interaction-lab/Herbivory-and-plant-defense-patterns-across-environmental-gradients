@@ -238,7 +238,7 @@ PP_yearly<-Extract_var_with_const_date(
   "MODIS/061/MOD17A3HGF",c("Npp","Npp_QC"),unit="Year",begin = 2013,
   end=2026,
   select = T,
-  buffer = 4000,scale = 500)
+  buffer = 5000,scale = 500)
 
 PP_8day<-Extract_var_with_const_date(
   sf::st_as_sf(coords,coords=c('Longitude','Latitude'),
@@ -251,7 +251,7 @@ PP_8day<-Extract_var_with_const_date(
 PP_yearly_sum<-PP_yearly %>%
   filter(Npp_QC <= 30) %>%
   group_by(Pop) %>%
-  summarise(NPP_y=sqrt(mean(Npp)/1e4))
+  summarise(NPP_y=mean(Npp)/1e4)
 
 
 
@@ -279,71 +279,72 @@ PP_8day_sum_season<- PP_g %>%
 ## Download bioclim data ----
 clim_vars <- c("bio01","bio04","bio12","bio18")
 
-
 Bioclims<-Extract_var_with_const_date(
   sf::st_as_sf(coords,coords=c('Longitude','Latitude'),
                crs="+proj=longlat +datum=WGS84"),
   "WORLDCLIM/V1/BIO",clim_vars,unit="",select = F,
   buffer = 500,scale = 500) %>% 
-  select(clim_vars,"Pop") %>% 
+  select(all_of(clim_vars),"Pop") %>% 
   summarise(
     .by = "Pop",
     across(
       where(is.numeric),
       ~ mean(., na.rm = TRUE)
     )
-  ) %>% 
+  )  %>% 
   left_join(PP_8day_sum_10y,join_by(Pop)) %>% 
   left_join(PP_8day_sum_season,join_by(Pop)) %>% 
   left_join(PP_yearly_sum,join_by(Pop)) %>% 
-  mutate(NPP_y=log(NPP_y),
-         bio18=sqrt(bio18),
+  right_join(coords) %>% 
+  mutate(
          Year = as.character(Year),
-         across(where(is.numeric), 
-                ~as.numeric(scale(.,center = T)))
-  ) %>% right_join(coords)
+
+         ) 
+         
+         
+Bioclims <- Bioclims %>%  
+           {
+             df <- .
+             
+             # ONLY climate variables go into PCA
+             pca <- prcomp(
+               df %>% select(all_of(clim_vars)) %>% 
+                 mutate(
+                        bio18=sqrt(bio18),),
+               scale. = T
+             )
+             
+             weights <- summary(pca)$importance[2, c("PC1","PC2")]
+             
+             # origin population
+             origin_pc <- pca$x[df$Pop == "DUDU", c("PC1","PC2")][1, ]
+             
+             # compute weighted distance
+             WeightedCD <- weighted_cd(
+               data = as.data.frame(pca$x),
+               origin_pc = origin_pc,
+               pc_cols = c("PC1","PC2"),
+               weights = weights
+             )
+             
+             mutate(df,
+                    Clim_PC1 = pca$x[, "PC1"],
+                    Clim_PC2 = pca$x[, "PC2"],
+                    WeightedCD = WeightedCD
+                    
+                    
+             ) %>% 
+               rename(
+                 `MAT` = bio01,
+                 `Tsd` = bio04,
+                 `AP`  = bio12,
+                 `PWQ` = bio18,
+                 NPPg=NPP_g,
+                 NPP = NPP_y
+                 
+               )}
 
 
-PCs <- Bioclims %>%  
-  {
-    df <- .
-    
-    # ONLY climate variables go into PCA
-    pca <- prcomp(
-      df %>% select(all_of(clim_vars)),
-    )
-    
-    weights <- summary(pca)$importance[2, c("PC1","PC2")]
-    
-    # origin population
-    origin_pc <- pca$x[df$Pop == "DUDU", c("PC1","PC2")][1, ]
-    
-    # compute weighted distance
-    WeightedCD <- weighted_cd(
-      data = as.data.frame(pca$x),
-      origin_pc = origin_pc,
-      pc_cols = c("PC1","PC2"),
-      weights = weights
-    )
-    
-    mutate(df,
-           Clim_PC1 = pca$x[, "PC1"],
-           Clim_PC2 = pca$x[, "PC2"],
-           WeightedCD = WeightedCD
-           
-           
-    ) %>% 
-      rename(
-        `MAT` = bio01,
-        `Tsd` = bio04,
-        `AP`  = bio12,
-        `PWQ` = bio18,
-        NPPg=NPP_g,
-        NPP = NPP_y
-        
-      )}
 
-
-
-write.csv(PCs, "Data/clim_data.csv",row.names = F)
+write.csv(Bioclims, "Data/clim_data.csv",row.names = F)
 
