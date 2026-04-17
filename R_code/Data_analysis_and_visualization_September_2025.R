@@ -212,7 +212,10 @@ ClimXtrich<-Custom_ggplot(predictor = "Climate_PC1",Trend = T)+
   labs(y=expression("Trichomes (n/cm"^"2"*")"),x="Climate PC1") +
   C_theme();ClimXtrich
 
-ClimXglyc<-Custom_ggplot(predictor = "Climate_PC1",response = "Conc", family = "gaussian",deg=1)+
+ClimXglyc<-Custom_ggplot(predictor = "Climate_PC1",
+                         response = "Conc", 
+                         family = "gaussian",deg=1,
+                         Trend = F)+
   labs(x="Climate PC1",y="Glycoalkaloids (mg/mg)") +
   C_theme();ClimXglyc
 
@@ -238,12 +241,15 @@ ggsave("Field_pan.jpg",
 ## Garden figure ----
 
 # Garden climate versus glycoalkaloids
-climXglyc<-Custom_ggplot(loc = "Garden",predictor = "Climate_PC1",response = "Conc", family = gaussian(link = "log"),deg=1,random = "+(1|Pop)")+
+climXglyc<-Custom_ggplot(loc = "Garden",predictor = "Climate_PC1",response = "Conc", 
+                         family = gaussian(link = "log"),deg=1,random = "+(1|Pop)")+
   labs(x="Climate PC1",y="Glycoalkaloids (mg/mg)") +
   C_theme();climXglyc
 
 # Garden climate versus trichomes
-climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Climate_PC1",response = "Trichomes", family = gaussian(link = "log"),deg=2,random = "+(1|Pop)")+
+climsqXtri_gard<-Custom_ggplot(loc = "Garden",predictor = "Climate_PC1",
+                               response = "Trichomes", family = gaussian(link = "log"),
+                               deg=2,random = "+(1|Pop)",Trend = F)+
   labs(x="Climate PC1",y=expression("Trichomes (n/cm"^"2"*")")) +
   C_theme();climsqXtri_gard
 
