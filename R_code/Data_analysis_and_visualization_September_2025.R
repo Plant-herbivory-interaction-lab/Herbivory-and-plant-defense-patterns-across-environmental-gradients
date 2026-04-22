@@ -37,11 +37,9 @@ Trait_data<-read.csv("Data/Combined_herbivory_and_trait_data.csv") %>%
 
 PCs<-read.csv("Data/clim_data.csv")
 
-<<<<<<< Updated upstream
-=======
+
 ggpairs(PCs %>% select(Latitude,NPP,Clim_PC1,WeightedCD,MAT,Tsd,AP,PWQ))
 
->>>>>>> Stashed changes
 PCbiplot(data1 = PCs %>% select(.,"MAT" ,"Tsd" ,"AP" ,"PWQ"))
 
 # SEM results ----
