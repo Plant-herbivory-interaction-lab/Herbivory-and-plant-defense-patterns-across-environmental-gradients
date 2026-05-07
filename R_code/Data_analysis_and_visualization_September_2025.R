@@ -40,10 +40,7 @@ PCs<-read.csv("Data/clim_data.csv")
 
 ggpairs(PCs %>% select(Latitude,NPP,Clim_PC1,WeightedCD,MAT,Tsd,AP,PWQ))
 
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
 PCbiplot(data1 = PCs %>% select(.,"MAT" ,"Tsd" ,"AP" ,"PWQ"))
 
 # SEM results ----
