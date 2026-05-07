@@ -132,6 +132,8 @@ Field_2022<-read.csv("Data/Field_2022_traits.csv") %>%
   mutate(
     Loc='Field',
     Leaves=NA,
+    fl_m=NA,
+    fl_h=NA,
     herb_p=Herbivory/100,
     Plant_ID=Collect_Label,
     Date= gsub("-(?!2023$)\\d{2,4}$", "-2022", Date,perl = T),
@@ -156,6 +158,8 @@ Field_2023<-read.csv("Data/Field_2023_traits.csv") %>%
     Loc="Field",
     Time="2023",
     Year="2023",
+    fl_m=NA,
+    fl_h=NA,
     Plant_ID=Plant_abr,
     herb_p=(Epitrix_herb+Chew_herb)/100,
     L_area=Leaf_Area,
@@ -191,7 +195,7 @@ Garden_2023<-glyc_2023 %>%
   mutate(
     Leaves=leaves,
     herb_p=as.numeric(Chewing)/100,
-    Date=as.Date(Date, format = "%m/%d/%y"),
+    Date=as.Date(Date, format = "%m/%d/%Y"),
     Year="2023",
     Loc="Garden",
    Time=cut(Date, 
@@ -207,13 +211,13 @@ Garden_2023<-glyc_2023 %>%
 # Combine data ----
 Combined_data<-rbind(Field_2022 %>% 
                        select(Pop,Date,Time,Plant_ID,Loc,Year,L_area,L_weight,Trichomes,
-                              Conc,herb_p,Leaves,Height),
+                              Conc,herb_p,Leaves,fl_m,fl_h,Height),
                      Field_2023 %>% 
                        select(Pop,Date,Time,Plant_ID,Loc,Year,L_area,L_weight,Trichomes,
-                              Conc,herb_p,Leaves,Height),
+                              Conc,herb_p,Leaves,fl_m,fl_h,Height),
                      Garden_2023 %>% 
                        select(Pop,Date,Time,Plant_ID,Loc,Year,L_area,L_weight,Trichomes,
-                              Conc,herb_p,Leaves,Height)) %>% 
+                              Conc,herb_p,Leaves,fl_m,fl_h,Height)) %>% 
   drop_na(Trichomes,Conc,herb_p) %>% 
   mutate(SLA=L_area/L_weight) %>% 
   filter(Conc>0)

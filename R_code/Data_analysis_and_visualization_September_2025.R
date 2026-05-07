@@ -40,6 +40,10 @@ PCs<-read.csv("Data/clim_data.csv")
 
 ggpairs(PCs %>% select(Latitude,NPP,Clim_PC1,WeightedCD,MAT,Tsd,AP,PWQ))
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 PCbiplot(data1 = PCs %>% select(.,"MAT" ,"Tsd" ,"AP" ,"PWQ"))
 
 # SEM results ----
@@ -312,14 +316,14 @@ Data_prep(loc="Garden|Field") %>%
 
 
 # Figure S1: Correlation of NPP and the climate variables that we used ----
-ggplot(Pop_info, aes(x=Climate_PC1, y=NPP)) + 
-<<<<<<< Updated upstream
+NPP_s1<-ggplot(Pop_info, aes(x=Climate_PC1, y=NPP)) + 
   geom_point() +
   geom_smooth(method = "glm")+
   labs(x="Climate PC1",y=expression("Ten year NPP"[g]*" (kg*C/m"^"2"*")"))+
-  C_theme()
-=======
-  geom_point()
+  C_theme()+
+  C_theme(14);NPP_s1
+
+
 
 ggplot(Data_prep(loc="Field") %>% summarise(
   .by = c(Pop),
@@ -329,14 +333,14 @@ ggplot(Data_prep(loc="Field") %>% summarise(
   geom_smooth(method="glm") +
   geom_point()
 
-herbs<-read.csv("Data/Combined_herbivores_data.csv") %>% 
+read.csv("Data/Combined_herbivores_data.csv") %>% 
   filter(Loc=="Field") %>% 
   summarise(.by = c(Pop,Year),
             abundance=sum(Amount),
             richness=length(unique(Species))) %>% 
   right_join(PCs %>% select(Pop,Latitude)) %>% 
   drop_na() %>% 
-  ggplot(.,aes(x=Latitude,y=richness)) +
+  ggplot(.,aes(x=Latitude,y=abundance)) +
   geom_point()
   
 
@@ -347,8 +351,11 @@ ggplot(Data_prep(loc="Field") %>% summarise(
   aes(x=Latitude, y=Height)) + 
   geom_smooth(method="glm") +
   geom_point()
->>>>>>> Stashed changes
-  
+
+ggsave("Appendix_S1.jpg",
+       device = "jpg",plot = NPP_s1,
+       path = "Figures",dpi = 400,width = 6, 
+       height = 4.9,limitsize = F)
   
 # Figure S2: Herbivory and phenology through time in the garden----
 Pop_level<-Data_prep(loc = "Garden",byDate = T,
