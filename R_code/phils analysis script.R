@@ -22,7 +22,8 @@ source("R_code/Functions.R")
 
 
 conflicts_prefer(dplyr::select,
-                 dplyr::filter)
+                 dplyr::filter,
+                 patchwork::area)
 # Read in data ####
 ## climate data
 #write.csv(PCs, 'Data/climate_data.csv')
@@ -264,7 +265,7 @@ ggsave("Figures/field_garden_correlations.png", fg_cors, width = 12, height = 4,
 # Field data ####
 field_data <- d1  %>% filter(Loc == "Field") %>% 
   full_join(clim_data, by=c("Pop")) %>% drop_na(Date) %>% 
-  mutate(Year=Year.y) %>% 
+  mutate(Year=Year.x) %>% 
   filter(Pop != "BR")
 head(field_data)
 
@@ -571,7 +572,8 @@ height_plot <- ggplot(field_pop_avg, aes(x = ClimPC1_s, y = Height)) +
 lvs_plot <- ggplot(field_pop_avg, aes(x = ClimPC1_s, y = Leaves)) +
   geom_point() +
   geom_smooth(method= "lm", formula = y~x)+
-  theme_bw(base_size = 18)
+  theme_bw(base_size = 13) +
+  xlab("Climate PC1")
 figS1 <- height_plot + lvs_plot
 ggsave("Figures/height_leaves_climpc1.png", figS1, width = 12, height = 6, dpi = 300)
 
@@ -580,12 +582,12 @@ ggsave("Figures/height_leaves_climpc1.png", figS1, width = 12, height = 6, dpi =
 proc_PC <- ggplot(field_pop_avg, aes(x = ClimPC1_s, y = NPP)) +
   geom_point() +
   geom_smooth(method = "lm", formula = y ~ x) +
-  labs(x = "Climate PC1", y = "NPP") +
-  theme_bw(base_size = 18)
+  labs(x = "Climate PC1", y = expression("NPP (kg*C/m"^"2"*")")) +
+  theme_bw(base_size = 13)
 ggsave("Figures/NPP_climpc1.png", proc_PC, width = 6, height = 5, dpi = 300)
 
 # Garden DATA ####
-garden_data <- d1 %>% select(-...1) %>% filter(Loc == "Garden") %>% 
+garden_data <- d1 %>% filter(Loc == "Garden") %>% 
   full_join(clim_data, by=c("Pop")) %>% drop_na(Date)
 head(garden_data)
 
@@ -603,7 +605,7 @@ ggplot(garden_data, aes(x = Date, y = herb_p, group = Date)) +
 
 ## summarize garden data ####
 garden_summary <- garden_data %>%
-  mutate(Date = as.Date(Date)) %>%
+  mutate(Date = as.Date(Date,"%m/%d/%Y")) %>%
   filter(month(Date) %in% c(6, 7)) %>%
   summarise(
     .by = Plant_ID,
@@ -650,28 +652,28 @@ mod_herb_g1 <- glmmTMB(mean_herb ~ ClimPC1_s + Trichomes_s + SLA_s + Conc_s +
                         (1 | Pop), family = ordbeta,
                       data = garden_summary)
 summary(mod_herb_g1)
-simulateResiduals(mod_herb_g, plot = T)
+simulateResiduals(mod_herb_g1, plot = T)
 
 # Trichomes model (population random effect)
 mod_trich_g1 <- glmmTMB(Trichomes_s ~ ClimPC1_s + 
                          (1 | Pop),
                        data = garden_summary)
 summary(mod_trich_g1)
-simulateResiduals(mod_trich_g, plot = T)
+simulateResiduals(mod_trich_g1, plot = T)
 
 # SLA model (population random effect)
 mod_SLA_g1 <- glmmTMB(SLA_s ~ ClimPC1_s +
                        (1 | Pop),
                      data = garden_summary)
 summary(mod_SLA_g1)
-simulateResiduals(mod_SLA_g, plot = T)
+simulateResiduals(mod_SLA_g1, plot = T)
 
 # Glycoalkaloids model (population random effect)
 mod_Conc_g1 <- glmmTMB(Conc_s ~ ClimPC1_s + 
                         (1 | Pop),
                       data = garden_summary)
 summary(mod_Conc_g1)
-simulateResiduals(mod_Conc_g, plot = T)
+simulateResiduals(mod_Conc_g1, plot = T)
 
 # Assemble pSEM
 garden_psem1 <- psem(
@@ -1051,11 +1053,76 @@ effect_table <- effects_table %>%
   )
 gtsave(effect_table, "psem_effect_table.docx")
 
-## Map Figure ----
+# Map Figure ----
+Pop_info<-field_garden %>% 
+  mutate(Year=Year.x) %>% 
+  select(Pop,Year,Loc,Latitude,Longitude) %>% summarise(
+           .by = c(Pop),
+           
+           Year = case_when(
+             n_distinct(Year[Loc == "Field"]) == 2 ~ "Both Years",
+             .default = as.character(first(Year))
+           ),
+           Loc = case_when(
+             n_distinct(Loc) == 2 ~ "Field & Garden",
+             .default = first(Loc)
+           ),
+           across(where(is.numeric), first),
+         )
 
+tempdir<-tempdir()
+
+cn <- gadm(country = "USA", level = 1,path=tempdir)
+
+clipxy <- c(-100,-65,25,50)
+
+OR <- crop(cn,clipxy)
+
+obs<-read.csv("Data/Solanum_carolinense_inat.csv") %>% 
+  drop_na(latitude) %>% 
+  rename(Longitude=longitude,
+         Latitude=latitude) %>% 
+  filter(
+    Longitude >= clipxy[1], Longitude <= clipxy[2],
+    Latitude  >= clipxy[3], Latitude  <= clipxy[4]
+  )
+
+map_clim<-ggplot() + 
+  geom_spatvector(data=OR,fill="NA",color="black") +
+  geom_point(data=obs,aes(x=Longitude,y=Latitude),shape=21,size=0.025,fill="lightgrey",alpha=0.1)+
+  geom_point(data=Pop_info,aes(x=Longitude,y=Latitude,shape = factor(Year), color = Loc),size=3,stroke=1.5)+
+  scale_shape_manual(name="Year",values = c(24,21,22))+
+  scale_color_manual(name="Location",values = c("#440154FF","#21908CFF","#FDE725FF"))+
+  theme_void(base_size = 13) +
+  theme(
+    legend.position = "inside",
+    legend.position.inside = c(0.83, 0.87),
+    legend.box =  "horizontal",
+    legend.margin = margin(5, 5, 5, 5),
+    legend.box.background = element_rect(fill = scales::alpha("white", 0.7), color = "black")
+  );map_clim
+
+
+
+pca<-PCbiplot(data1 = clim_data %>% select(., all_of(c('MAT',
+                                                 'AP','PWQ',"Tsd"))),
+              font_size = 4,rot_x = -1,ext = 2) + theme_bw(base_size=13);pca
+
+
+clim_vars<-map_clim+
+  plot_spacer()+
+  inset_element(pca, -0.6, -0.1, 0.9, 0.47,align_to = "panel")+
+  (lvs_plot/proc_PC) + 
+  plot_annotation(tag_levels = "A") +
+  plot_layout(widths = c(1.05,0.45,0.50)) 
+
+
+ggsave("fig_1.jpg",
+       device = "jpg",plot = clim_vars,
+       path = "Figures",dpi = 400,width = 11, 
+       height = 6)
 
 # Full SEM plot ####
-## Figure 2: SEMs ----
 Field_semgraph<-semGraph(field_psem, marg_y = 5,
                          node_locs = list("Climate PC1"=c(-0.5,-1),
                                           "Climate PC1 (sq)"=c(0.5,-1)),
@@ -1069,7 +1136,7 @@ Field_semgraph<-semGraph(field_psem, marg_y = 5,
                                            c("Climate PC1 (sq)","Herbivory",-5.7)))
 Field_semgraph
 
-Garden_semgraph<-semGraph(Garden_sem, marg_y = 5,
+Garden_semgraph<-semGraph(garden_psem, marg_y = 5,
                           node_locs = list("Climate PC1"=c(-0.5,-1),
                                            "Climate PC1 (sq)"=c(0.5,-1)),
                           edge_locs = list(c("Climate PC1","Herbivory",0.65),
@@ -1083,3 +1150,7 @@ Garden_semgraph<-semGraph(Garden_sem, marg_y = 5,
 
 SEM_fig<-(Field_semgraph | Garden_semgraph)+plot_annotation(tag_levels = "A");SEM_fig
 
+ggsave("SEM_R.jpg",
+       device = "jpg",plot = SEM_fig,
+       path = "Figures",dpi = 400,width = 10, 
+       height = 5,limitsize = F)
