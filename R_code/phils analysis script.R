@@ -582,7 +582,7 @@ ggsave("Figures/NPP_climpc1.png", proc_PC, width = 6, height = 5, dpi = 300)
 
 # Garden DATA ####
 garden_data <- d1 %>% select(-...1) %>% filter(Loc == "Garden") %>% 
-  full_join(clim_data, by=c("Pop","Year")) %>% drop_na(Date)
+  full_join(clim_data, by=c("Pop")) %>% drop_na(Date)
 head(garden_data)
 
 colnames(garden_data)
@@ -601,8 +601,8 @@ ggplot(garden_data, aes(x = Date, y = herb_p, group = Date)) +
 garden_summary <- garden_data %>%
   mutate(Date = as.Date(Date)) %>%
   filter(month(Date) %in% c(6, 7)) %>%
-  group_by(Plant_ID) %>%
   summarise(
+    .by = Plant_ID,
     across(-c(Date, herb_p), first),
     mean_herb = mean(herb_p, na.rm = TRUE),
     median_herb = median(herb_p, na.rm = TRUE),
@@ -1052,7 +1052,7 @@ gtsave(effect_table, "psem_effect_table.docx")
 
 # Full SEM plot ####
 ## Figure 2: SEMs ----
-Field_semgraph<-semGraph(field_psem1, marg_y = 5,
+Field_semgraph<-semGraph(field_psem, marg_y = 5,
                          node_locs = list("Climate PC1"=c(-0.5,-1),
                                           "Climate PC1 (sq)"=c(0.5,-1)),
                          edge_locs = list(c("Climate PC1","Herbivory",0.65),
@@ -1078,3 +1078,4 @@ Garden_semgraph<-semGraph(Garden_sem, marg_y = 5,
                                             c("Climate PC1 (sq)","Herbivory",-5.7)));Garden_semgraph
 
 SEM_fig<-(Field_semgraph | Garden_semgraph)+plot_annotation(tag_levels = "A");SEM_fig
+
