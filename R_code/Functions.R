@@ -271,12 +271,13 @@ semGraph<-function(fit=fit,node_locs=list(),
                    curve_locs = list(),
                    H = F, marg_y = 12) {
   
-  edges<-summary(fit,rsquare=T,conserve=T)$coefficients[,c("Response","Predictor","Std.Estimate","P.Value","Std.Error")] %>% 
+  edges<-summary(fit,rsquare=T,conserve=T)$coefficients[,c("Response","Predictor","Estimate","P.Value","Std.Error")] %>% 
     filter(!grepl("~",Response)&!grepl("Loc",Predictor)) %>% 
     mutate(
-      across(where(is.character), ~ sub("_sc_sq", " (sq)", .)),
+      across(where(is.character), ~ sub("_s2", " (sq)", .)),
+      across(where(is.character), ~ sub("Clim", "Climate ", .)),
+      across(where(is.character), ~ sub("_s", "", .)),
       across(where(is.character), ~ sub("_", " ", .)),
-      across(where(is.character), ~ sub("_.*", "", .)),
       Response=case_when(grepl("herb", Response) ~ 'Herbivory',
                          grepl("Conc", Response) ~ 'Glycoalkaloids',
                          grepl("SLA", Response) ~ 'SLA',
@@ -290,7 +291,7 @@ semGraph<-function(fit=fit,node_locs=list(),
   
   # Convert to edgelist format (include all paths)
   edge_list <- as.matrix(edges[, c("Predictor", "Response")])
-  weights <- edges$Std.Estimate  # Path coefficients as weights
+  weights <- edges$Estimate  # Path coefficients as weights
   p_values <- round(edges$P.Value,2)  # P-values
   
   # Change the response and predictor labels
@@ -302,16 +303,16 @@ semGraph<-function(fit=fit,node_locs=list(),
   
   # Define line types: Solid for significant (p < 0.05), Dashed for non-significant
   if (H) {edge_lty <- 1
-  } else { edge_lty <- ifelse(p_values < 0.05, 1, 2)}  # 1 = solid, 2 = dashed
+  } else { edge_lty <- ifelse(p_values < 0.1, 1, 2)}  # 1 = solid, 2 = dashed
  
   
   # Define edge widths based on effect size
   if (H) {edge_widths <- 2
-  } else { edge_widths <- ifelse(p_values < 0.05,abs(weights)*20,2)}
+  } else { edge_widths <- ifelse(p_values < 0.1,abs(weights)*20,2)}
   
   
   # Define estimates as edge labels (rounded to 2 decimals)
-  if (H) {edge_labels <- NULL
+  if (H) {edge_labels <- NULL # only significant ones
   } else {  edge_labels <- mapply(function(w, se, p) {
     bquote(
       atop(.(round(w, 2)) %+-% .(round(as.numeric(se), 2)),
@@ -484,125 +485,125 @@ weighted_cd <- function(data, origin_pc, pc_cols, weights) {
 #ee_install_upgrade()
 #ee_Authenticate()
 
-reticulate::use_virtualenv("rgee")
-library(rgee)
-ee_Initialize()
-
-
-
-
-## Extract multiple bands and dates from google earth engine----
-Extract_var_with_const_date <- function(loc,path,subpath,select,
-                                        begin = 5,
-                                        end=7,
-                                        unit="month",
-                                        begin1 = 5,
-                                        end1 =7,
-                                        unit1 = "",
-                                        buffer=1500,
-                                        scale=300) {
-  batch_size=round(sqrt(6000/(3.14*(buffer/scale)^2)))
-  print(batch_size)
-  
-  if(select!=T){
-    terra<-ee$Image(as.character(path))
-    n_images <- 1
-    
-    
-  } else if(select==T){
-    terra<-ee$ImageCollection(as.character(path))$select(as.character(subpath))
-  
-  
-    if(nchar(unit)>1) {
-      terra<-terra$filter(
-        ee$Filter$calendarRange(
-          begin,
-          end,
-          unit
-        )
-      )
-    }
-    
-    if(nchar(unit1)>1) {
-      terra<-terra$filter(
-        ee$Filter$calendarRange(
-          begin1,
-          end1,
-          unit1
-        )
-      )
-    }
-  
-  
-  n_images <- terra$size()$getInfo()
-}
-  
-  num_iterations <- ceiling(nrow(loc) / batch_size)
-  
-  results<-list()
-  # Loop through each batch
-  for (i in 1:num_iterations) {
-    # Calculate the start and end rows for the current batch
-    start_row <- (i - 1) * batch_size + 1
-    end_row <- min(i * batch_size, nrow(loc))
-    print(paste("Processing locations", start_row,"-",end_row, "of", nrow(loc)))
-    # Extract current batch
-    batch <- sf_as_ee(loc[start_row:end_row, ])$map(function(pt) {                         # pt is an ee.Feature
-      pt$buffer(buffer)                  
-    }) 
-    
-    
-    im_iter <- ceiling(n_images / batch_size)
-    
-
-    if(select!=T) {
-      row<-terra$sampleRegions(
-        collection = batch,
-        scale = scale,
-        geometries = FALSE
-      ) %>% 
-        ee_as_sf() %>% sf::st_drop_geometry()
-
-      results[[paste(i)]]<-row
-      
-      
-    } else {   
-    for (j in 1:im_iter) {
-      start_im <- (j - 1) * batch_size + 1
-      end_im <- min(j * batch_size, n_images)
-      
-      print(paste("Processing images", start_im,"-",end_im, "of", n_images))
-      
-      # Get the i-th image (0-indexed in EE)
-      img <- ee$ImageCollection$fromImages(terra$toList(n_images)$slice(start_im,end_im))
-     
-    # Perform ee_extract for the current batch
-    row <-img$map(
-      ee_utils_pyfunc(function(img) {
-        img_date <- img$date()$format("YYYY-MM-dd")
-        
-        sampled <- img$sampleRegions(
-          collection = batch,
-          scale = scale,
-          geometries = FALSE
-        )
-        sampled$map(
-          ee_utils_pyfunc(function(feature) {
-            feature$set("image_date", img_date)
-          })
-        )
-      })
-     )$flatten() %>% ee_as_sf() %>% sf::st_drop_geometry()
-    results[[paste(i,j)]]<-row
-    }
-   
-    }
-
-  }
-  
-  results<-do.call(rbind, results)
-
-  
-  results
-}
-
+# reticulate::use_virtualenv("rgee")
+# library(rgee)
+# ee_Initialize()
+# 
+# 
+# 
+# 
+# ## Extract multiple bands and dates from google earth engine----
+# Extract_var_with_const_date <- function(loc,path,subpath,select,
+#                                         begin = 5,
+#                                         end=7,
+#                                         unit="month",
+#                                         begin1 = 5,
+#                                         end1 =7,
+#                                         unit1 = "",
+#                                         buffer=1500,
+#                                         scale=300) {
+#   batch_size=round(sqrt(6000/(3.14*(buffer/scale)^2)))
+#   print(batch_size)
+#   
+#   if(select!=T){
+#     terra<-ee$Image(as.character(path))
+#     n_images <- 1
+#     
+#     
+#   } else if(select==T){
+#     terra<-ee$ImageCollection(as.character(path))$select(as.character(subpath))
+#   
+#   
+#     if(nchar(unit)>1) {
+#       terra<-terra$filter(
+#         ee$Filter$calendarRange(
+#           begin,
+#           end,
+#           unit
+#         )
+#       )
+#     }
+#     
+#     if(nchar(unit1)>1) {
+#       terra<-terra$filter(
+#         ee$Filter$calendarRange(
+#           begin1,
+#           end1,
+#           unit1
+#         )
+#       )
+#     }
+#   
+#   
+#   n_images <- terra$size()$getInfo()
+# }
+#   
+#   num_iterations <- ceiling(nrow(loc) / batch_size)
+#   
+#   results<-list()
+#   # Loop through each batch
+#   for (i in 1:num_iterations) {
+#     # Calculate the start and end rows for the current batch
+#     start_row <- (i - 1) * batch_size + 1
+#     end_row <- min(i * batch_size, nrow(loc))
+#     print(paste("Processing locations", start_row,"-",end_row, "of", nrow(loc)))
+#     # Extract current batch
+#     batch <- sf_as_ee(loc[start_row:end_row, ])$map(function(pt) {                         # pt is an ee.Feature
+#       pt$buffer(buffer)                  
+#     }) 
+#     
+#     
+#     im_iter <- ceiling(n_images / batch_size)
+#     
+# 
+#     if(select!=T) {
+#       row<-terra$sampleRegions(
+#         collection = batch,
+#         scale = scale,
+#         geometries = FALSE
+#       ) %>% 
+#         ee_as_sf() %>% sf::st_drop_geometry()
+# 
+#       results[[paste(i)]]<-row
+#       
+#       
+#     } else {   
+#     for (j in 1:im_iter) {
+#       start_im <- (j - 1) * batch_size + 1
+#       end_im <- min(j * batch_size, n_images)
+#       
+#       print(paste("Processing images", start_im,"-",end_im, "of", n_images))
+#       
+#       # Get the i-th image (0-indexed in EE)
+#       img <- ee$ImageCollection$fromImages(terra$toList(n_images)$slice(start_im,end_im))
+#      
+#     # Perform ee_extract for the current batch
+#     row <-img$map(
+#       ee_utils_pyfunc(function(img) {
+#         img_date <- img$date()$format("YYYY-MM-dd")
+#         
+#         sampled <- img$sampleRegions(
+#           collection = batch,
+#           scale = scale,
+#           geometries = FALSE
+#         )
+#         sampled$map(
+#           ee_utils_pyfunc(function(feature) {
+#             feature$set("image_date", img_date)
+#           })
+#         )
+#       })
+#      )$flatten() %>% ee_as_sf() %>% sf::st_drop_geometry()
+#     results[[paste(i,j)]]<-row
+#     }
+#    
+#     }
+# 
+#   }
+#   
+#   results<-do.call(rbind, results)
+# 
+#   
+#   results
+# }
+# 
