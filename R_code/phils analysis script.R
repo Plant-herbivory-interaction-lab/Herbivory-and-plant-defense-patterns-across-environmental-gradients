@@ -17,6 +17,9 @@ library(grid)
 library(gt)
 library(lubridate)
 
+# Load in Modified functions ----
+source("R_code/Functions.R")
+
 
 conflicts_prefer(dplyr::select,
                  dplyr::filter)
@@ -58,7 +61,7 @@ head(d1)
 # field and garden ####
 field_garden <- d1 %>% 
   mutate(Ppop_ID = gsub("([A-Za-z0-9]+-[0-9]+)[A-Z]$", "\\1", Plant_ID)) %>% 
-  full_join(.,read_csv('Data/clim_data.csv'), by=c("Pop","Year")) %>% drop_na(Date)
+  full_join(.,clim_data, by=c("Pop")) %>% drop_na(Date)
 head(field_garden)
 
 library(dplyr)
@@ -260,7 +263,8 @@ ggsave("Figures/field_garden_correlations.png", fg_cors, width = 12, height = 4,
 
 # Field data ####
 field_data <- d1  %>% filter(Loc == "Field") %>% 
-  full_join(clim_data, by=c("Pop","Year")) %>% drop_na(Date) %>% 
+  full_join(clim_data, by=c("Pop")) %>% drop_na(Date) %>% 
+  mutate(Year=Year.y) %>% 
   filter(Pop != "BR")
 head(field_data)
 
@@ -268,9 +272,9 @@ colnames(field_data)
 ggpairs(field_data %>% select(herb_p, Trichomes, SLA, Conc, Clim_PC1, ClimProd1, WeightedCD))
 
 fcount <- field_data %>% count(Pop,Year)
-fsum <- field_data %>% mutate(obs=1) %>%  group_by(Pop,Year) %>% 
-  summarise(nplant = sum(obs)) %>% 
-  ungroup() %>% 
+fsum <- field_data %>% mutate(obs=1) %>%
+  summarise(nplant = sum(obs),
+            .by = c(Pop,Year)) %>% 
   summarize(mean = mean(nplant), sd = sd(nplant), min = min(nplant), max = max(nplant))
 
 
