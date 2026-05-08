@@ -23,7 +23,8 @@ conflicts_prefer(dplyr::select,
 # Read in data ####
 ## climate data
 #write.csv(PCs, 'Data/climate_data.csv')
-clim_data <- read_csv('Data/climate_data.csv') %>% select(-...1) 
+clim_data <- read_csv('Data/clim_data.csv') %>% 
+  distinct(Pop, .keep_all = TRUE)
 head(clim_data)
 
 hist(log10(clim_data$NPP))
@@ -31,7 +32,7 @@ hist(log10(clim_data$NPP))
 
 ggpairs(clim_data %>% select(MAT, Tsd, AP, PWQ, NPP_g_10y, NPPg, NPP, Latitude, Clim_PC1, Clim_PC2, WeightedCD))
 
-clim_pca1 <- princomp(clim_data %>% distinct(Pop, .keep_all = TRUE) %>% select(MAT, Tsd, AP, PWQ), cor = TRUE)
+clim_pca1 <- princomp(clim_data %>%  select(MAT, Tsd, AP, PWQ), cor = TRUE)
 summary(clim_pca1)
 clim_pca2 <- princomp(clim_data %>% select(MAT, Tsd, AP, PWQ, NPP), cor = TRUE)
 summary(clim_pca2)
@@ -57,7 +58,7 @@ head(d1)
 # field and garden ####
 field_garden <- d1 %>% 
   mutate(Ppop_ID = gsub("([A-Za-z0-9]+-[0-9]+)[A-Z]$", "\\1", Plant_ID)) %>% 
-  full_join(.,clim_data, by=c("Pop","Year")) %>% drop_na(Date)
+  full_join(.,read_csv('Data/clim_data.csv'), by=c("Pop","Year")) %>% drop_na(Date)
 head(field_garden)
 
 library(dplyr)
@@ -179,7 +180,7 @@ fgcheck <- field_garden %>%
 
 # Summarize population averages and pivot wider
 field_garden_wide <- field_garden %>%
-  group_by(Pop,Ppop_ID, Loc,Latitude) %>%
+  group_by(Pop, Loc) %>%
   summarise(
     Trichomes = mean(Trichomes, na.rm = TRUE),
     SLA = mean(SLA, na.rm = TRUE),
@@ -258,7 +259,7 @@ ggsave("Figures/field_garden_correlations.png", fg_cors, width = 12, height = 4,
 
 
 # Field data ####
-field_data <- d1 %>% select(-...1) %>% filter(Loc == "Field") %>% 
+field_data <- d1  %>% filter(Loc == "Field") %>% 
   full_join(clim_data, by=c("Pop","Year")) %>% drop_na(Date) %>% 
   filter(Pop != "BR")
 head(field_data)
@@ -303,9 +304,9 @@ mod_herb1 <- glmmTMB(herb_p ~ ClimPC1_s +Trichomes_s + SLA_s + Conc_s +
 summary(mod_herb1)
 simulateResiduals(mod_herb1, plot=T)
 
-pred_herb <- ggpredict(mod_herb, terms = c("ClimPC1_s"))
+pred_herb <- ggpredict(mod_herb1, terms = c("ClimPC1_s"))
 plot(pred_herb)
-pred_herb1 <- ggpredict(mod_herb, terms = c("Conc_s"))
+pred_herb1 <- ggpredict(mod_herb1, terms = c("Conc_s"))
 plot(pred_herb1)
 
 # Trichomes model (year:population random effect due to singularity)
@@ -315,7 +316,7 @@ mod_trich1 <- glmmTMB(Trichomes_s ~ ClimPC1_s +
 summary(mod_trich1)
 simulateResiduals(mod_trich1, plot=T)
 
-pred_trich <- ggpredict(mod_trich, terms = c("ClimPC1_s [all]"))
+pred_trich <- ggpredict(mod_trich1, terms = c("ClimPC1_s [all]"))
 plot(pred_trich)
 
 # SLA model (population nested within year)
@@ -332,7 +333,7 @@ mod_Conc1 <- glmmTMB(Conc_s ~ ClimPC1_s +
 summary(mod_Conc1)
 simulateResiduals(mod_Conc1, plot=T)
 
-pred_Conc <- ggpredict(mod_Conc1, terms = c("Clim_PC1_s"))
+pred_Conc <- ggpredict(mod_Conc1, terms = c("ClimPC1_s"))
 plot(pred_Conc)
 
 # Assemble pSEM
@@ -348,7 +349,7 @@ field_psem1 <- psem(
 
 ## Summary of field psem ####
 summary(field_psem1, .progressBar = FALSE)
-sem.coefs(field_psem1)
+coefs(field_psem1)
 
 
 ## Quadratic Sub-models ####
@@ -388,7 +389,7 @@ mod_Conc <- glmmTMB(Conc_s ~ ClimPC1_s + ClimPC1_s2  +
 summary(mod_Conc)
 simulateResiduals(mod_Conc, plot=T)
 
-pred_Conc <- ggpredict(mod_Conc, terms = c("Clim_PC1_s"))
+pred_Conc <- ggpredict(mod_Conc, terms = c("ClimPC1_s"))
 plot(pred_Conc)
 
 # Assemble pSEM
@@ -404,7 +405,7 @@ field_psem <- psem(
 
 ## Summary of field psem ####
 summary(field_psem, .progressBar = FALSE)
-sem.coefs(field_psem)
+coefs(field_psem)
 
 summary(field_psem1, .progressBar = FALSE)$AIC #linear 
 summary(field_psem, .progressBar = FALSE)$AIC  #quadratic
@@ -1046,9 +1047,12 @@ effect_table <- effects_table %>%
   )
 gtsave(effect_table, "psem_effect_table.docx")
 
+## Map Figure ----
+
+
 # Full SEM plot ####
 ## Figure 2: SEMs ----
-Field_semgraph<-semGraph(field_psem, marg_y = 5,
+Field_semgraph<-semGraph(field_psem1, marg_y = 5,
                          node_locs = list("Climate PC1"=c(-0.5,-1),
                                           "Climate PC1 (sq)"=c(0.5,-1)),
                          edge_locs = list(c("Climate PC1","Herbivory",0.65),
