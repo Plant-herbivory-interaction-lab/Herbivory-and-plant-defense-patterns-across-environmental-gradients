@@ -582,7 +582,7 @@ ggsave("Figures/height_leaves_climpc1.png", figS1, width = 12, height = 6, dpi =
 proc_PC <- ggplot(field_pop_avg, aes(x = ClimPC1_s, y = NPP)) +
   geom_point() +
   geom_smooth(method = "lm", formula = y ~ x) +
-  labs(x = "Climate PC1", y = expression("NPP (kg*C/m"^"2"*")")) +
+  labs(x = "Climate PC1", y = "Ten year NPP") +
   theme_bw(base_size = 13)
 ggsave("Figures/NPP_climpc1.png", proc_PC, width = 6, height = 5, dpi = 300)
 
