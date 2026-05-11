@@ -25,6 +25,9 @@ conflicts_prefer(dplyr::select,
                  dplyr::filter,
                  patchwork::area)
 # Read in data ####
+
+
+
 ## climate data
 #write.csv(PCs, 'Data/climate_data.csv')
 clim_data <- read_csv('Data/clim_data.csv') %>% 
@@ -53,6 +56,33 @@ clim_data$ClimProd1 <- clim_pca2$scores[,1]
 
 ggpairs(clim_data %>% select(Latitude, NPP, ClimPC1, ClimProd1))
 
+
+## Herbivore data ####
+herbdat <- read_csv('Data/Combined_herbivores_data.csv') %>% 
+  full_join(clim_data, by="Pop") %>% 
+  mutate(Species=gsub("Meallybug", "Mealybug", Species),
+                                 Species=gsub("White Fly", "White fly", Species),
+                                 Species=gsub("Scales", "Scale", Species)) #%>% 
+  filter(Species == "Epitrix fuscula" | Species == "Leptinotarsa juncta" #| 
+           #Species == "Mealybug" | Species == "Scale" |Species == "White fly"
+         ) 
+head(herbdat)
+unique(herbdat$Species)
+herb_summary <- herbdat %>% group_by(Pop,Species,Latitude) %>% 
+  summarise(Amount=sum(Amount, na.rm=T)) %>% 
+  pivot_wider(names_from = Species, values_from = Amount, values_fill = 0)
+
+# write.csv(herb_summary, "Figures/HerbivoreTable.csv")
+
+## plot Amount by climate facet_wrap by species 
+ggplot(herb_summary, aes(y=Amount, x=ClimPC1))+
+  geom_point() + 
+  geom_smooth(method="glm.nb", formula= y~poly(x,2)) + 
+  facet_wrap(~Species, scales = "free")+
+  theme_bw(base_size = 16)
+
+epi_mod <- glmmTMB(Amount ~ poly(ClimPC1,1) , data=herb_summary %>% filter(Species=='Epitrix fuscula'))
+summary(epi_mod)
 
 ## herbivory and trait data from field and garden
 #write.csv(Combined_data, 'Data/Combined_data.csv')
