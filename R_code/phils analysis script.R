@@ -620,7 +620,7 @@ height_plot <- ggplot(field_pop_avg, aes(x = ClimPC1_s, y = Height)) +
   geom_smooth(method= "lm", formula = y~poly(x,2))+
   theme_bw(base_size = 18)
 
-lvs_plot <- ggplot(field_pop_avg, aes(x = ClimPC1_s, y = Leaves)) +
+lvs_plot <- ggplot(field_pop_avg, aes(x = ClimPC1, y = Leaves)) +
   geom_point() +
   geom_smooth(method= "lm", formula = y~x)+
   theme_bw(base_size = 13) +
@@ -632,7 +632,7 @@ ggsave("Figures/height_leaves_climpc1.png", figS1, width = 12, height = 6, dpi =
 
 
 ## Field NPP ~ PC plot ####
-proc_PC <- ggplot(field_pop_avg, aes(x = ClimPC1_s, y = NPP)) +
+proc_PC <- ggplot(field_pop_avg, aes(x = ClimPC1, y = NPP)) +
   geom_point() +
   geom_smooth(method = "lm", formula = y ~ x) +
   labs(x = "Climate PC1", y = expression("Ten year NPP (kg*C/m"^"2"*")")) +
@@ -1187,8 +1187,8 @@ clim_vars<-map_clim+
   plot_layout(widths = c(1.05,0.45,0.50)) 
 
 
-ggsave("fig_1.jpg",
-       device = "jpg",plot = clim_vars,
+ggsave("fig_1.png",
+       device = "png",plot = clim_vars,
        path = "Figures",dpi = 400,width = 11, 
        height = 6)
 
