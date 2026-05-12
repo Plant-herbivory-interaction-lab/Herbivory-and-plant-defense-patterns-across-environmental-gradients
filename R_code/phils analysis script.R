@@ -247,6 +247,7 @@ cor_conc
 
 t1 <- glmmTMB(Trichomes_Field ~ Trichomes_Garden + (1 | Pop), data = field_garden_wide)
 summary(t1)
+r2(t1)
 t1 <- glmmTMB(SLA_Field ~ SLA_Garden + (1 | Pop), data = field_garden_wide)
 summary(t1)
 t1 <- glmmTMB(Conc_Field ~ Conc_Garden + (1 | Pop), data = field_garden_wide)
@@ -329,7 +330,7 @@ field_datas <- field_data %>%
   ) #%>% filter(SLA>50)
 
 ggpairs(field_datas %>% select(herb_p_s, herb_p_s, Trichomes_s, SLA_s, Conc_s, NPP_s, Clim_PC1_s, ClimPC1_s, ClimProd1_s))
-cor.test(clim_data$ClimPC1, clim_data$NPP)
+cor.test(field_datas$ClimPC1, field_datas$NPP)
 
 ## linear Sub-models ####
 # Herbivory model (population nested within year)
@@ -520,6 +521,7 @@ gtsave(coef_table_full, "Figures/psem_table.docx")
 field_pop_avg <- field_datas %>%
   group_by(Pop) %>%
   summarise(
+    ClimPC1 = mean(ClimPC1, na.rm = TRUE),
     ClimPC1_s = mean(ClimPC1_s, na.rm = TRUE),
     Trichomes = mean(Trichomes, na.rm = TRUE),
     Conc = mean(Conc, na.rm = TRUE),
@@ -531,41 +533,53 @@ field_pop_avg <- field_datas %>%
 
 # A) Trichomes by ClimPC1 (quadratic)
 pA <- ggplot() +
-  geom_smooth(data = field_pop_avg, aes(x = ClimPC1_s, y = Trichomes),
+  geom_smooth(data = field_pop_avg, aes(x = ClimPC1, y = Trichomes),
               method = "lm", formula = y ~ x + I(x^2), color = "black") +
-  geom_point(data = field_datas, aes(x = ClimPC1_s, y = Trichomes), 
+  geom_point(data = field_datas, aes(x = ClimPC1, y = Trichomes), 
              alpha = 0.2, size = 1) +
-  geom_point(data = field_pop_avg, aes(x = ClimPC1_s, y = Trichomes), 
+  geom_point(data = field_pop_avg, aes(x = ClimPC1, y = Trichomes), 
              size = 3) +
   labs(x = "Climate PC1", y = "Trichomes (#/cm^2)", tag = "A") +
+  annotate("text", x = 1.5, y = 380,
+           label = "x: italic(p) == 0.21", parse=T, hjust=0, size = 5) +
+  annotate("text", x = 1.5, y = 350,
+           label = "x^2: italic(p) == 0.003", parse=T, hjust=0, size = 5) +
   theme_bw(base_size = 18)
 
 # B) Conc by ClimPC1 (linear)
 pB <- ggplot() +
-  geom_smooth(data = field_pop_avg, aes(x = ClimPC1_s, y = Conc),
+  geom_smooth(data = field_pop_avg, aes(x = ClimPC1, y = Conc),
               method = "lm", formula = y ~ x, color = "black") +
-  labs(x = "Climate PC1", y = "Glycoalkaloids (mg/mg)", tag = "B") +
-  geom_point(data = field_datas, aes(x = ClimPC1_s, y = Conc), 
+  labs(x = "Climate PC1", y = "Glycoalkaloids (mg/g)", tag = "B") +
+  geom_point(data = field_datas, aes(x = ClimPC1, y = Conc), 
              alpha = 0.2, size = 1) +
-  geom_point(data = field_pop_avg, aes(x = ClimPC1_s, y = Conc), 
+  geom_point(data = field_pop_avg, aes(x = ClimPC1, y = Conc), 
              size = 3) +
+  annotate("text", x = 1.5, y = 1.3,
+           label = "x: italic(p) == 0.070", parse=T, hjust=0, size = 5) +
+  annotate("text", x = 1.5, y = 1.2,
+           label = "x^2: italic(p) == 0.50", parse=T, hjust=0, size = 5) +
   theme_bw(base_size = 18)
 
 # C) herb_p by ClimPC1 (quadratic)
-herb1 <- glmmTMB(herb_p ~ poly(ClimPC1_s, 2) + Conc + (1 | Year/Pop), family=ordbeta, data = field_datas)
-pred_herb_clim <- ggpredict(herb1, terms = "ClimPC1_s [all]")
+herb1 <- glmmTMB(herb_p ~ poly(ClimPC1, 2) + Conc + (1 | Year/Pop), family=ordbeta, data = field_datas)
+pred_herb_clim <- ggpredict(herb1, terms = "ClimPC1 [all]")
 pred_herb_conc <- ggpredict(herb1, terms = "Conc [all]")
 
 pC <- ggplot() +
   geom_line(data = pred_herb_clim, aes(x = x, y = predicted), linewidth=1.25, color = "black") +
   geom_ribbon(data = pred_herb_clim, aes(x = x, ymin = conf.low, ymax = conf.high),
               alpha = 0.2) +
-  geom_point(data = field_datas, aes(x = ClimPC1_s, y = herb_p),
+  geom_point(data = field_datas, aes(x = ClimPC1, y = herb_p),
              alpha = 0.2, size = 1) +
-  geom_point(data = field_pop_avg, aes(x = ClimPC1_s, y = herb_p),
+  geom_point(data = field_pop_avg, aes(x = ClimPC1, y = herb_p),
              size = 3) +
   scale_y_continuous(labels = scales::percent)+
-  labs(x = "Climate PC1", y = "Herbivory", tag = "C") +
+  labs(x = "Climate PC1", y = "Herbivore damage", tag = "C") +
+  annotate("text", x = 1.5, y = .48,
+           label = "x: italic(p) == 0.026", parse=T, hjust=0, size = 5) +
+  annotate("text", x = 1.5, y = .42,
+           label = "x^2: italic(p) == 0.003", parse=T, hjust=0, size = 5) +
   theme_bw(base_size = 18)
 
 # D) herb_p by Conc
@@ -578,7 +592,9 @@ pD <- ggplot() +
   geom_point(data = field_pop_avg, aes(x = Conc, y = herb_p),
              size = 3) +
   scale_y_continuous(labels = scales::percent)+
-  labs(x = "Glycoalkaloids (mg/mg)", y = "Herbivory", tag = "D") +
+  labs(x = "Glycoalkaloids (mg/mg)", y = "Herbivore damage", tag = "D") +
+  annotate("text", x = .9, y = .4,
+           label = "italic(p) == 0.004", parse=T, hjust=0, size = 5) +
   theme_bw(base_size = 18)
 
 # Combine panels
@@ -595,14 +611,21 @@ lmod1 <- lm(NPP ~ poly(ClimPC1_s, 1), data = field_pop_avg)
 summary(lmod1)
 Anova(lmod1)
 
+lmod1 <- lm(Leaves ~ poly(ClimPC1_s, 1), data = field_pop_avg)
+summary(lmod1)
+Anova(lmod1)
+
 height_plot <- ggplot(field_pop_avg, aes(x = ClimPC1_s, y = Height)) +
   geom_point() +
   geom_smooth(method= "lm", formula = y~poly(x,2))+
   theme_bw(base_size = 18)
+
 lvs_plot <- ggplot(field_pop_avg, aes(x = ClimPC1_s, y = Leaves)) +
   geom_point() +
   geom_smooth(method= "lm", formula = y~x)+
   theme_bw(base_size = 13) +
+  annotate("text", x = -.5, y = 15,
+           label = paste0("r = 0.76","\np = 0.004"), size = 4.5) +
   xlab("Climate PC1")
 figS1 <- height_plot + lvs_plot
 ggsave("Figures/height_leaves_climpc1.png", figS1, width = 12, height = 6, dpi = 300)
@@ -613,6 +636,8 @@ proc_PC <- ggplot(field_pop_avg, aes(x = ClimPC1_s, y = NPP)) +
   geom_point() +
   geom_smooth(method = "lm", formula = y ~ x) +
   labs(x = "Climate PC1", y = expression("Ten year NPP (kg*C/m"^"2"*")")) +
+  annotate("text", x = -.5, y = 1,
+           label = paste0("r = 0.69","\np < 0.001"), size = 4.5) +
   theme_bw(base_size = 13)
 ggsave("Figures/NPP_climpc1.png", proc_PC, width = 6, height = 5, dpi = 300)
 
@@ -771,6 +796,7 @@ summary(garden_psem)$AIC #quadratic
 garden_pop_avg <- garden_summary %>%
   group_by(Pop) %>%
   summarise(
+    ClimPC1 = mean(ClimPC1, na.rm = TRUE),
     ClimPC1_s = mean(ClimPC1_s, na.rm = TRUE),
     Trichomes = mean(Trichomes, na.rm = TRUE),
     Conc = mean(Conc, na.rm = TRUE),
@@ -789,24 +815,32 @@ pred_herb_SLA_g <- ggpredict(herb2, terms = "SLA [all]")
 
 # A) Trichomes by ClimPC1 (quadratic)
 pA_g <- ggplot() +
-  geom_smooth(data = garden_summary, aes(x = ClimPC1_s, y = Trichomes),
+  geom_smooth(data = garden_summary, aes(x = ClimPC1, y = Trichomes),
               method = "lm", formula = y ~ x + I(x^2), color = "black") +
-  geom_point(data = garden_summary, aes(x = ClimPC1_s, y = Trichomes),
+  geom_point(data = garden_summary, aes(x = ClimPC1, y = Trichomes),
              alpha = 0.2, size = 1.25) +
-  geom_point(data = garden_pop_avg, aes(x = ClimPC1_s, y = Trichomes),
+  geom_point(data = garden_pop_avg, aes(x = ClimPC1, y = Trichomes),
              size = 3) +
   labs(x = "Climate PC1", y = "Trichomes (#/cm^2)", tag = "A") +
+  annotate("text", x = -1.5, y = 150,
+           label = "x: italic(p) == 0.98", parse=T, hjust=0, size = 5) +
+  annotate("text", x = -1.5, y = 135,
+           label = "x^2: italic(p) == 0.055", parse=T, hjust=0, size = 5) +
   theme_bw(base_size = 18)
 
 # B) Conc by ClimPC1 (linear)
 pB_g <- ggplot() +
-  geom_smooth(data = garden_pop_avg, aes(x = ClimPC1_s, y = Conc),
+  geom_smooth(data = garden_pop_avg, aes(x = ClimPC1, y = Conc),
               method = "lm", formula = y ~ x, color = "black") +
-  geom_point(data = garden_summary, aes(x = ClimPC1_s, y = Conc),
+  geom_point(data = garden_summary, aes(x = ClimPC1, y = Conc),
              alpha = 0.2, size = 1.25) +
-  geom_point(data = garden_pop_avg, aes(x = ClimPC1_s, y = Conc),
+  geom_point(data = garden_pop_avg, aes(x = ClimPC1, y = Conc),
              size = 3) +
-  labs(x = "Climate PC1", y = "Glycoalkaloids (mg/mg)", tag = "B") +
+  labs(x = "Climate PC1", y = "Glycoalkaloids (mg/g)", tag = "B") +
+  annotate("text", x = 1.8, y = 1.2,
+           label = "x: italic(p) == 0.003", parse=T, hjust=0, size = 5) +
+  annotate("text", x = 1.8, y = 1.1,
+           label = "x^2: italic(p) == 0.11", parse=T, hjust=0, size = 5) +
   theme_bw(base_size = 18)
 
 # C) mean_herb by ClimPC1 (quadratic) with ordbeta predictions
@@ -814,12 +848,16 @@ pC_g <- ggplot() +
   #geom_line(data = pred_herb_clim_g, aes(x = x, y = predicted), linewidth = 1.25, color = "black") +
   #geom_ribbon(data = pred_herb_clim_g, aes(x = x, ymin = conf.low, ymax = conf.high),
             #  alpha = 0.2) +
-  geom_point(data = garden_summary, aes(x = ClimPC1_s, y = mean_herb),
+  geom_point(data = garden_summary, aes(x = ClimPC1, y = mean_herb),
              alpha = 0.2, size = 1.25) +
-  geom_point(data = garden_pop_avg, aes(x = ClimPC1_s, y = mean_herb),
+  geom_point(data = garden_pop_avg, aes(x = ClimPC1, y = mean_herb),
              size = 3) +
   scale_y_continuous(labels = scales::percent)+
-  labs(x = "Climate PC1", y = "Herbivory", tag = "C") +
+  labs(x = "Climate PC1", y = "Herbivore damage", tag = "C") +
+  annotate("text", x = 1.8, y = .4,
+           label = "x: italic(p) == 0.33", parse=T, hjust=0, size = 5) +
+  annotate("text", x = 1.8, y = .35,
+           label = "x^2: italic(p) == 0.27", parse=T, hjust=0, size = 5) +
   theme_bw(base_size = 18)
 
 # D) mean_herb by SLA with ordbeta predictions
@@ -832,7 +870,9 @@ pD_g <- ggplot() +
   geom_point(data = garden_pop_avg, aes(x = SLA, y = mean_herb),
              size = 3) +
   scale_y_continuous(labels = scales::percent)+
-  labs(x = "SLA", y = "Herbivory", tag = "D") +
+  labs(x = "SLA", y = "Herbivore damage", tag = "D") +
+  annotate("text", x = 240, y = .45,
+           label = "x: italic(p) == 0.001", parse=T, hjust=0, size = 5) +
   theme_bw(base_size = 18)
 
 # Combine panels
