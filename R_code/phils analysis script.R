@@ -60,15 +60,17 @@ ggpairs(clim_data %>% select(Latitude, NPP, ClimPC1, ClimProd1))
 ## Herbivore data ####
 herbdat <- read_csv('Data/Combined_herbivores_data.csv') %>% 
   full_join(clim_data, by="Pop") %>% 
-  mutate(Species=gsub("Meallybug", "Mealybug", Species),
+  mutate(Latitude=round(Latitude,3),
+    Species=gsub("Meallybug", "Mealybug", Species),
                                  Species=gsub("White Fly", "White fly", Species),
-                                 Species=gsub("Scales", "Scale", Species)) #%>% 
-  filter(Species == "Epitrix fuscula" | Species == "Leptinotarsa juncta" #| 
-           #Species == "Mealybug" | Species == "Scale" |Species == "White fly"
-         ) 
+                                 Species=gsub("Scales", "Scale", Species)) %>% 
+  dplyr::filter(#Species == "Epitrix fuscula" | Species == "Leptinotarsa juncta" #| 
+  #          #Species == "Mealybug" | Species == "Scale" |Species == "White fly" |
+        Loc == "Field"  ) 
 head(herbdat)
 unique(herbdat$Species)
-herb_summary <- herbdat %>% group_by(Pop,Species,Latitude) %>% 
+herb_summary <- herbdat %>% group_by(Pop,Species,Latitude,Year.x) %>% 
+  rename(Year=Year.x) %>% 
   summarise(Amount=sum(Amount, na.rm=T)) %>% 
   pivot_wider(names_from = Species, values_from = Amount, values_fill = 0)
 
