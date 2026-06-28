@@ -314,11 +314,22 @@ semGraph<-function(fit=fit,node_locs=list(),
   # Define estimates as edge labels (rounded to 2 decimals)
   if (H) {edge_labels <- NULL # only significant ones
   } else {  edge_labels <- mapply(function(w, se, p) {
-    bquote(
-      atop(.(round(w, 2)) %+-% .(round(as.numeric(se), 2)),
-           italic(p) == .(p))
-    )
-  }, weights, edges$Std.Error, p_values)} 
+    if (p < 0.01) {
+      bquote(
+        atop(
+          .(round(w, 2)) %+-% .(round(as.numeric(se), 2)),
+          italic(p) < 0.01
+        )
+      )
+    } else {
+      bquote(
+        atop(
+          .(round(w, 2)) %+-% .(round(as.numeric(se), 2)),
+          italic(p) == .(round(p, 2))
+        )
+      )
+    }
+  }, weights, edges$Std.Error, p_values, SIMPLIFY = FALSE)} 
 
   
   
