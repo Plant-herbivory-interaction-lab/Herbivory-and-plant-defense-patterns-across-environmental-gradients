@@ -454,6 +454,68 @@ plot(partialResid(herb_p ~ Conc_s, field_psem)$xresid,
 abline(partialResid(herb_p ~ Conc_s, field_psem)$xresid,
        partialResid(herb_p ~ Conc_s, field_psem)$yresid)
 
+## 2022 data ----
+# field_datas_2022 <- field_datas %>% 
+#   filter(Year.x == "2022") %>% 
+#   filter(Pop %in% pull(d1 %>% filter(Loc=="Garden"), Pop))
+# 
+# mod_herb <- glmmTMB(herb_p ~ ClimPC1_s + ClimPC1_s2 + Trichomes_s + SLA_s + Conc_s +
+#                       (1 | Pop), family=ordbeta,
+#                     data = field_datas_2022)
+# summary(mod_herb)
+# simulateResiduals(mod_herb, plot=T)
+# 
+# pred_herb <- ggpredict(mod_herb, terms = c("ClimPC1_s"))
+# plot(pred_herb)
+# pred_herb1 <- ggpredict(mod_herb, terms = c("Conc_s"))
+# plot(pred_herb1)
+# 
+# # Trichomes model (year:population random effect due to singularity)
+# mod_trich <- glmmTMB(Trichomes_s ~ ClimPC1_s + ClimPC1_s2  +
+#                        (1 | Pop),
+#                      data = field_datas_2022)
+# summary(mod_trich)
+# simulateResiduals(mod_trich, plot=T)
+# 
+# pred_trich <- ggpredict(mod_trich, terms = c("ClimPC1_s [all]"))
+# plot(pred_trich)
+# 
+# # SLA model (population nested within year)
+# mod_SLA <- glmmTMB(SLA_s ~ ClimPC1_s + ClimPC1_s2  +
+#                      (1 | Pop),
+#                    data = field_datas_2022)
+# summary(mod_SLA)
+# simulateResiduals(mod_SLA, plot=T)
+# 
+# # Glycoalkaloids model (population nested within year)
+# mod_Conc <- glmmTMB(Conc_s ~ ClimPC1_s + ClimPC1_s2  +
+#                       (1 | Pop),
+#                     data = field_datas_2022)
+# summary(mod_Conc)
+# simulateResiduals(mod_Conc, plot=T)
+# 
+# pred_Conc <- ggpredict(mod_Conc, terms = c("ClimPC1_s"))
+# plot(pred_Conc)
+# 
+# # Assemble pSEM
+# field_psem <- psem(
+#   mod_herb,
+#   mod_trich,
+#   mod_SLA,
+#   mod_Conc,
+#   SLA_s %~~% Trichomes_s,
+#   #Conc_s %~~% SLA_s,
+#   data = field_datas_2022
+# )
+# 
+# ## Summary of field psem ####
+# summary(field_psem, .progressBar = FALSE)
+# coefs(field_psem)
+# 
+# 
+# 
+# 
+
 ## FIELD table ####
 # Extract coefficients from psem summary
 psem_summary <- summary(field_psem, .progressBar = FALSE)
@@ -1137,6 +1199,8 @@ Pop_info<-field_garden %>%
            ),
            Loc = case_when(
              n_distinct(Loc) == 2 ~ "Field & Garden",
+             n_distinct(Loc) == 1 & first(Loc) == "Garden" ~ "Garden only",
+             n_distinct(Loc) == 1 & first(Loc) == "Field" ~ "Field only",
              .default = first(Loc)
            ),
            across(where(is.numeric), first),
@@ -1154,7 +1218,7 @@ obs<-read.csv("Data/Solanum_carolinense_inat.csv") %>%
   drop_na(latitude) %>% 
   rename(Longitude=longitude,
          Latitude=latitude) %>% 
-  filter(
+  dplyr::filter(
     Longitude >= clipxy[1], Longitude <= clipxy[2],
     Latitude  >= clipxy[3], Latitude  <= clipxy[4]
   )
@@ -1163,8 +1227,8 @@ map_clim<-ggplot() +
   geom_spatvector(data=OR,fill="NA",color="black") +
   geom_point(data=obs,aes(x=Longitude,y=Latitude),shape=21,size=0.025,fill="lightgrey",alpha=0.1)+
   geom_point(data=Pop_info,aes(x=Longitude,y=Latitude,shape = factor(Year), color = Loc),size=3,stroke=1.5)+
-  scale_shape_manual(name="Year",values = c(24,21,22))+
-  scale_color_manual(name="Location",values = c("#440154FF","#21908CFF","#FDE725FF"))+
+  scale_shape_manual(name="Year of field\n observation",values = c(24,21,22))+
+  scale_color_manual(name="Location observed",values = c("#440154FF","#21908CFF","#FDE725FF"))+
   theme_void(base_size = 13) +
   theme(
     legend.position = "inside",
