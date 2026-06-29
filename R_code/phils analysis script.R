@@ -77,9 +77,9 @@ herb_summary <- herbdat %>% group_by(Pop,Species,Latitude,Year.x) %>%
 # write.csv(herb_summary, "Figures/HerbivoreTable.csv")
 
 ## plot Amount by climate facet_wrap by species 
-ggplot(herb_summary, aes(y=Amount, x=ClimPC1))+
+ggplot(herbdat, aes(y=Amount, x=ClimPC1))+
   geom_point() + 
-  geom_smooth(method="glm.nb", formula= y~poly(x,2)) + 
+  geom_smooth(method="poisson", formula= y~poly(x,2)) + 
   facet_wrap(~Species, scales = "free")+
   theme_bw(base_size = 16)
 
@@ -455,63 +455,63 @@ abline(partialResid(herb_p ~ Conc_s, field_psem)$xresid,
        partialResid(herb_p ~ Conc_s, field_psem)$yresid)
 
 ## 2022 data ----
-# field_datas_2022 <- field_datas %>% 
-#   filter(Year.x == "2022") %>% 
-#   filter(Pop %in% pull(d1 %>% filter(Loc=="Garden"), Pop))
-# 
-# mod_herb <- glmmTMB(herb_p ~ ClimPC1_s + ClimPC1_s2 + Trichomes_s + SLA_s + Conc_s +
-#                       (1 | Pop), family=ordbeta,
-#                     data = field_datas_2022)
-# summary(mod_herb)
-# simulateResiduals(mod_herb, plot=T)
-# 
-# pred_herb <- ggpredict(mod_herb, terms = c("ClimPC1_s"))
-# plot(pred_herb)
-# pred_herb1 <- ggpredict(mod_herb, terms = c("Conc_s"))
-# plot(pred_herb1)
-# 
-# # Trichomes model (year:population random effect due to singularity)
-# mod_trich <- glmmTMB(Trichomes_s ~ ClimPC1_s + ClimPC1_s2  +
-#                        (1 | Pop),
-#                      data = field_datas_2022)
-# summary(mod_trich)
-# simulateResiduals(mod_trich, plot=T)
-# 
-# pred_trich <- ggpredict(mod_trich, terms = c("ClimPC1_s [all]"))
-# plot(pred_trich)
-# 
-# # SLA model (population nested within year)
-# mod_SLA <- glmmTMB(SLA_s ~ ClimPC1_s + ClimPC1_s2  +
-#                      (1 | Pop),
-#                    data = field_datas_2022)
-# summary(mod_SLA)
-# simulateResiduals(mod_SLA, plot=T)
-# 
-# # Glycoalkaloids model (population nested within year)
-# mod_Conc <- glmmTMB(Conc_s ~ ClimPC1_s + ClimPC1_s2  +
-#                       (1 | Pop),
-#                     data = field_datas_2022)
-# summary(mod_Conc)
-# simulateResiduals(mod_Conc, plot=T)
-# 
-# pred_Conc <- ggpredict(mod_Conc, terms = c("ClimPC1_s"))
-# plot(pred_Conc)
-# 
-# # Assemble pSEM
-# field_psem <- psem(
-#   mod_herb,
-#   mod_trich,
-#   mod_SLA,
-#   mod_Conc,
-#   SLA_s %~~% Trichomes_s,
-#   #Conc_s %~~% SLA_s,
-#   data = field_datas_2022
-# )
-# 
-# ## Summary of field psem ####
-# summary(field_psem, .progressBar = FALSE)
-# coefs(field_psem)
-# 
+ field_datas_2022 <- field_datas %>% 
+   filter(Year.x == "2022") %>% 
+   filter(Pop %in% pull(d1 %>% filter(Loc=="Garden"), Pop))
+ 
+ mod_herb <- glmmTMB(herb_p ~ ClimPC1_s + ClimPC1_s2 + Trichomes_s + SLA_s + Conc_s +
+                       (1 | Pop), family=ordbeta,
+                     data = field_datas_2022)
+ summary(mod_herb)
+ simulateResiduals(mod_herb, plot=T)
+ 
+ pred_herb <- ggpredict(mod_herb, terms = c("ClimPC1_s"))
+ plot(pred_herb)
+ pred_herb1 <- ggpredict(mod_herb, terms = c("Conc_s"))
+ plot(pred_herb1)
+ 
+ # Trichomes model (year:population random effect due to singularity)
+ mod_trich <- glmmTMB(Trichomes_s ~ ClimPC1_s + ClimPC1_s2  +
+                        (1 | Pop),
+                      data = field_datas_2022)
+ summary(mod_trich)
+ simulateResiduals(mod_trich, plot=T)
+ 
+ pred_trich <- ggpredict(mod_trich, terms = c("ClimPC1_s [all]"))
+ plot(pred_trich)
+ 
+ # SLA model (population nested within year)
+ mod_SLA <- glmmTMB(SLA_s ~ ClimPC1_s + ClimPC1_s2  +
+                      (1 | Pop),
+                    data = field_datas_2022)
+ summary(mod_SLA)
+ simulateResiduals(mod_SLA, plot=T)
+ 
+ # Glycoalkaloids model (population nested within year)
+ mod_Conc <- glmmTMB(Conc_s ~ ClimPC1_s + ClimPC1_s2  +
+                       (1 | Pop),
+                     data = field_datas_2022)
+ summary(mod_Conc)
+ simulateResiduals(mod_Conc, plot=T)
+ 
+ pred_Conc <- ggpredict(mod_Conc, terms = c("ClimPC1_s"))
+ plot(pred_Conc)
+ 
+ # Assemble pSEM
+ field_psem22 <- psem(
+   mod_herb,
+   mod_trich,
+   mod_SLA,
+   mod_Conc,
+   SLA_s %~~% Trichomes_s,
+   #Conc_s %~~% SLA_s,
+   data = field_datas_2022
+ )
+ 
+ ## Summary of field psem ####
+ summary(field_psem, .progressBar = FALSE)
+ coefs(field_psem22)
+ 
 # 
 # 
 # 
@@ -773,12 +773,21 @@ mod_herb_g1 <- glmmTMB(mean_herb ~ ClimPC1_s + Trichomes_s + SLA_s + Conc_s +
 summary(mod_herb_g1)
 simulateResiduals(mod_herb_g1, plot = T)
 
+mod_herb_g1nr <- glmmTMB(mean_herb ~ ClimPC1_s + Trichomes_s + SLA_s + Conc_s, 
+                         family = ordbeta,
+                       data = garden_summary)
+anova(mod_herb_g1,mod_herb_g1nr)
+
 # Trichomes model (population random effect)
 mod_trich_g1 <- glmmTMB(Trichomes_s ~ ClimPC1_s + 
                          (1 | Pop),
                        data = garden_summary)
 summary(mod_trich_g1)
 simulateResiduals(mod_trich_g1, plot = T)
+
+mod_trich_g1nr <- glmmTMB(Trichomes_s ~ ClimPC1_s,
+                        data = garden_summary)
+anova(mod_trich_g1,mod_trich_g1nr)
 
 # SLA model (population random effect)
 mod_SLA_g1 <- glmmTMB(SLA_s ~ ClimPC1_s +
@@ -787,12 +796,20 @@ mod_SLA_g1 <- glmmTMB(SLA_s ~ ClimPC1_s +
 summary(mod_SLA_g1)
 simulateResiduals(mod_SLA_g1, plot = T)
 
+mod_SLA_g1nr <- glmmTMB(SLA_s ~ ClimPC1_s ,
+                      data = garden_summary)
+anova(mod_SLA_g1,mod_SLA_g1nr)
+
 # Glycoalkaloids model (population random effect)
 mod_Conc_g1 <- glmmTMB(Conc_s ~ ClimPC1_s + 
                         (1 | Pop),
                       data = garden_summary)
 summary(mod_Conc_g1)
 simulateResiduals(mod_Conc_g1, plot = T)
+
+mod_Conc_g1nr <- glmmTMB(Conc_s ~ ClimPC1_s,
+                       data = garden_summary)
+anova(mod_Conc_g1,mod_Conc_g1nr)
 
 # Assemble pSEM
 garden_psem1 <- psem(
