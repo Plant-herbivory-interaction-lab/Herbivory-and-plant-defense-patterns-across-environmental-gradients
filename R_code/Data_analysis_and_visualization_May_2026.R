@@ -1231,7 +1231,7 @@ clipxy <- c(-100,-65,25,50)
 
 OR <- crop(cn,clipxy)
 
-obs<-read.csv("Data/Solanum_carolinense_inat.csv") %>% 
+obs<-read_csv("Data/Solanum_carolinense_inat.csv") %>% 
   drop_na(latitude) %>% 
   rename(Longitude=longitude,
          Latitude=latitude) %>% 
