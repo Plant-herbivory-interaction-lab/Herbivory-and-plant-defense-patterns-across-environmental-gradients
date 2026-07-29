@@ -5,7 +5,7 @@
 |-----------|----------|
 |Data_analysis_and_visualization_May_2025.R| Contains code regarding the final analysis and presentation of the data. This code depends on the **Functions.R** file. |                 
  | Functions.R| Includes various functions that were used throughout the data analysis pipeline. |
- | Data_wrangling.R | Contains code that was used to obtain bioclim data and coed that combined data from the various csv files |     
+ | Data_wrangling.R | Contains code that was used to obtain bioclim data and code that combined data from the various csv files |     
  | Old_code | Contains code no longer used in this data analysis |
            
 
