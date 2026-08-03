@@ -18,7 +18,7 @@ library(gt)
 library(lubridate)
 
 # Load in Modified functions ----
-source("R_code/Functions.R")
+#source("R_code/Functions.R")
 
 
 conflicts_prefer(dplyr::select,
@@ -30,7 +30,7 @@ conflicts_prefer(dplyr::select,
 
 ## climate data
 #write.csv(PCs, 'Data/climate_data.csv')
-clim_data <- read_csv('Data/clim_data.csv') %>% 
+clim_data <- read_csv('clim_data.csv') %>% 
   distinct(Pop, .keep_all = TRUE)
 head(clim_data)
 
@@ -58,7 +58,7 @@ ggpairs(clim_data %>% select(Latitude, NPP, ClimPC1, ClimProd1))
 
 
 ## Herbivore data ####
-herbdat <- read_csv('Data/Combined_herbivores_data.csv') %>% 
+herbdat <- read_csv('Combined_herbivores_data.csv') %>% 
   full_join(clim_data, by="Pop") %>% 
   mutate(Latitude=round(Latitude,3),
     Species=gsub("Meallybug", "Mealybug", Species),
@@ -83,12 +83,12 @@ ggplot(herbdat, aes(y=Amount, x=ClimPC1))+
   facet_wrap(~Species, scales = "free")+
   theme_bw(base_size = 16)
 
-epi_mod <- glmmTMB(Amount ~ poly(ClimPC1,1) , data=herb_summary %>% filter(Species=='Epitrix fuscula'))
+epi_mod <- glmmTMB(Amount ~ poly(ClimPC1,1) , data=herbdat %>% filter(Species=='Epitrix fuscula'))
 summary(epi_mod)
 
 ## herbivory and trait data from field and garden
 #write.csv(Combined_data, 'Data/Combined_data.csv')
-d1 <- read_csv('Data/Combined_data.csv')
+d1 <- read_csv('Combined_data.csv')
 head(d1)
 
 # field and garden ####
@@ -292,7 +292,7 @@ pC_cor <- ggplot(field_garden_wide, aes(x = Conc_Field, y = Conc_Garden)) +
 # Combine panels
 fg_cors <- pA_cor | pB_cor | pC_cor
 
-ggsave("Figures/field_garden_correlations.png", fg_cors, width = 12, height = 4, dpi = 300)
+#ggsave("Figures/field_garden_correlations.png", fg_cors, width = 12, height = 4, dpi = 300)
 
 
 # Field data ####
@@ -664,7 +664,7 @@ pD <- ggplot() +
 # Combine panels
 fig3 <- (pA | pB) / (pC | pD)
 
-ggsave("Figures/field_bivariate_plots.png", fig3, width = 12, height = 10, dpi = 300)
+#ggsave("Figures/field_bivariate_plots.png", fig3, width = 12, height = 10, dpi = 300)
 
 ## plot of plant height ####
 hmod1 <- lm(Height ~ poly(ClimPC1_s, 2), data = field_pop_avg)
@@ -692,7 +692,7 @@ lvs_plot <- ggplot(field_pop_avg, aes(x = ClimPC1, y = Leaves)) +
            label = paste0("r = 0.76","\np = 0.004"), size = 4.5) +
   xlab("Climate PC1")
 figS1 <- height_plot + lvs_plot
-ggsave("Figures/height_leaves_climpc1.png", figS1, width = 12, height = 6, dpi = 300)
+#ggsave("Figures/height_leaves_climpc1.png", figS1, width = 12, height = 6, dpi = 300)
 
 
 ## Field NPP ~ PC plot ####
@@ -703,7 +703,7 @@ proc_PC <- ggplot(field_pop_avg, aes(x = ClimPC1, y = NPP)) +
   annotate("text", x = -.5, y = 1,
            label = paste0("r = 0.69","\np < 0.001"), size = 4.5) +
   theme_bw(base_size = 13)
-ggsave("Figures/NPP_climpc1.png", proc_PC, width = 6, height = 5, dpi = 300)
+#ggsave("Figures/NPP_climpc1.png", proc_PC, width = 6, height = 5, dpi = 300)
 
 # Garden DATA ####
 garden_data <- d1 %>% filter(Loc == "Garden") %>% 
@@ -958,7 +958,7 @@ pD_g <- ggplot() +
 
 # Combine panels
 fig4 <- (pA_g | pB_g) / (pC_g | pD_g)
-ggsave("Figures/garden_bivariate_plots.png", fig4, width = 12, height = 10, dpi = 300)
+#ggsave("Figures/garden_bivariate_plots.png", fig4, width = 12, height = 10, dpi = 300)
 
 # Full table ####
 # Extract field coefficients
@@ -1270,10 +1270,10 @@ clim_vars<-map_clim+
   plot_layout(widths = c(1.05,0.45,0.50)) 
 
 
-ggsave("fig_1.png",
-       device = "png",plot = clim_vars,
-       path = "Figures",dpi = 400,width = 11, 
-       height = 6)
+# ggsave("fig_1.png",
+#        device = "png",plot = clim_vars,
+#        path = "Figures",dpi = 400,width = 11, 
+#        height = 6)
 
 # Full SEM plot ####
 Field_semgraph<-semGraph(field_psem, marg_y = 5,
@@ -1303,7 +1303,7 @@ Garden_semgraph<-semGraph(garden_psem, marg_y = 5,
 
 SEM_fig<-(Field_semgraph | Garden_semgraph)+plot_annotation(tag_levels = "A");SEM_fig
 
-ggsave("SEM_R.jpg",
-       device = "jpg",plot = SEM_fig,
-       path = "Figures",dpi = 400,width = 10, 
-       height = 5,limitsize = F)
+# ggsave("SEM_R.jpg",
+#        device = "jpg",plot = SEM_fig,
+#        path = "Figures",dpi = 400,width = 10, 
+#        height = 5,limitsize = F)
