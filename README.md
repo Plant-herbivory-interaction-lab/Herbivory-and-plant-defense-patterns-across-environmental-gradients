@@ -51,7 +51,6 @@ Dataset DOI: [10.5061/dryad.pc866t23k](https://doi.org/10.5061/dryad.pc866t23k)
 | Conc..mg.mL | mg/mL | Glycoalk_Spring_2023_standard_curve.csv | Concentration of the standard used in glycoalkaloid analysis. |
 | Conc..mg.mL. | mg/mL | Glycoalk_fall_2023_Standard_curve.csv | Concentration of the standard used in glycoalkaloid analysis. |
 | Date | date | Combined_data.csv, Combined_herbivores_data.csv, Combined_herbivory_and_trait_data.csv, Field_2022_traits.csv, Field_2023_traits.csv, Garden_leaf_traits.csv, Garden_survey.csv | The date that indicates when the data was collected. |
-| Email | character | Field_2023_pop_info.csv | Email of the contacted person for data collection permission. |
 | Epitrix | numeric | Field_2023_traits.csv | Number of *Epitrix fuscula* individuals on plants. |
 | Epitrix_fuscula | numeric | Field_2022_traits.csv | Number of *Epitrix fuscula* individuals on plants. |
 | Epitrix_herb | percent | Field_2023_traits.csv | Percent of *Epitrix fuscula* herbivory on the plants. |
