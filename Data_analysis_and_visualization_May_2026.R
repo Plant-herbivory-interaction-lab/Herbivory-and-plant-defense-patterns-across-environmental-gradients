@@ -16,23 +16,21 @@ library(ggplotify)
 library(grid)
 library(gt)
 library(lubridate)
-library(qgraph)
-library(rsvg)
-library(svglite)
-library(grid)
 
 # Load in Modified functions ----
-source("Functions.R")
+source("R_code/Functions.R")
 
 
 conflicts_prefer(dplyr::select,
                  dplyr::filter,
                  patchwork::area)
-
-
 # Read in data ####
+
+
+
 ## climate data
-clim_data <- read_csv('clim_data.csv') %>% 
+#write.csv(PCs, 'Data/climate_data.csv')
+clim_data <- read_csv('Data/clim_data.csv') %>% 
   distinct(Pop, .keep_all = TRUE)
 head(clim_data)
 
@@ -60,7 +58,7 @@ ggpairs(clim_data %>% select(Latitude, NPP, ClimPC1, ClimProd1))
 
 
 ## Herbivore data ####
-herbdat <- read_csv('Combined_herbivores_data.csv') %>% 
+herbdat <- read_csv('Data/Combined_herbivores_data.csv') %>% 
   full_join(clim_data, by="Pop") %>% 
   mutate(Latitude=round(Latitude,3),
     Species=gsub("Meallybug", "Mealybug", Species),
@@ -79,18 +77,18 @@ herb_summary <- herbdat %>% group_by(Pop,Species,Latitude,Year.x) %>%
 # write.csv(herb_summary, "Figures/HerbivoreTable.csv")
 
 ## plot Amount by climate facet_wrap by species 
-ggplot(herbdat, aes(y=Amount, x=ClimPC1))+
+ggplot(herb_summary, aes(y=Amount, x=ClimPC1))+
   geom_point() + 
-  geom_smooth(method="poisson", formula= y~poly(x,2)) + 
+  geom_smooth(method="glm.nb", formula= y~poly(x,2)) + 
   facet_wrap(~Species, scales = "free")+
   theme_bw(base_size = 16)
 
-epi_mod <- glmmTMB(Amount ~ poly(ClimPC1,1) , data=herbdat %>% filter(Species=='Epitrix fuscula'))
+epi_mod <- glmmTMB(Amount ~ poly(ClimPC1,1) , data=herb_summary %>% filter(Species=='Epitrix fuscula'))
 summary(epi_mod)
 
 ## herbivory and trait data from field and garden
 #write.csv(Combined_data, 'Data/Combined_data.csv')
-d1 <- read_csv('Combined_data.csv')
+d1 <- read_csv('Data/Combined_data.csv')
 head(d1)
 
 # field and garden ####
@@ -294,7 +292,7 @@ pC_cor <- ggplot(field_garden_wide, aes(x = Conc_Field, y = Conc_Garden)) +
 # Combine panels
 fg_cors <- pA_cor | pB_cor | pC_cor
 
-#ggsave("Figures/field_garden_correlations.png", fg_cors, width = 12, height = 4, dpi = 300)
+ggsave("Figures/field_garden_correlations.png", fg_cors, width = 12, height = 4, dpi = 300)
 
 
 # Field data ####
@@ -457,63 +455,63 @@ abline(partialResid(herb_p ~ Conc_s, field_psem)$xresid,
        partialResid(herb_p ~ Conc_s, field_psem)$yresid)
 
 ## 2022 data ----
- field_datas_2022 <- field_datas %>% 
-   filter(Year.x == "2022") %>% 
-   filter(Pop %in% pull(d1 %>% filter(Loc=="Garden"), Pop))
- 
- mod_herb <- glmmTMB(herb_p ~ ClimPC1_s + ClimPC1_s2 + Trichomes_s + SLA_s + Conc_s +
-                       (1 | Pop), family=ordbeta,
-                     data = field_datas_2022)
- summary(mod_herb)
- simulateResiduals(mod_herb, plot=T)
- 
- pred_herb <- ggpredict(mod_herb, terms = c("ClimPC1_s"))
- plot(pred_herb)
- pred_herb1 <- ggpredict(mod_herb, terms = c("Conc_s"))
- plot(pred_herb1)
- 
- # Trichomes model (year:population random effect due to singularity)
- mod_trich <- glmmTMB(Trichomes_s ~ ClimPC1_s + ClimPC1_s2  +
-                        (1 | Pop),
-                      data = field_datas_2022)
- summary(mod_trich)
- simulateResiduals(mod_trich, plot=T)
- 
- pred_trich <- ggpredict(mod_trich, terms = c("ClimPC1_s [all]"))
- plot(pred_trich)
- 
- # SLA model (population nested within year)
- mod_SLA <- glmmTMB(SLA_s ~ ClimPC1_s + ClimPC1_s2  +
-                      (1 | Pop),
-                    data = field_datas_2022)
- summary(mod_SLA)
- simulateResiduals(mod_SLA, plot=T)
- 
- # Glycoalkaloids model (population nested within year)
- mod_Conc <- glmmTMB(Conc_s ~ ClimPC1_s + ClimPC1_s2  +
-                       (1 | Pop),
-                     data = field_datas_2022)
- summary(mod_Conc)
- simulateResiduals(mod_Conc, plot=T)
- 
- pred_Conc <- ggpredict(mod_Conc, terms = c("ClimPC1_s"))
- plot(pred_Conc)
- 
- # Assemble pSEM
- field_psem22 <- psem(
-   mod_herb,
-   mod_trich,
-   mod_SLA,
-   mod_Conc,
-   SLA_s %~~% Trichomes_s,
-   #Conc_s %~~% SLA_s,
-   data = field_datas_2022
- )
- 
- ## Summary of field psem ####
- summary(field_psem, .progressBar = FALSE)
- coefs(field_psem22)
- 
+# field_datas_2022 <- field_datas %>% 
+#   filter(Year.x == "2022") %>% 
+#   filter(Pop %in% pull(d1 %>% filter(Loc=="Garden"), Pop))
+# 
+# mod_herb <- glmmTMB(herb_p ~ ClimPC1_s + ClimPC1_s2 + Trichomes_s + SLA_s + Conc_s +
+#                       (1 | Pop), family=ordbeta,
+#                     data = field_datas_2022)
+# summary(mod_herb)
+# simulateResiduals(mod_herb, plot=T)
+# 
+# pred_herb <- ggpredict(mod_herb, terms = c("ClimPC1_s"))
+# plot(pred_herb)
+# pred_herb1 <- ggpredict(mod_herb, terms = c("Conc_s"))
+# plot(pred_herb1)
+# 
+# # Trichomes model (year:population random effect due to singularity)
+# mod_trich <- glmmTMB(Trichomes_s ~ ClimPC1_s + ClimPC1_s2  +
+#                        (1 | Pop),
+#                      data = field_datas_2022)
+# summary(mod_trich)
+# simulateResiduals(mod_trich, plot=T)
+# 
+# pred_trich <- ggpredict(mod_trich, terms = c("ClimPC1_s [all]"))
+# plot(pred_trich)
+# 
+# # SLA model (population nested within year)
+# mod_SLA <- glmmTMB(SLA_s ~ ClimPC1_s + ClimPC1_s2  +
+#                      (1 | Pop),
+#                    data = field_datas_2022)
+# summary(mod_SLA)
+# simulateResiduals(mod_SLA, plot=T)
+# 
+# # Glycoalkaloids model (population nested within year)
+# mod_Conc <- glmmTMB(Conc_s ~ ClimPC1_s + ClimPC1_s2  +
+#                       (1 | Pop),
+#                     data = field_datas_2022)
+# summary(mod_Conc)
+# simulateResiduals(mod_Conc, plot=T)
+# 
+# pred_Conc <- ggpredict(mod_Conc, terms = c("ClimPC1_s"))
+# plot(pred_Conc)
+# 
+# # Assemble pSEM
+# field_psem <- psem(
+#   mod_herb,
+#   mod_trich,
+#   mod_SLA,
+#   mod_Conc,
+#   SLA_s %~~% Trichomes_s,
+#   #Conc_s %~~% SLA_s,
+#   data = field_datas_2022
+# )
+# 
+# ## Summary of field psem ####
+# summary(field_psem, .progressBar = FALSE)
+# coefs(field_psem)
+# 
 # 
 # 
 # 
@@ -580,7 +578,7 @@ coef_table_full <- coef_table %>%
     table.font.size = 12
   )
 
-#gtsave(coef_table_full, "Figures/psem_table.docx")  
+gtsave(coef_table_full, "Figures/psem_table.docx")  
 
 ## Field bivariate plots ####
 # Calculate population averages
@@ -666,7 +664,7 @@ pD <- ggplot() +
 # Combine panels
 fig3 <- (pA | pB) / (pC | pD)
 
-#ggsave("Figures/field_bivariate_plots.png", fig3, width = 12, height = 10, dpi = 300)
+ggsave("Figures/field_bivariate_plots.png", fig3, width = 12, height = 10, dpi = 300)
 
 ## plot of plant height ####
 hmod1 <- lm(Height ~ poly(ClimPC1_s, 2), data = field_pop_avg)
@@ -694,7 +692,7 @@ lvs_plot <- ggplot(field_pop_avg, aes(x = ClimPC1, y = Leaves)) +
            label = paste0("r = 0.76","\np = 0.004"), size = 4.5) +
   xlab("Climate PC1")
 figS1 <- height_plot + lvs_plot
-#ggsave("Figures/height_leaves_climpc1.png", figS1, width = 12, height = 6, dpi = 300)
+ggsave("Figures/height_leaves_climpc1.png", figS1, width = 12, height = 6, dpi = 300)
 
 
 ## Field NPP ~ PC plot ####
@@ -705,7 +703,7 @@ proc_PC <- ggplot(field_pop_avg, aes(x = ClimPC1, y = NPP)) +
   annotate("text", x = -.5, y = 1,
            label = paste0("r = 0.69","\np < 0.001"), size = 4.5) +
   theme_bw(base_size = 13)
-#ggsave("Figures/NPP_climpc1.png", proc_PC, width = 6, height = 5, dpi = 300)
+ggsave("Figures/NPP_climpc1.png", proc_PC, width = 6, height = 5, dpi = 300)
 
 # Garden DATA ####
 garden_data <- d1 %>% filter(Loc == "Garden") %>% 
@@ -775,21 +773,12 @@ mod_herb_g1 <- glmmTMB(mean_herb ~ ClimPC1_s + Trichomes_s + SLA_s + Conc_s +
 summary(mod_herb_g1)
 simulateResiduals(mod_herb_g1, plot = T)
 
-mod_herb_g1nr <- glmmTMB(mean_herb ~ ClimPC1_s + Trichomes_s + SLA_s + Conc_s, 
-                         family = ordbeta,
-                       data = garden_summary)
-anova(mod_herb_g1,mod_herb_g1nr)
-
 # Trichomes model (population random effect)
 mod_trich_g1 <- glmmTMB(Trichomes_s ~ ClimPC1_s + 
                          (1 | Pop),
                        data = garden_summary)
 summary(mod_trich_g1)
 simulateResiduals(mod_trich_g1, plot = T)
-
-mod_trich_g1nr <- glmmTMB(Trichomes_s ~ ClimPC1_s,
-                        data = garden_summary)
-anova(mod_trich_g1,mod_trich_g1nr)
 
 # SLA model (population random effect)
 mod_SLA_g1 <- glmmTMB(SLA_s ~ ClimPC1_s +
@@ -798,20 +787,12 @@ mod_SLA_g1 <- glmmTMB(SLA_s ~ ClimPC1_s +
 summary(mod_SLA_g1)
 simulateResiduals(mod_SLA_g1, plot = T)
 
-mod_SLA_g1nr <- glmmTMB(SLA_s ~ ClimPC1_s ,
-                      data = garden_summary)
-anova(mod_SLA_g1,mod_SLA_g1nr)
-
 # Glycoalkaloids model (population random effect)
 mod_Conc_g1 <- glmmTMB(Conc_s ~ ClimPC1_s + 
                         (1 | Pop),
                       data = garden_summary)
 summary(mod_Conc_g1)
 simulateResiduals(mod_Conc_g1, plot = T)
-
-mod_Conc_g1nr <- glmmTMB(Conc_s ~ ClimPC1_s,
-                       data = garden_summary)
-anova(mod_Conc_g1,mod_Conc_g1nr)
 
 # Assemble pSEM
 garden_psem1 <- psem(
@@ -960,7 +941,7 @@ pD_g <- ggplot() +
 
 # Combine panels
 fig4 <- (pA_g | pB_g) / (pC_g | pD_g)
-#ggsave("Figures/garden_bivariate_plots.png", fig4, width = 12, height = 10, dpi = 300)
+ggsave("Figures/garden_bivariate_plots.png", fig4, width = 12, height = 10, dpi = 300)
 
 # Full table ####
 # Extract field coefficients
@@ -1112,7 +1093,7 @@ psem_table <- combined_wide %>%
   )
 
 ## save table ####
-#gtsave(psem_table, "psem_results.docx")
+gtsave(psem_table, "psem_results.docx")
 
 # Table of Direct and Indirect effects ####
 ## ---- Field path coefficients ----
@@ -1204,7 +1185,7 @@ effect_table <- effects_table %>%
     row_group.background.color = "#f0f0f0",
     table.font.size = 12
   )
-#gtsave(effect_table, "psem_effect_table.docx")
+gtsave(effect_table, "psem_effect_table.docx")
 
 # Map Figure ----
 Pop_info<-field_garden %>% 
@@ -1233,7 +1214,7 @@ clipxy <- c(-100,-65,25,50)
 
 OR <- crop(cn,clipxy)
 
-obs<-read_csv("Solanum_carolinense_inat.csv") %>% 
+obs<-read_csv("Data/Solanum_carolinense_inat.csv") %>% 
   drop_na(latitude) %>% 
   rename(Longitude=longitude,
          Latitude=latitude) %>% 
@@ -1272,10 +1253,10 @@ clim_vars<-map_clim+
   plot_layout(widths = c(1.05,0.45,0.50)) 
 
 
-# ggsave("fig_1.png",
-#        device = "png",plot = clim_vars,
-#        path = "Figures",dpi = 400,width = 11, 
-#        height = 6)
+ggsave("fig_1.png",
+       device = "png",plot = clim_vars,
+       path = "Figures",dpi = 400,width = 11, 
+       height = 6)
 
 # Full SEM plot ####
 Field_semgraph<-semGraph(field_psem, marg_y = 5,
@@ -1305,7 +1286,7 @@ Garden_semgraph<-semGraph(garden_psem, marg_y = 5,
 
 SEM_fig<-(Field_semgraph | Garden_semgraph)+plot_annotation(tag_levels = "A");SEM_fig
 
-# ggsave("SEM_R.jpg",
-#        device = "jpg",plot = SEM_fig,
-#        path = "Figures",dpi = 400,width = 10, 
-#        height = 5,limitsize = F)
+ggsave("SEM_R.jpg",
+       device = "jpg",plot = SEM_fig,
+       path = "Figures",dpi = 400,width = 10, 
+       height = 5,limitsize = F)

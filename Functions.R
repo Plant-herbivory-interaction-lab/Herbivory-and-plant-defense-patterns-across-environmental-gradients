@@ -3,6 +3,12 @@
 ## Email: j.herschberger@ufl.edu
 ## Project: Culprits of plant defense variation across a latitudinal gradient.
 
+# Packages ----
+library(qgraph)
+library(rsvg)
+library(svglite)
+library(grid)
+
 # Functions ----
 ## Compress data function ----
 transform_perc <- function(percentage_vec) {
@@ -10,11 +16,254 @@ transform_perc <- function(percentage_vec) {
   (percentage_vec * (length(percentage_vec) - 1) + 0.5)/length(percentage_vec)
 }
 
+
+## Data prep function ----
+Data_prep<-function(loc="Field",PopLevel=F,long=F,ClimateLong=F,clim_t = T,
+                    Treatment=F,Time.var='Mid',start_date="2023-06-15",
+                    end_date="2023-07-29",byDate=F,group=NULL,...){
+  
+  
+  Combined_data1<- Trait_data  %>% 
+    left_join(PCs)
+  
+  if(loc=="Field"|loc=="Garden"){Combined_data1<-Combined_data1 %>% 
+    dplyr::filter(Loc==loc)}
+  
+  
+  if(loc=="Garden"){
+    
+    if(byDate==T){
+      Combined_data1<-Combined_data1 %>%
+        filter(Date >= as.Date(start_date) & Date <= as.Date(end_date))}
+    else{
+      Combined_data1<-Combined_data1 %>%
+        filter(str_detect(Time,Time.var))
+    }
+    
+    if (!is.null(group)) {
+      Combined_data1 <- Combined_data1 %>% summarise(
+          .by = group,
+          Pop = unique(Pop),
+          Loc = if (PopLevel) unique(Loc) else first(Loc),
+          Time =  first(Time),
+          Plant_N= if (PopLevel) length(Pop) else NULL,
+          Date = sample(c(min(Date, na.rm = TRUE), max(Date, na.rm = TRUE)), size = 1),
+          count = n(),
+          flowers = sum(fl_m > 0, fl_h > 0, na.rm = TRUE),
+          quant_herb_0.75 = as.vector(quantile(herb_p, na.rm = TRUE)[3]),
+          max_herb = max(herb_p, na.rm = TRUE),
+          across(where(is.numeric), ~ mean(., na.rm = TRUE))
+        )}
+  }
+  
+  if (!is.null(group)& PopLevel==T & loc != "Garden") {
+    Combined_data1 <- Combined_data1 %>% summarise(
+      .by = group,
+      Pop = unique(Pop),
+      Loc = if (PopLevel) unique(Loc) else first(Loc),
+      count = n(),
+      across(where(is.numeric), ~ mean(., na.rm = TRUE))
+    )}
+  
+  
+  if(long==T&ClimateLong==T){Combined_data1<-Combined_data1 %>%
+    pivot_longer(cols = c(Trichomes_t_sc,SLA_t_sc,Conc_t_sc,Clim_PC1_sq_sc,Clim_ave_PC1_sc)) 
+  }
+  
+  if(long==T&ClimateLong==F){Combined_data1<-Combined_data1 %>%
+    left_join(Pop_info %>% select(Pop,Latitude))%>% 
+    pivot_longer(cols = c(Trichomes_t_sc,SLA_t_sc,Conc_t_sc))
+  }
+  
+  if(long==T){Combined_data1<-Combined_data1 %>%
+    mutate(name=case_when(
+      name=="Conc_t_sc"~"Glycoalkaloids (mg/g)",
+      name=='Clim_ave_PC1_sc'~'Climate',
+      name=='Clim_PC1_sq_sc'~'Climate (sq)',
+      name=="Trichomes_t_sc"~"Trichomes",
+      name=='SLA_t_sc'~'SLA',
+      .default = name))}
+  
+  
+  Combined_data1<-Combined_data1 %>% 
+    mutate(
+      Conc_t=log(Conc),
+      SLA_t=log(SLA),
+      Trichomes_t=log(Trichomes),
+      herb_p_t=logit(herb_p),
+      Climate_PC1=if(clim_t == F) Clim_PC1 else -Clim_PC1,
+      across(any_of(c("herb_p_t","Trichomes_t","SLA_t","Conc_t","Climate_PC1","Productivity","WeightedCD")), 
+             ~as.numeric(scale(.,center = T)), .names = "{.col}_sc"),
+      across(any_of(c("Latitude_sc","Climate_PC1_sc","WeightedCD_sc")), 
+             ~as.numeric(.^2), .names = "{.col}_sq"),
+      Plant=c(1:length(Conc))
+    )  %>% filter(SLA_t_sc>-3&SLA_t_sc<3)
+  
+  Combined_data1
+}
+
 ## Graph theme setup----
 C_theme<-function(size=18){theme_bw(base_size = size)+
     theme(panel.grid.minor = element_blank(),
           panel.grid.major = element_blank())}
 
+
+## SEM function ----
+SEM_results <- function(Loc = "Field", Prod = "", lat_prod="Latitude_sc", clim_t = T,
+                        lat_main=NULL, lat_traits=NULL, main="Trichomes_t_sc + Conc_t_sc + SLA_t_sc",
+                        mod_fun='glmmTMB',
+                        model = c("lm1", "lm2", "lm3", "lm4"), 
+                        random = "(1|Year:Pop)", year_ran = "", main_ran = "(1|Year:Pop)",
+                        Time="mid", group="Plant_ID",
+                        byDate=T,start_date="2023-06-15",end_date="2023-07-29",ICC=T,corError = list(
+                          quote(SLA_t_sc %~~% Trichomes_t_sc),
+                          quote(SLA_t_sc %~~% Conc_t_sc))) {
+  
+  
+  method<-get(mod_fun)
+  
+  build_formula <- function(terms) {
+    terms <- terms[!sapply(terms, is.null) & terms != ""]
+    paste(terms, collapse = " + ")
+  }
+  
+  formula_strings <- c(
+    lm1 = paste0('herb_p_t_sc ~',build_formula(c(lat_main, main, Prod, main_ran, year_ran))), 
+    lm2 = paste0('Conc_t_sc ~ ',build_formula(c(lat_traits,  Prod, random, year_ran))),           
+    lm3 = paste0('SLA_t_sc ~ ',build_formula(c(lat_traits, Prod, random, year_ran))),
+    lm4 = paste0('Trichomes_t_sc ~ ',build_formula(c(lat_traits, Prod, random)))#,  
+    #lm5 = paste0('NPP_g_10y_sc ~', build_formula(c(lat_prod, '(1|dummy)'))),
+    #lm6 = paste0('NPP_g_sc ~', build_formula(c(lat_prod, '(1|dummy)')))
+  )
+  
+  DF_short_I_field <- Data_prep(loc=Loc,Time.var=Time,byDate = byDate,
+                                start_date = start_date, clim_t = clim_t,
+                                end_date = end_date,group=group) %>% 
+    select(all_of(c("Date",unique(unlist(lapply(formula_strings, function(fstr) {
+      all.vars(as.formula(fstr))
+    })))))) %>% drop_na()
+  
+  
+  
+  print(min(DF_short_I_field$Date))
+  print(max(DF_short_I_field$Date))
+  
+  
+  model_list <- lapply(formula_strings, function(fstr) method(as.formula(fstr), DF_short_I_field))
+  
+  AICs<-sapply(model_list,FUN=AIC)
+  
+  print(AICs)
+  
+  if(ICC==T){cus_unlist<-function(x){as.vector(icc(x))}
+  ICCs<-do.call(cbind,sapply(model_list,FUN=cus_unlist,simplify = F))
+  
+  print(ICCs)}
+  
+  for (m in model) {
+    model_list[[m]]$call[[1]] <- as.name(mod_fun)
+  }
+  
+  fit <- do.call(psem, c(
+    model_list[model],
+    corError,
+    list(data = DF_short_I_field)
+  ))
+  
+  return(fit)
+}
+
+## Mini multi-panel plot ----
+make_plots <- function(data, x_var, y_vars, ncol = 2, extra_plots = NULL) {
+  nplots <- length(y_vars)
+  
+  # Identify bottom-most plot in each column
+  bottom_plots <- sapply(1:ncol, function(col) {
+    idx <- seq(col, nplots, by = ncol)
+    max(idx)
+  })
+  
+  # Create main plots
+  plots <- lapply(seq_along(y_vars), function(i) {
+    y <- y_vars[i]
+    y_lab <- if (nchar(y) > 8) str_wrap(y, width = 8) else y
+    
+    p <- ggplot(data, aes(x = .data[[x_var]], y = .data[[y]])) +
+      geom_point() +
+      C_theme(size = 12) +
+      labs(y = y_lab)
+    
+    # Show x-axis only for bottom-most plot in each column
+    if (i %in% bottom_plots) {
+      p <- p + labs(x = x_var)
+    } else {
+      p <- p + theme(
+        #axis.text.x  = element_blank(),
+        #axis.ticks.x = element_blank(),
+        axis.title.x = element_blank()
+      )
+    }
+    
+    p
+  })
+  
+  # Insert extra plots at specific positions if provided
+  if (!is.null(extra_plots)) {
+    # extra_plots should be a named list: names are indices where to insert
+    positions <- as.integer(names(extra_plots))
+    for (i in seq_along(extra_plots)) {
+      pos <- positions[i]
+      p <- extra_plots[[i]]
+      
+      # Wrap y-label and apply theme
+      y_lab <- p$labels$y
+      if (is.null(y_lab)) y_lab <- ""
+      wrapped_y <- if (nchar(y_lab) > 12) str_wrap(y_lab, width = 12) else y_lab
+      p <- p + labs(y = wrapped_y) + C_theme(size = 15)
+      
+      # Insert the plot at the desired position
+      if (pos > length(plots)) {
+        plots[[pos]] <- p
+      } else {
+        plots <- append(plots, list(p), after = pos - 1)
+      }
+    }
+  }
+  
+  wrap_plots(plots, ncol = ncol)
+}
+
+## Plots with trend lines ----
+Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1',deg=2,random="+(1|Pop:Time)",family="poisson",Trend=T){
+  Data<-Data_prep(loc=loc,byDate = T,group = "Plant_ID") %>% 
+    mutate(Pop=as.factor(Pop))
+  
+  Data_pop<-Data_prep(loc=loc,PopLevel = T,byDate = T, group = "Pop") 
+  
+  max_l<-max(Data[,predictor],na.rm=T)
+  
+  min_l<-min(Data[,predictor],na.rm=T)
+  
+  values<-seq(from=min_l,to=max_l,length.out=100)
+  
+  m<-glmmTMB(as.formula(paste0(response,'~poly(',predictor,',',deg,')', random)),Data,family = family)
+  
+  
+  predicted<-as.data.frame(predict_response(m,
+                                            terms=c(paste0(predictor,'[',paste(values, collapse = ", "),']')), margin="empirical",
+  ))
+  
+  
+  p<-ggplot(data=predicted,aes(x=x,y=predicted))
+    
+  if(Trend==T){p<-p+geom_ribbon(aes(x=x,y=predicted,ymin=conf.low,ymax = conf.high), fill = "grey70",alpha=0.5) + 
+    geom_line(linewidth=1)}
+  
+    p<-p+geom_point(data=Data,aes(x=!!sym(predictor),y=!!sym(response)),alpha=0.3,shape = 16)+
+    geom_point(data=Data_pop,aes(x=!!sym(predictor),y=!!sym(response)),col="darkred",size=3)
+  
+    return(p)
+}
 
 ## SEM graphing function ----
 semGraph<-function(fit=fit,node_locs=list(),
@@ -55,7 +304,7 @@ semGraph<-function(fit=fit,node_locs=list(),
   # Define line types: Solid for significant (p < 0.05), Dashed for non-significant
   if (H) {edge_lty <- 1
   } else { edge_lty <- ifelse(p_values < 0.1, 1, 2)}  # 1 = solid, 2 = dashed
-  
+ 
   
   # Define edge widths based on effect size
   if (H) {edge_widths <- 2
@@ -81,7 +330,7 @@ semGraph<-function(fit=fit,node_locs=list(),
       )
     }
   }, weights, edges$Std.Error, p_values, SIMPLIFY = FALSE)} 
-  
+
   
   
   
@@ -96,24 +345,24 @@ semGraph<-function(fit=fit,node_locs=list(),
   edge_label_locations<-graph$graphAttributes$Edges$edge.label.position
   
   get_path_num<-function(pred="NPP",resp="Herbivory"){
-    which(edge_list[,1] %in% as.vector(pred) & edge_list[,2] == resp)
+  which(edge_list[,1] %in% as.vector(pred) & edge_list[,2] == resp)
   }
   
-  edge_loc = c(list(c("Latitude","Glycoalkaloids",0.3),
+    edge_loc = c(list(c("Latitude","Glycoalkaloids",0.3),
                     c("Glycoalkaloids","Herbivory",0.3),
                     c("NPP","Herbivory",0.6),
                     c("NPP","Trichomes",0.3),
                     c("SLA","Herbivory",0.6),
                     c("Trichomes","Herbivory",0.3)),edge_locs)
-  
-  
-  
+    
+
+    
   for(i in seq_along(edge_loc)) {
     
     num<-get_path_num(edge_loc[[i]][1],edge_loc[[i]][2])
-    
+
     if(length(num) != 0){
-      edge_label_locations[num]<-as.numeric(edge_loc[[i]][3])
+    edge_label_locations[num]<-as.numeric(edge_loc[[i]][3])
     }
   }
   
@@ -123,11 +372,11 @@ semGraph<-function(fit=fit,node_locs=list(),
   rownames(layout_matrix)<-node_names
   
   node_loc=c(list('Herbivory'=c(0,1),
-                  "Glycoalkaloids"=c(-0.7,0),
-                  "SLA"=c(0,0),
-                  "Trichomes"=c(0.7,0),
-                  "NPP"=c(-0.7,-1),
-                  "Latitude"=c(0.7,-1)),node_locs)
+                 "Glycoalkaloids"=c(-0.7,0),
+                 "SLA"=c(0,0),
+                 "Trichomes"=c(0.7,0),
+                 "NPP"=c(-0.7,-1),
+                 "Latitude"=c(0.7,-1)),node_locs)
   
   for(i in seq_along(node_loc)) {
     node_name<-names(node_loc[i])
@@ -136,16 +385,16 @@ semGraph<-function(fit=fit,node_locs=list(),
     }
     
   }
-  
-  
+
+
   # Assign default straight edges
   curves <- graph$graphAttributes$Edges$curve  
   
   # Identify only the climate → herbivory paths and set outward curves
   curve_loc = c(list(c("Latitude","Herbivory",-5),
-                     c("NPP","Herbivory",5)),curve_locs)
+                    c("NPP","Herbivory",5)),curve_locs)
   
-  
+
   for(i in seq_along(curve_loc)) {
     num<-get_path_num(curve_loc[[i]][1],curve_loc[[i]][2])
     
@@ -228,3 +477,144 @@ weighted_cd <- function(data, origin_pc, pc_cols, weights) {
   return(d)
 }
 
+
+
+# Function to extract data from Google earth engine ----
+
+
+## see https://github.com/r-spatial/rgee/tree/master for rgee usage and installation
+## you will need to run the commented commands below when first setting up rgee
+#install.packages("rgee")
+#install.packages("reticulate")
+# you might also have to install git https://git-scm.com/downloads
+#reticulate::install_python() # make sure python is installed
+#reticulate::virtualenv_create("rgee")
+#reticulate::py_install("numpy","rgee")
+#reticulate::py_install("earthengine-api","rgee")
+#reticulate::use_virtualenv("rgee")
+#library(rgee)
+#ee_install_upgrade()
+#ee_Authenticate()
+
+# reticulate::use_virtualenv("rgee")
+# library(rgee)
+# ee_Initialize()
+# 
+# 
+# 
+# 
+# ## Extract multiple bands and dates from google earth engine----
+# Extract_var_with_const_date <- function(loc,path,subpath,select,
+#                                         begin = 5,
+#                                         end=7,
+#                                         unit="month",
+#                                         begin1 = 5,
+#                                         end1 =7,
+#                                         unit1 = "",
+#                                         buffer=1500,
+#                                         scale=300) {
+#   batch_size=round(sqrt(6000/(3.14*(buffer/scale)^2)))
+#   print(batch_size)
+#   
+#   if(select!=T){
+#     terra<-ee$Image(as.character(path))
+#     n_images <- 1
+#     
+#     
+#   } else if(select==T){
+#     terra<-ee$ImageCollection(as.character(path))$select(as.character(subpath))
+#   
+#   
+#     if(nchar(unit)>1) {
+#       terra<-terra$filter(
+#         ee$Filter$calendarRange(
+#           begin,
+#           end,
+#           unit
+#         )
+#       )
+#     }
+#     
+#     if(nchar(unit1)>1) {
+#       terra<-terra$filter(
+#         ee$Filter$calendarRange(
+#           begin1,
+#           end1,
+#           unit1
+#         )
+#       )
+#     }
+#   
+#   
+#   n_images <- terra$size()$getInfo()
+# }
+#   
+#   num_iterations <- ceiling(nrow(loc) / batch_size)
+#   
+#   results<-list()
+#   # Loop through each batch
+#   for (i in 1:num_iterations) {
+#     # Calculate the start and end rows for the current batch
+#     start_row <- (i - 1) * batch_size + 1
+#     end_row <- min(i * batch_size, nrow(loc))
+#     print(paste("Processing locations", start_row,"-",end_row, "of", nrow(loc)))
+#     # Extract current batch
+#     batch <- sf_as_ee(loc[start_row:end_row, ])$map(function(pt) {                         # pt is an ee.Feature
+#       pt$buffer(buffer)                  
+#     }) 
+#     
+#     
+#     im_iter <- ceiling(n_images / batch_size)
+#     
+# 
+#     if(select!=T) {
+#       row<-terra$sampleRegions(
+#         collection = batch,
+#         scale = scale,
+#         geometries = FALSE
+#       ) %>% 
+#         ee_as_sf() %>% sf::st_drop_geometry()
+# 
+#       results[[paste(i)]]<-row
+#       
+#       
+#     } else {   
+#     for (j in 1:im_iter) {
+#       start_im <- (j - 1) * batch_size + 1
+#       end_im <- min(j * batch_size, n_images)
+#       
+#       print(paste("Processing images", start_im,"-",end_im, "of", n_images))
+#       
+#       # Get the i-th image (0-indexed in EE)
+#       img <- ee$ImageCollection$fromImages(terra$toList(n_images)$slice(start_im,end_im))
+#      
+#     # Perform ee_extract for the current batch
+#     row <-img$map(
+#       ee_utils_pyfunc(function(img) {
+#         img_date <- img$date()$format("YYYY-MM-dd")
+#         
+#         sampled <- img$sampleRegions(
+#           collection = batch,
+#           scale = scale,
+#           geometries = FALSE
+#         )
+#         sampled$map(
+#           ee_utils_pyfunc(function(feature) {
+#             feature$set("image_date", img_date)
+#           })
+#         )
+#       })
+#      )$flatten() %>% ee_as_sf() %>% sf::st_drop_geometry()
+#     results[[paste(i,j)]]<-row
+#     }
+#    
+#     }
+# 
+#   }
+#   
+#   results<-do.call(rbind, results)
+# 
+#   
+#   results
+# }
+# 
