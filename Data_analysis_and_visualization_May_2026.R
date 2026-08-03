@@ -1234,9 +1234,7 @@ clipxy <- c(-100,-65,25,50)
 OR <- crop(cn,clipxy)
 
 obs<-read_csv("Solanum_carolinense_inat.csv") %>% 
-  drop_na(latitude) %>% 
-  rename(Longitude=longitude,
-         Latitude=latitude) %>% 
+  drop_na(Latitude)  %>% 
   dplyr::filter(
     Longitude >= clipxy[1], Longitude <= clipxy[2],
     Latitude  >= clipxy[3], Latitude  <= clipxy[4]
