@@ -16,20 +16,22 @@ library(ggplotify)
 library(grid)
 library(gt)
 library(lubridate)
+library(qgraph)
+library(rsvg)
+library(svglite)
+library(grid)
 
 # Load in Modified functions ----
-#source("R_code/Functions.R")
+source("Functions.R")
 
 
 conflicts_prefer(dplyr::select,
                  dplyr::filter,
                  patchwork::area)
+
+
 # Read in data ####
-
-
-
 ## climate data
-#write.csv(PCs, 'Data/climate_data.csv')
 clim_data <- read_csv('clim_data.csv') %>% 
   distinct(Pop, .keep_all = TRUE)
 head(clim_data)
@@ -578,7 +580,7 @@ coef_table_full <- coef_table %>%
     table.font.size = 12
   )
 
-gtsave(coef_table_full, "Figures/psem_table.docx")  
+#gtsave(coef_table_full, "Figures/psem_table.docx")  
 
 ## Field bivariate plots ####
 # Calculate population averages
@@ -1110,7 +1112,7 @@ psem_table <- combined_wide %>%
   )
 
 ## save table ####
-gtsave(psem_table, "psem_results.docx")
+#gtsave(psem_table, "psem_results.docx")
 
 # Table of Direct and Indirect effects ####
 ## ---- Field path coefficients ----
@@ -1202,7 +1204,7 @@ effect_table <- effects_table %>%
     row_group.background.color = "#f0f0f0",
     table.font.size = 12
   )
-gtsave(effect_table, "psem_effect_table.docx")
+#gtsave(effect_table, "psem_effect_table.docx")
 
 # Map Figure ----
 Pop_info<-field_garden %>% 
@@ -1231,7 +1233,7 @@ clipxy <- c(-100,-65,25,50)
 
 OR <- crop(cn,clipxy)
 
-obs<-read_csv("Data/Solanum_carolinense_inat.csv") %>% 
+obs<-read_csv("Solanum_carolinense_inat.csv") %>% 
   drop_na(latitude) %>% 
   rename(Longitude=longitude,
          Latitude=latitude) %>% 
