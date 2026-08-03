@@ -1,12 +1,12 @@
-Pop,Pop_area,Latitude,Longitude,Location name
+Pop,Pop_area,Latitude,Longitude,Location name,
 QUI,192,30.5473566,-84.5984944,Quincy-FL,
-COO,160,32.5134944,-84.9074259,Cooper Creek
+COO,160,32.5134944,-84.9074259,Cooper Creek,
 DUDU,60,29.6135164,-82.3603294,Dudu population,
-SUW,76,29.3034545,-83.0598532,Suwanee
+SUW,76,29.3034545,-83.0598532,Suwanee,
 TAL,30,30.4959901,-84.1760539,Miccosukee Greenway (Tallahassee FL),
 OAK,100,42.1814204,-88.9532783,Oak Ridge Forest Preserve (Rock ford IL),
 KAN,140,41.0491084,-87.4607779,"Kankakee Sands - Bison Viewing (Morocco, IN)",
-SHE,1000,36.185288,-86.7066416,"Shelby Bottoms Nature Center & Greenway (Nashville, TN)"
+SHE,1000,36.185288,-86.7066416,"Shelby Bottoms Nature Center & Greenway (Nashville, TN)",
 PLA,100,39.719879,-86.3736799,Plainfield IN,
 BEC,300,38.2144158,-85.4761698,"Breckley Creek Park (Louisville, KY)",
 GRE,1500,33.3606805,-86.8145261,"Cahaba Riverchase Greenway (Birmingham, AL)",
