@@ -269,7 +269,8 @@ Custom_ggplot<-function(loc="Field",response='Trichomes',predictor='Clim_ave_PC1
 semGraph<-function(fit=fit,node_locs=list(),
                    edge_locs = list(),
                    curve_locs = list(),
-                   H = F, marg_y = 12) {
+                   edge_label_size = 1.2,
+                   H = F, marg_y = 12, show_signs=F) {
   
   edges<-summary(fit,rsquare=T,conserve=T)$coefficients[,c("Response","Predictor","Estimate","P.Value","Std.Error")] %>% 
     filter(!grepl("~",Response)&!grepl("Loc",Predictor)) %>% 
@@ -313,6 +314,9 @@ semGraph<-function(fit=fit,node_locs=list(),
   
   # Define estimates as edge labels (rounded to 2 decimals)
   if (H) {edge_labels <- NULL # only significant ones
+  } else if(show_signs) {
+    edge_labels <- ifelse(p_values < 0.1, ifelse(weights > 0, "+", "−"), NA)
+    
   } else {  edge_labels <- mapply(function(w, se, p) {
     if (p < 0.01) {
       bquote(
@@ -413,7 +417,7 @@ semGraph<-function(fit=fit,node_locs=list(),
   # Plot with qgraph
   qgraph(edge_list, labels = node_names, directed = TRUE,
          edge.labels = edge_labels, edge.color = edge_colors, edge.width = edge_widths,
-         edge.label.cex = 1.2,
+         edge.label.cex = edge_label_size,
          lty = edge_lty, curve = curves, 
          edge.label.position = edge_label_locations, layout = layout_matrix,
          edge.label.bg = "white",curveShape = -1.5,

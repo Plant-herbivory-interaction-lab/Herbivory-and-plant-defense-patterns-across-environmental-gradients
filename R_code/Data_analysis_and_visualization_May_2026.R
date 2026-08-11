@@ -664,7 +664,7 @@ pD <- ggplot() +
 # Combine panels
 fig3 <- (pA | pB) / (pC | pD)
 
-ggsave("Figures/field_bivariate_plots.png", fig3, width = 12, height = 10, dpi = 300)
+ggsave("Figures/field_bivariate_plots.png", fig3, width = 12, height = 10, dpi = 600)
 
 ## plot of plant height ####
 hmod1 <- lm(Height ~ poly(ClimPC1_s, 2), data = field_pop_avg)
@@ -958,7 +958,7 @@ pD_g <- ggplot() +
 
 # Combine panels
 fig4 <- (pA_g | pB_g) / (pC_g | pD_g)
-ggsave("Figures/garden_bivariate_plots.png", fig4, width = 12, height = 10, dpi = 300)
+ggsave("Figures/garden_bivariate_plots.png", fig4, width = 12, height = 10, dpi = 600)
 
 # Full table ####
 # Extract field coefficients
@@ -1272,7 +1272,7 @@ clim_vars<-map_clim+
 
 ggsave("fig_1.png",
        device = "png",plot = clim_vars,
-       path = "Figures",dpi = 400,width = 11, 
+       path = "Figures",dpi = 600,width = 11, 
        height = 6)
 
 # Full SEM plot ####
@@ -1305,5 +1305,40 @@ SEM_fig<-(Field_semgraph | Garden_semgraph)+plot_annotation(tag_levels = "A");SE
 
 ggsave("SEM_R.jpg",
        device = "jpg",plot = SEM_fig,
-       path = "Figures",dpi = 400,width = 10, 
+       path = "Figures",dpi = 600,width = 10, 
+       height = 5,limitsize = F)
+
+# Full SEM plot abstract ####
+Field_semgraph<-semGraph(field_psem, marg_y = 5, show_signs = T,
+                         edge_label_size = 4,
+                         node_locs = list("Climate PC1"=c(-0.5,-1),
+                                          "Climate PC1 (sq)"=c(0.5,-1)),
+                         edge_locs = list(c("Climate PC1","Herbivory",0.65),
+                                          c("Climate PC1 (sq)","Herbivory",0.65),
+                                          c("Climate PC1 (sq)","Trichomes",0.2),
+                                          c("Climate PC1","Glycoalkaloids",0.2),
+                                          c("Climate PC1","Trichomes",0.8),
+                                          c("Climate PC1 (sq)","Glycoalkaloids",0.8)),
+                         curve_locs = list(c("Climate PC1","Herbivory",5.7),
+                                           c("Climate PC1 (sq)","Herbivory",-5.7)))
+Field_semgraph
+
+Garden_semgraph<-semGraph(garden_psem, marg_y = 5,show_signs = T,
+                          edge_label_size = 4,
+                          node_locs = list("Climate PC1"=c(-0.5,-1),
+                                           "Climate PC1 (sq)"=c(0.5,-1)),
+                          edge_locs = list(c("Climate PC1","Herbivory",0.65),
+                                           c("Climate PC1 (sq)","Herbivory",0.65),
+                                           c("Climate PC1 (sq)","Trichomes",0.2),
+                                           c("Climate PC1","Glycoalkaloids",0.2),
+                                           c("Climate PC1","Trichomes",0.8),
+                                           c("Climate PC1 (sq)","Glycoalkaloids",0.8)),
+                          curve_locs = list(c("Climate PC1","Herbivory",5.7),
+                                            c("Climate PC1 (sq)","Herbivory",-5.7)));Garden_semgraph
+
+SEM_fig<-(Field_semgraph | Garden_semgraph)+plot_annotation(tag_levels = "A");SEM_fig
+
+ggsave("SEM_R_abstract.jpg",
+       device = "jpg",plot = SEM_fig,
+       path = "Figures",dpi = 600,width = 10, 
        height = 5,limitsize = F)
