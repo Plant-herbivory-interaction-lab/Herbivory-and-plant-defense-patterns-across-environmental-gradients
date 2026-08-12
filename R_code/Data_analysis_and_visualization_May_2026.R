@@ -662,7 +662,10 @@ pD <- ggplot() +
   theme_bw(base_size = 18)
 
 # Combine panels
-fig3 <- (pA | pB) / (pC | pD)
+fig3 <- (pA | pB) / (pC | pD)+
+  plot_annotation(tag_levels = "a",tag_prefix = "(",
+                  tag_suffix = ")")  &
+  theme(plot.tag = element_text(size = 15))
 
 ggsave("Figures/field_bivariate_plots.png", fig3, width = 12, height = 10, dpi = 600)
 
@@ -687,7 +690,7 @@ height_plot <- ggplot(field_pop_avg, aes(x = ClimPC1_s, y = Height)) +
 lvs_plot <- ggplot(field_pop_avg, aes(x = ClimPC1, y = Leaves)) +
   geom_point() +
   geom_smooth(method= "lm", formula = y~x)+
-  theme_bw(base_size = 13) +
+  theme_bw(base_size = 15) +
   annotate("text", x = -.5, y = 15,
            label = paste0("r = 0.76","\np = 0.004"), size = 4.5) +
   xlab("Climate PC1")
@@ -699,10 +702,10 @@ ggsave("Figures/height_leaves_climpc1.png", figS1, width = 12, height = 6, dpi =
 proc_PC <- ggplot(field_pop_avg, aes(x = ClimPC1, y = NPP)) +
   geom_point() +
   geom_smooth(method = "lm", formula = y ~ x) +
-  labs(x = "Climate PC1", y = expression("Ten year NPP (kg*C/m"^"2"*")")) +
+  labs(x = "Climate PC1", y = expression(atop("Ten year NPP", "(kg*C/m"^"2"*")"))) +
   annotate("text", x = -.5, y = 1,
            label = paste0("r = 0.69","\np < 0.001"), size = 4.5) +
-  theme_bw(base_size = 13)
+  theme_bw(base_size = 15)
 ggsave("Figures/NPP_climpc1.png", proc_PC, width = 6, height = 5, dpi = 300)
 
 # Garden DATA ####
@@ -957,7 +960,10 @@ pD_g <- ggplot() +
   theme_bw(base_size = 18)
 
 # Combine panels
-fig4 <- (pA_g | pB_g) / (pC_g | pD_g)
+fig4 <- (pA_g | pB_g) / (pC_g | pD_g)+
+  plot_annotation(tag_levels = "a",tag_prefix = "(",
+                  tag_suffix = ")")  &
+  theme(plot.tag = element_text(size = 15))
 ggsave("Figures/garden_bivariate_plots.png", fig4, width = 12, height = 10, dpi = 600)
 
 # Full table ####
@@ -1259,15 +1265,17 @@ map_clim<-ggplot() +
 
 pca<-PCbiplot(data1 = clim_data %>% select(., all_of(c('MAT',
                                                  'AP','PWQ',"Tsd"))),
-              font_size = 4,rot_x = -1,ext = 2) + theme_bw(base_size=13);pca
+              font_size = 4,rot_x = -1,ext = 2) + theme_bw(base_size=15);pca
 
 
 clim_vars<-map_clim+
   plot_spacer()+
   inset_element(pca, -0.6, -0.1, 0.9, 0.47,align_to = "panel")+
-  (lvs_plot/proc_PC) + 
-  plot_annotation(tag_levels = "A") +
-  plot_layout(widths = c(1.05,0.45,0.50)) 
+  (lvs_plot/proc_PC)  +
+  plot_layout(widths = c(1.05,0.45,0.50)) + 
+  plot_annotation(tag_levels = "a",tag_prefix = "(",
+                  tag_suffix = ")") &
+  theme(plot.tag = element_text(size = 15))
 
 
 ggsave("fig_1.png",
@@ -1276,7 +1284,7 @@ ggsave("fig_1.png",
        height = 6)
 
 # Full SEM plot ####
-Field_semgraph<-semGraph(field_psem, marg_y = 5,
+Field_semgraph<-semGraph(field_psem, marg_y = 5, edge_label_size = 1.4,
                          node_locs = list("Climate PC1"=c(-0.5,-1),
                                           "Climate PC1 (sq)"=c(0.5,-1)),
                          edge_locs = list(c("Climate PC1","Herbivory",0.65),
@@ -1289,7 +1297,7 @@ Field_semgraph<-semGraph(field_psem, marg_y = 5,
                                            c("Climate PC1 (sq)","Herbivory",-5.7)))
 Field_semgraph
 
-Garden_semgraph<-semGraph(garden_psem, marg_y = 5,
+Garden_semgraph<-semGraph(garden_psem, marg_y = 5,edge_label_size = 1.4,
                           node_locs = list("Climate PC1"=c(-0.5,-1),
                                            "Climate PC1 (sq)"=c(0.5,-1)),
                           edge_locs = list(c("Climate PC1","Herbivory",0.65),
@@ -1301,7 +1309,10 @@ Garden_semgraph<-semGraph(garden_psem, marg_y = 5,
                           curve_locs = list(c("Climate PC1","Herbivory",5.7),
                                             c("Climate PC1 (sq)","Herbivory",-5.7)));Garden_semgraph
 
-SEM_fig<-(Field_semgraph | Garden_semgraph)+plot_annotation(tag_levels = "A");SEM_fig
+SEM_fig<-(Field_semgraph | Garden_semgraph)+
+  plot_annotation(tag_levels = "a",tag_prefix = "(",
+                  tag_suffix = ")")  &
+  theme(plot.tag = element_text(size = 15));SEM_fig
 
 ggsave("SEM_R.jpg",
        device = "jpg",plot = SEM_fig,
@@ -1336,9 +1347,11 @@ Garden_semgraph<-semGraph(garden_psem, marg_y = 5,show_signs = T,
                           curve_locs = list(c("Climate PC1","Herbivory",5.7),
                                             c("Climate PC1 (sq)","Herbivory",-5.7)));Garden_semgraph
 
-SEM_fig<-(Field_semgraph | Garden_semgraph)+plot_annotation(tag_levels = "A");SEM_fig
+SEM_fig_abstract<-(Field_semgraph | Garden_semgraph)+plot_annotation(tag_levels = "A")+
+  plot_annotation(tag_levels = list(c("Field","Garden")))  &
+  theme(plot.tag = element_text(size = 15));SEM_fig_abstract
 
 ggsave("SEM_R_abstract.jpg",
-       device = "jpg",plot = SEM_fig,
+       device = "jpg",plot = SEM_fig_abstract,
        path = "Figures",dpi = 600,width = 10, 
        height = 5,limitsize = F)
