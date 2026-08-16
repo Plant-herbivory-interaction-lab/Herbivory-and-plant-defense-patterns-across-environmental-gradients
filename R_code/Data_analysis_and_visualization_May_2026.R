@@ -603,7 +603,7 @@ pA <- ggplot() +
              alpha = 0.2, size = 1) +
   geom_point(data = field_pop_avg, aes(x = ClimPC1, y = Trichomes), 
              size = 3) +
-  labs(x = "Climate PC1", y = "Trichomes (#/cm^2)", tag = "A") +
+  labs(x = "Climate PC1", y = expression("Trichomes (#/cm"^2*")"), tag = "A") +
   annotate("text", x = 1.5, y = 380,
            label = "x: italic(p) == 0.21", parse=T, hjust=0, size = 5) +
   annotate("text", x = 1.5, y = 350,
@@ -905,7 +905,7 @@ pA_g <- ggplot() +
              alpha = 0.2, size = 1.25) +
   geom_point(data = garden_pop_avg, aes(x = ClimPC1, y = Trichomes),
              size = 3) +
-  labs(x = "Climate PC1", y = "Trichomes (#/cm^2)", tag = "A") +
+  labs(x = "Climate PC1", y = expression("Trichomes (#/cm"^2*")"), tag = "A") +
   annotate("text", x = -1.5, y = 150,
            label = "x: italic(p) == 0.98", parse=T, hjust=0, size = 5) +
   annotate("text", x = -1.5, y = 135,
